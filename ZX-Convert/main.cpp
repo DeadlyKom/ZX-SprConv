@@ -26,6 +26,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
     LocalFree(lpszArgv);
 
-    FAppFramework AppFramework;
-    return AppFramework.Launch(Args);
+    return FAppFramework::Get().Launch(Args);
 }

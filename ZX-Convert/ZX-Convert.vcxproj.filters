@@ -37,6 +37,18 @@
     <ClCompile Include="..\Source\Core\Utils.cpp">
       <Filter>Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\ImageList.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\Palette.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\Sequencer.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\FileDialog.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h">
@@ -54,6 +66,18 @@
     </ClInclude>
     <ClInclude Include="..\Source\Core\Utils.h">
       <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\ImageList.h">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\Palette.h">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\Sequencer.h">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\FileDialog.h">
+      <Filter>Source\Viewer\Windows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

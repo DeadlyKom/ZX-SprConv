@@ -1,10 +1,24 @@
+#include "backends/imgui_impl_win32.h"
+#include "backends/imgui_impl_dx11.h"
+
 #include "AppFramework.h"
 #include "../ZX-Convert/Resource.h"
 
-#include "Utils.cpp"
+namespace KeywordArg
+{
+	const wstring FULLSCREEN = TEXT("-fullscreen");
+}
 
-#include "backends/imgui_impl_win32.h"
-#include "backends/imgui_impl_dx11.h"
+namespace
+{
+	enum class ECommandLine
+	{
+		Unknow,
+		Fullscreen,
+	};
+
+	map<wstring, ECommandLine> CommandLineArray = { {TEXT("-fullscreen"), ECommandLine::Fullscreen} };
+}
 
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -37,6 +51,15 @@ static LONG_PTR CALLBACK AppFrameworkProc(HWND hWnd, UINT msg, WPARAM wParam, LP
 			return 0;
 		}
 		break;
+	case WM_DPICHANGED:
+		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
+		{
+			//const int dpi = HIWORD(wParam);
+			//printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
+			const RECT* suggested_rect = (RECT*)lParam;
+			SetWindowPos(hWnd, NULL, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+		}
+		break;
 
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -54,10 +77,12 @@ FAppFramework::FAppFramework()
 	, RenderTargetView(nullptr)
 	, ClassName(TEXT("DefaultClassName"))
 	, WindowName(TEXT("ZX-Editor"))
+	, bVsync(true)
 	, BackgroundColor(ImVec4(0.0f, 0.0f, 0.0f, 1.0f))
 	, Font(nullptr)
 	, SevenSegmentFont(nullptr)
 	, FontSize(15)
+	, HandleCounter(0)
 {
 	ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 	ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -66,16 +91,28 @@ FAppFramework::FAppFramework()
 FAppFramework::~FAppFramework()
 {}
 
+FAppFramework& FAppFramework::Get()
+{
+	static shared_ptr<FAppFramework> InstanceAppFramework(new FAppFramework());
+	return *InstanceAppFramework.get();
+}
+
 int32_t FAppFramework::Launch(const vector<wstring>& Args, int32_t Width /*= -1*/, int32_t Height /*= -1*/)
 {
+	// initialize
+	WindowWidth = Width;
+	WindowHeight = Height;
+
 	// startup
 	Startup(Args);
 	Register();
-	if (!Create(Width, Height))
+
+	if (!Create(WindowWidth, WindowHeight))
 	{
 		Shutdown();
 		return 1;
 	}
+	
 	Initialize();
 	StartupGUI();
 
@@ -98,6 +135,28 @@ void FAppFramework::Release()
 	}
 }
 
+void FAppFramework::Startup(const vector<wstring>& Args)
+{
+	for(const wstring& Arg : Args)
+	{
+		const map<wstring, ECommandLine>::iterator& SearchIt = CommandLineArray.find(Arg);
+		const ECommandLine CommandLine = SearchIt != CommandLineArray.end() ? SearchIt->second : ECommandLine::Unknow;
+		switch (CommandLine)
+		{
+		case ECommandLine::Unknow:
+			break;
+
+		case ECommandLine::Fullscreen:
+			WindowWidth = ScreenWidth;
+			WindowHeight = ScreenHeight;
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
 void FAppFramework::Initialize()
 {
 	Viewer.Initialize();
@@ -117,6 +176,24 @@ void FAppFramework::Shutdown()
 void FAppFramework::Render()
 {
 	Viewer.Render();
+
+	for (pair<uint32_t, function<void()>> Event : RenderEvents)
+	{
+		Event.second();
+	}
+
+	// remove empty elements
+	for (map<uint32_t, function<void()>>::iterator SearchIt = RenderEvents.begin(); SearchIt != RenderEvents.end();)
+	{
+		if (!SearchIt->second)
+		{
+			SearchIt = RenderEvents.erase(SearchIt);
+		}
+		else
+		{
+			++SearchIt;
+		}
+	}
 }
 
 void FAppFramework::SetRectWindow(uint16_t Width, uint16_t Height)
@@ -129,13 +206,28 @@ void FAppFramework::SetRectWindow(uint16_t Width, uint16_t Height)
 	}
 }
 
+uint32_t FAppFramework::BindRender(const function<void()>& Callback)
+{
+	RenderEvents.insert_or_assign(HandleCounter, Callback);
+	return HandleCounter++;
+}
+
+void FAppFramework::UnbindRender(uint32_t Handle)
+{
+	const map<uint32_t, function<void()>>::iterator& SearchIt = RenderEvents.find(Handle);
+	if (SearchIt != RenderEvents.end())
+	{
+		RenderEvents.insert_or_assign(Handle, nullptr);
+	}
+}
+
 void FAppFramework::Register()
 {
 	WNDCLASSEX wcex;
 	hInstance = GetModuleHandle(nullptr);
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_CLASSDC | CS_HREDRAW | CS_VREDRAW;
+	wcex.style = CS_CLASSDC/* | CS_HREDRAW | CS_VREDRAW*/;
 	wcex.lpfnWndProc = (WNDPROC)AppFrameworkProc;
 	wcex.cbClsExtra =
 	wcex.cbWndExtra = 0;
@@ -202,7 +294,7 @@ bool FAppFramework::CreateDeviceD3D()
 	//createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	D3D_FEATURE_LEVEL featureLevel;
 	const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-	if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &featureLevel, &DeviceContext) != S_OK)
+	if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &featureLevel, &DeviceContext) != S_OK)
 	{
 		return false;
 	}
@@ -262,9 +354,18 @@ void FAppFramework::StartupGUI()
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
+
+	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+	ImGuiStyle& style = ImGui::GetStyle();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		style.WindowRounding = 0.0f;
+		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+	}
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init(hwndAppFramework);
@@ -332,6 +433,13 @@ void FAppFramework::Idle()
 		DeviceContext->OMSetRenderTargets(1, &RenderTargetView, nullptr);
 		DeviceContext->ClearRenderTargetView(RenderTargetView, clear_color_with_alpha);
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		SwapChain->Present(1, 0);
+
+		// Update and Render additional Platform Windows
+		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+		}
+		SwapChain->Present(!!bVsync, 0);
 	}
 }

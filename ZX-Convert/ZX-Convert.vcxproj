@@ -122,6 +122,7 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\Dependencies\IMGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,6 +152,10 @@
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp" />
     <ClCompile Include="..\Source\Fonts\SevenSegment.cpp" />
     <ClCompile Include="..\Source\Viewer\Viewer.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\FileDialog.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\ImageList.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\Palette.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\Sequencer.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Sprite.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -159,6 +164,10 @@
     <ClInclude Include="..\Source\Core\Utils.h" />
     <ClInclude Include="..\Source\Core\Window.h" />
     <ClInclude Include="..\Source\Viewer\Viewer.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\FileDialog.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\ImageList.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\Palette.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\Sequencer.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Sprite.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

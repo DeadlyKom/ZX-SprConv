@@ -4,9 +4,13 @@
 
 #include <string>
 #include <stdint.h>
+#include <map>
 #include <vector>
+#include <memory>
 #include <windows.h>
 #include <codecvt>
+#include <functional>
+#include <algorithm>
 
 #include <d3d11.h>
 #include <tchar.h>
@@ -29,20 +33,25 @@
 
 using namespace std;
 
-class FAppFramework
+class FAppFramework : enable_shared_from_this<FAppFramework>
 {
 public:
 	FAppFramework();
 	virtual ~FAppFramework();
+	static FAppFramework& Get();
+
 	int32_t Launch(const vector<wstring>& Args, int32_t Width = -1, int32_t Height = -1);
 	void Release();
 
-	virtual void Startup(const vector<wstring>& Args) {};
+	virtual void Startup(const vector<wstring>& Args);
 	virtual void Initialize();
 	virtual void Shutdown();
 	virtual void Tick(float DeltaTime) {};
 	virtual void Render();
 	virtual void SetRectWindow(uint16_t Width, uint16_t Height);
+
+	uint32_t BindRender(const function<void()>& Callback);
+	void UnbindRender(uint32_t Handle);
 
 protected:
 	//template <typename... Args>
@@ -79,7 +88,6 @@ private:
 	void StartupGUI();
 	void ShutdownGUI();
 
-
 	HINSTANCE hInstance;
 	ATOM AtomClass;
 	HWND hwndAppFramework;
@@ -92,9 +100,13 @@ private:
 
 	uint32_t ScreenWidth;
 	uint32_t ScreenHeight;
+	uint32_t WindowWidth;
+	uint32_t WindowHeight;
 
 	wstring ClassName;
 	wstring WindowName;
+
+	bool bVsync;
 
 	ImVec4 BackgroundColor;
 
@@ -103,4 +115,7 @@ private:
 	int32_t FontSize;
 
 	SViewer Viewer;
+
+	uint32_t HandleCounter;
+	map<uint32_t, function<void()>> RenderEvents;
 };

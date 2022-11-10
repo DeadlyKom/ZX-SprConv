@@ -2,13 +2,17 @@
 #include "Core\Window.h"
 
 #include "Windows/Sprite.h"
+#include "Windows/ImageList.h"
+#include "Windows/Palette.h"
 
 SViewer::SViewer()
 {}
 
 void SViewer::Initialize()
 {
-	Windows = { std::make_shared<SSprite>(), };
+	Windows = { std::make_shared<SSprite>(),
+				std::make_shared<SImageList>(),
+				std::make_shared<SPalette>(), };
 
 	for (int i = 0; i < Windows.size(); i++)
 	{
