@@ -2,40 +2,32 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <string>
+#include <d3d11.h>
+#include <tchar.h>
 #include <stdint.h>
+#include <windows.h>
+
 #include <map>
 #include <vector>
 #include <memory>
-#include <windows.h>
+#include <string>
 #include <codecvt>
 #include <functional>
 #include <algorithm>
 
-#include <d3d11.h>
-#include <tchar.h>
-
 #include "imgui.h"
-
-//#include <vector>
-//#include <utility>
-//#include <stdio.h>
-//#include <iostream>
-//#include <xlocbuf>
-//#include <codecvt>
-//#include <iosfwd>
-//#include <sstream>
-//#include <fstream>
-//#include <codecvt>
 
 #include "Utils.h"
 #include "Viewer\Viewer.h"
+#include "Delegates.h"
 
 using namespace std;
 
 class FAppFramework : enable_shared_from_this<FAppFramework>
 {
 public:
+	DECLARE_MULTICAST_DELEGATE(FOnRender);
+
 	FAppFramework();
 	virtual ~FAppFramework();
 	static FAppFramework& Get();
@@ -50,29 +42,7 @@ public:
 	virtual void Render();
 	virtual void SetRectWindow(uint16_t Width, uint16_t Height);
 
-	uint32_t BindRender(const function<void()>& Callback);
-	void UnbindRender(uint32_t Handle);
-
-protected:
-	//template <typename... Args>
-	//wstring Format(const wstring& format, Args... args)
-	//{
-	//	wchar_t Buffer[512];
-	//	size_t size = swprintf(Buffer, 512, format.c_str(), args...) + 1;
-	//	return Buffer;
-	//}
-	//wstring s2ws(const string& str)
-	//{
-	//	using convert_typeX = codecvt_utf8<wchar_t>;
-	//	wstring_convert<convert_typeX, wchar_t> converterX;
-	//	return converterX.from_bytes(str);
-	//}
-	//string ws2s(const wstring& wstr)
-	//{
-	//	using convert_typeX = codecvt_utf8<wchar_t>;
-	//	wstring_convert<convert_typeX, wchar_t> converterX;
-	//	return converterX.to_bytes(wstr);
-	//}
+	FOnRender OnRender;
 
 private:
 	void Register();
@@ -115,7 +85,4 @@ private:
 	int32_t FontSize;
 
 	SViewer Viewer;
-
-	uint32_t HandleCounter;
-	map<uint32_t, function<void()>> RenderEvents;
 };

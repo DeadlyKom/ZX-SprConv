@@ -1,8 +1,9 @@
-#include "backends/imgui_impl_win32.h"
-#include "backends/imgui_impl_dx11.h"
+#include "backends\imgui_impl_win32.h"
+#include "backends\imgui_impl_dx11.h"
 
 #include "AppFramework.h"
-#include "../ZX-Convert/Resource.h"
+#include "..\ZX-Convert\Resource.h"
+#include "Fonts\Fonts.h"
 
 namespace KeywordArg
 {
@@ -51,6 +52,7 @@ static LONG_PTR CALLBACK AppFrameworkProc(HWND hWnd, UINT msg, WPARAM wParam, LP
 			return 0;
 		}
 		break;
+
 	case WM_DPICHANGED:
 		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
 		{
@@ -82,7 +84,7 @@ FAppFramework::FAppFramework()
 	, Font(nullptr)
 	, SevenSegmentFont(nullptr)
 	, FontSize(15)
-	, HandleCounter(0)
+	//, HandleCounter(0)
 {
 	ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 	ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -176,24 +178,7 @@ void FAppFramework::Shutdown()
 void FAppFramework::Render()
 {
 	Viewer.Render();
-
-	for (pair<uint32_t, function<void()>> Event : RenderEvents)
-	{
-		Event.second();
-	}
-
-	// remove empty elements
-	for (map<uint32_t, function<void()>>::iterator SearchIt = RenderEvents.begin(); SearchIt != RenderEvents.end();)
-	{
-		if (!SearchIt->second)
-		{
-			SearchIt = RenderEvents.erase(SearchIt);
-		}
-		else
-		{
-			++SearchIt;
-		}
-	}
+	OnRender.Broadcast();
 }
 
 void FAppFramework::SetRectWindow(uint16_t Width, uint16_t Height)
@@ -203,21 +188,6 @@ void FAppFramework::SetRectWindow(uint16_t Width, uint16_t Height)
 		CleanupRenderTarget();
 		SwapChain->ResizeBuffers(0, (UINT)Width, (UINT)Height, DXGI_FORMAT_UNKNOWN, 0);
 		CreateRenderTarget();
-	}
-}
-
-uint32_t FAppFramework::BindRender(const function<void()>& Callback)
-{
-	RenderEvents.insert_or_assign(HandleCounter, Callback);
-	return HandleCounter++;
-}
-
-void FAppFramework::UnbindRender(uint32_t Handle)
-{
-	const map<uint32_t, function<void()>>::iterator& SearchIt = RenderEvents.find(Handle);
-	if (SearchIt != RenderEvents.end())
-	{
-		RenderEvents.insert_or_assign(Handle, nullptr);
 	}
 }
 
@@ -371,8 +341,10 @@ void FAppFramework::StartupGUI()
 	ImGui_ImplWin32_Init(hwndAppFramework);
 	ImGui_ImplDX11_Init(Device, DeviceContext);
 
-	Font = Utils::LoadFont(14, 0);
-	SevenSegmentFont = Utils::LoadFont(50);
+	FFonts& Fonts = FFonts::Get();
+	Fonts.LoadFont(11, 0);
+	Font = Fonts.GetFont(Fonts.LoadFont(14, 0));
+	SevenSegmentFont = Fonts.GetFont(Fonts.LoadFont(50));
 }
 
 void FAppFramework::ShutdownGUI()
@@ -403,7 +375,10 @@ int32_t FAppFramework::Run()
 			}
 		}
 
-		Idle();
+		if (bRun)
+		{
+			Idle();
+		}
 	}
 
 	return (int32_t)msg.wParam;

@@ -1,11 +1,10 @@
 #include "ImageList.h"
-#include "Core/Utils.h"
+#include "Core\Utils.h"
 
 void SImageList::Initialize()
 {
 	bIncludeInWindows = true;
 	Name = "Image List";
-	FileDialogHandle = INDEX_NONE;
 }
 
 void SImageList::Render()
@@ -63,13 +62,12 @@ void SImageList::Render()
 
 void SImageList::ShowMenuFiles()
 {
-	if (ImGui::MenuItem("Open", NULL) && FileDialogHandle == INDEX_NONE)
+	if (ImGui::MenuItem("Open", NULL) && !FileDialogHandle.IsValid())
 	{
-		FileDialogHandle = Utils::OpenWindowFileDialog([this]() -> void
+		FileDialogHandle = Utils::OpenWindowFileDialog("Select File", EDialogMode::Select, [this](std::string FilePath) -> void
 		{
 			Utils::CloseWindowFileDialog(FileDialogHandle);
-
-		});
+		}, "", "*.*, *.png, *.scr");
 	}
 	ImGui::EndMenu();
 }

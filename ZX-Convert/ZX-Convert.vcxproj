@@ -148,7 +148,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Source\Core\AppFramework.cpp" />
+    <ClCompile Include="..\Source\Core\Delegate.cpp" />
     <ClCompile Include="..\Source\Core\Utils.cpp" />
+    <ClCompile Include="..\Source\Fonts\Fonts.cpp" />
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp" />
     <ClCompile Include="..\Source\Fonts\SevenSegment.cpp" />
     <ClCompile Include="..\Source\Viewer\Viewer.cpp" />
@@ -161,8 +163,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h" />
+    <ClInclude Include="..\Source\Core\Delegates.h" />
     <ClInclude Include="..\Source\Core\Utils.h" />
     <ClInclude Include="..\Source\Core\Window.h" />
+    <ClInclude Include="..\Source\Fonts\Fonts.h" />
     <ClInclude Include="..\Source\Viewer\Viewer.h" />
     <ClInclude Include="..\Source\Viewer\Windows\FileDialog.h" />
     <ClInclude Include="..\Source\Viewer\Windows\ImageList.h" />

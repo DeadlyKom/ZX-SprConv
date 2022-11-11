@@ -3,6 +3,7 @@
 #include <vector>
 #include <filesystem>
 #include "Core\Window.h"
+#include "core\Delegates.h"
 
 class SImageList : public SWindow
 {
@@ -13,6 +14,6 @@ public:
 private:
 	void ShowMenuFiles();
 
-	uint32_t FileDialogHandle;
+	DelegateHandle FileDialogHandle;
 	std::vector<std::filesystem::directory_entry> Files;
 };
