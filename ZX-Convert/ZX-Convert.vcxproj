@@ -81,7 +81,7 @@
     <OutDir>..\Bin\Debug-windows-x86_64\GUI\</OutDir>
     <TargetName>ZX-Converter</TargetName>
     <IntDir>..\Bin\Intermediate\Debug-windows-x86_64\GUI\</IntDir>
-    <IncludePath>..\Source\;$(IncludePath)</IncludePath>
+    <IncludePath>..\Source\;..\Dependencies\;$(IncludePath)</IncludePath>
     <LibraryPath>..\Bin\Debug-windows-x86_64\IMGUI;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="..\Source\Core\AppFramework.cpp" />
     <ClCompile Include="..\Source\Core\Delegate.cpp" />
+    <ClCompile Include="..\Source\Core\Image.cpp" />
     <ClCompile Include="..\Source\Core\Utils.cpp" />
     <ClCompile Include="..\Source\Fonts\Fonts.cpp" />
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp" />
@@ -164,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h" />
     <ClInclude Include="..\Source\Core\Delegates.h" />
+    <ClInclude Include="..\Source\Core\Image.h" />
     <ClInclude Include="..\Source\Core\Utils.h" />
     <ClInclude Include="..\Source\Core\Window.h" />
     <ClInclude Include="..\Source\Fonts\Fonts.h" />

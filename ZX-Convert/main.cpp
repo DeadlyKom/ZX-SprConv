@@ -9,8 +9,6 @@
 #include <shellapi.h>
 #include <Core/AppFramework.h>
 
-using namespace std;
-
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -19,10 +17,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     int32_t NumArgs;
     LPWSTR* lpszArgv = CommandLineToArgvW(lpCmdLine, &NumArgs);
 
-	vector<wstring> Args;
+    std::vector<std::wstring> Args;
 	for (int i = 0; i < NumArgs; ++i)
 	{
-		Args.push_back(wstring(lpszArgv[i]));
+		Args.push_back(std::wstring(lpszArgv[i]));
 	}
     LocalFree(lpszArgv);
 

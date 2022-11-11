@@ -55,6 +55,9 @@
     <ClCompile Include="..\Source\Core\Delegate.cpp">
       <Filter>Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Core\Image.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h">
@@ -89,6 +92,9 @@
       <Filter>Source\Fonts</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Core\Delegates.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Core\Image.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
   </ItemGroup>

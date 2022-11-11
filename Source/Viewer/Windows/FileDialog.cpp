@@ -33,7 +33,7 @@ void SFileDialog::Initialize()
 	FolderSelectIndex = 0;
 
 	Font = FFonts::Get().GetFont(0);
-	ImGui::SetNextWindowSize(ImVec2(850.0f, 420.0f));
+	Stage = EDialogStage::Unknown;
 }
 
 void SFileDialog::Render()
@@ -42,6 +42,11 @@ void SFileDialog::Render()
 	{
 		Close();
 		return;
+	}
+
+	if (IsWindowAppearing())
+	{
+		ImGui::SetNextWindowSize(ImVec2(850.0f, 420.0f));
 	}
 
 	ImGui::PushFont(Font);
@@ -81,27 +86,44 @@ void SFileDialog::Render()
 	
 	if (!IsOpen())
 	{
-		CloseCallback("");
+		Stage = EDialogStage::Close;
 	}
 
 	ImGui::BeginDisabled(CurrentFile.empty());
 	if (ImGui::Button("Select"))
 	{
-		Close();
-		CloseCallback(CurrentPath + "\\" + CurrentFile);
+		Stage = EDialogStage::Close;
 	}
 	ImGui::EndDisabled();
 
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))
 	{
-		Close();
-		CloseCallback("");
+		Stage = EDialogStage::Close;
 	}
 
 	ImGui::End();
 
 	ImGui::PopFont();
+
+	SWindow::Render();
+
+	switch (Stage)
+	{
+	case EDialogStage::Unknown:
+		break;
+
+	case EDialogStage::Close:
+		Close();
+		CloseCallback("");
+		break;
+
+	case EDialogStage::Selected:
+		Close();
+		std::filesystem::path Path(CurrentPath);
+		CloseCallback(Path / CurrentFile);
+		break;
+	}
 }
 
 SFileDialog& SFileDialog::Get()
@@ -122,13 +144,13 @@ void SFileDialog::Close()
 	Release();
 }
 
-DelegateHandle SFileDialog::OpenWindow(std::string& FileDialogName, EDialogMode Mode, std::function<void(std::string)>& OnCallback, const std::string& Path, const std::string& FilterTypes)
+DelegateHandle SFileDialog::OpenWindow(std::string& FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)>& OnCallback, const std::filesystem::path& Path, const std::string& FilterTypes)
 {
 	SFileDialog& FileDialog = SFileDialog::Get();
 	FileDialog.FileDialogName = FileDialogName;
 	FileDialog.Mode = Mode;
 	FileDialog.CloseCallback = OnCallback;
-	FileDialog.CurrentPath = Path;
+	FileDialog.CurrentPath = Path.string();
 	FileDialog.SetFilterTypes(FilterTypes);
 	FileDialog.Open();
 	return FAppFramework::Get().OnRender.AddRaw(&FileDialog, &SFileDialog::Render);
@@ -142,6 +164,7 @@ void SFileDialog::CloseWindow(DelegateHandle& Handle)
 void SFileDialog::SetFilterTypes(const std::string& InFilterTypes)
 {
 	SelectedFilterIndex = 0;
+	FilterTypes.clear();
 
 	if (InFilterTypes.empty())
 	{
@@ -244,30 +267,27 @@ void SFileDialog::ShowFiles(const ImVec2& Size)
 	ImGui::BeginChild("Files", Size, true, ImGuiWindowFlags_HorizontalScrollbar);
 	ImGui::Columns(4);
 
-	ImGui::SetColumnWidth(0, Size.x * 0.5f);
-	ImGui::SetColumnWidth(1, Size.x * 0.1f);
-	ImGui::SetColumnWidth(2, Size.x * 0.13f);
+	if (IsWindowAppearing())
+	{
+		ImGui::SetColumnWidth(0, Size.x * 0.5f);
+		ImGui::SetColumnWidth(1, Size.x * 0.1f);
+		ImGui::SetColumnWidth(2, Size.x * 0.13f);
+	}
 
 	if (ImGui::Selectable("File"))
 	{
 		NameSortOrder = FlipFlopOrder(NameSortOrder);
-		//SizeSortOrder = EFileSortOrder::Unknown;
-		//TypeSortOrder = EFileSortOrder::Unknown;
-		//DateSortOrder = EFileSortOrder::Unknown;
 		std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
 		{
-			const string& NameA = A.path().filename().string();
-			const string& NameB = B.path().filename().string();
+			const std::string& NameA = A.path().filename().string();
+			const std::string& NameB = B.path().filename().string();
 			return NameSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
 		});
 	}
 	ImGui::NextColumn();
 	if (ImGui::Selectable("Size"))
 	{
-		//NameSortOrder = EFileSortOrder::Unknown;
 		SizeSortOrder = FlipFlopOrder(SizeSortOrder);
-		//TypeSortOrder = EFileSortOrder::Unknown;
-		//DateSortOrder = EFileSortOrder::Unknown;
 		std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
 		{
 			const size_t& NameA = A.file_size();
@@ -278,71 +298,27 @@ void SFileDialog::ShowFiles(const ImVec2& Size)
 	ImGui::NextColumn();
 	if (ImGui::Selectable("Type"))
 	{
-		//NameSortOrder = EFileSortOrder::Unknown;
-		//SizeSortOrder = EFileSortOrder::Unknown;
 		TypeSortOrder = FlipFlopOrder(TypeSortOrder);
-		//DateSortOrder = EFileSortOrder::Unknown;
 		std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
 		{
-			const string& NameA = A.path().extension().string();
-			const string& NameB = B.path().extension().string();
+			const std::string& NameA = A.path().extension().string();
+			const std::string& NameB = B.path().extension().string();
 			return TypeSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
 		});
 	}
 	ImGui::NextColumn();
 	if (ImGui::Selectable("Date"))
 	{
-		//NameSortOrder = EFileSortOrder::Unknown;
-		//SizeSortOrder = EFileSortOrder::Unknown;
-		//TypeSortOrder = EFileSortOrder::Unknown;
 		DateSortOrder = FlipFlopOrder(DateSortOrder);
 		std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
 		{
-			const filesystem::file_time_type& NameA = A.last_write_time();
-			const filesystem::file_time_type& NameB = B.last_write_time();
+			const std::filesystem::file_time_type& NameA = A.last_write_time();
+			const std::filesystem::file_time_type& NameB = B.last_write_time();
 			return DateSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
 		});
 	}
 	ImGui::NextColumn();
 	ImGui::Separator();
-
-	// sort files
-	//if (NameSortOrder != EFileSortOrder::Unknown)
-	//{
-	//	std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
-	//	{
-	//		const string& NameA = A.path().filename().string();
-	//		const string& NameB = B.path().filename().string();
-	//		return NameSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
-	//	});
-	//}
-	//else if (SizeSortOrder != EFileSortOrder::Unknown)
-	//{
-	//	std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
-	//	{
-	//		const size_t& NameA = A.file_size();
-	//		const size_t& NameB = B.file_size();
-	//		return NameSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
-	//	});
-	//}
-	//else if (TypeSortOrder != EFileSortOrder::Unknown)
-	//{
-	//	std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
-	//	{
-	//		const string& NameA = A.path().extension().string();
-	//		const string& NameB = B.path().extension().string();
-	//		return NameSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
-	//	});
-	//}
-	//else if (DateSortOrder != EFileSortOrder::Unknown)
-	//{
-	//	std::sort(Files.begin(), Files.end(), [=](const std::filesystem::directory_entry& A, const std::filesystem::directory_entry& B) -> bool
-	//	{
-	//		const filesystem::file_time_type& NameA = A.last_write_time();
-	//		const filesystem::file_time_type& NameB = B.last_write_time();
-	//		return NameSortOrder == EFileSortOrder::Down ? NameA > NameB : NameA < NameB;
-	//	});
-	//}
 
 	for (int32_t i = 0; i < Files.size(); ++i)
 	{
@@ -350,20 +326,26 @@ void SFileDialog::ShowFiles(const ImVec2& Size)
 		{
 			FileSelectIndex = i;
 			CurrentFile = Files[i].path().filename().string();
+
+			if (ImGui::IsMouseDoubleClicked(0))
+			{
+				Stage = EDialogStage::Selected;
+			}
 		}
 		ImGui::NextColumn();
 		ImGui::TextUnformatted(std::to_string(Files[i].file_size()).c_str());
 		ImGui::NextColumn();
 		ImGui::TextUnformatted(Files[i].path().extension().string().c_str());
 		ImGui::NextColumn();
-		filesystem::file_time_type Time = Files[i].last_write_time();
-		auto st = std::chrono::time_point_cast<std::chrono::system_clock::duration>(Time - decltype(Time)::clock::now() + std::chrono::system_clock::now());
-		std::time_t Clock = std::chrono::system_clock::to_time_t(st);
+		std::filesystem::file_time_type Time = Files[i].last_write_time();
+		auto ST = std::chrono::time_point_cast<std::chrono::system_clock::duration>(Time - decltype(Time)::clock::now() + std::chrono::system_clock::now());
+		std::time_t Clock = std::chrono::system_clock::to_time_t(ST);
 		std::tm* TimeInfo = std::localtime(&Clock);
 		std::string DateName = Utils::Format("%d/%d/%d %.2d:%.2d:%.2d", TimeInfo->tm_mday, TimeInfo->tm_mon+1, TimeInfo->tm_year+1900, TimeInfo->tm_hour, TimeInfo->tm_min, TimeInfo->tm_sec);
 		ImGui::TextUnformatted(DateName.c_str());
 		ImGui::NextColumn();
 	}
+
 	ImGui::EndChild();
 }
 

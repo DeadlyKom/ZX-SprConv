@@ -10,7 +10,12 @@ ImFont* Utils::LoadFont(int32_t Size, int32_t Index)
 	return ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(MonoLisa_compressed_data, MonoLisa_compressed_size, (float)Size, 0, Index >= 0 ? &FontRanges[Index] : nullptr);
 }
 
-DelegateHandle Utils::OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::string)> OnCallback, std::string Path /*= ""*/, std::string FilterTypes /*= "*.*"*/)
+std::shared_ptr<FImage> Utils::LoadImage(std::string Filename)
+{
+	return FImageBase::Get().Load(Filename);
+}
+
+DelegateHandle Utils::OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path Path /*= ""*/, std::string FilterTypes /*= "*.*"*/)
 {
 	return SFileDialog::OpenWindow(FileDialogName, Mode, OnCallback, Path, FilterTypes);
 }

@@ -9,6 +9,7 @@
 #include <functional>
 #include "imgui.h"
 #include "Delegates.h"
+#include "Image.h"
 #include "Viewer\Windows\FileDialog.h"
 
 #define INDEX_NONE (-1)
@@ -17,7 +18,9 @@
 namespace Utils
 {
 	ImFont* LoadFont(int32_t Size, int32_t Index = INDEX_NONE);
-	DelegateHandle OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::string)> OnCallback, std::string Path = "", std::string FilterTypes = "*.*");
+	std::shared_ptr<FImage> LoadImage(std::string Filename);
+
+	DelegateHandle OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path Path = "", std::string FilterTypes = "*.*");
 	void CloseWindowFileDialog(DelegateHandle& Handle);
 
 	template <typename... Args>

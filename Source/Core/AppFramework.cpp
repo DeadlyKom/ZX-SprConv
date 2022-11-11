@@ -7,7 +7,7 @@
 
 namespace KeywordArg
 {
-	const wstring FULLSCREEN = TEXT("-fullscreen");
+	const std::wstring FULLSCREEN = TEXT("-fullscreen");
 }
 
 namespace
@@ -18,7 +18,7 @@ namespace
 		Fullscreen,
 	};
 
-	map<wstring, ECommandLine> CommandLineArray = { {TEXT("-fullscreen"), ECommandLine::Fullscreen} };
+	std::map<std::wstring, ECommandLine> CommandLineArray = { {TEXT("-fullscreen"), ECommandLine::Fullscreen} };
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
@@ -95,11 +95,11 @@ FAppFramework::~FAppFramework()
 
 FAppFramework& FAppFramework::Get()
 {
-	static shared_ptr<FAppFramework> InstanceAppFramework(new FAppFramework());
+	static std::shared_ptr<FAppFramework> InstanceAppFramework(new FAppFramework());
 	return *InstanceAppFramework.get();
 }
 
-int32_t FAppFramework::Launch(const vector<wstring>& Args, int32_t Width /*= -1*/, int32_t Height /*= -1*/)
+int32_t FAppFramework::Launch(const std::vector<std::wstring>& Args, int32_t Width /*= -1*/, int32_t Height /*= -1*/)
 {
 	// initialize
 	WindowWidth = Width;
@@ -137,11 +137,11 @@ void FAppFramework::Release()
 	}
 }
 
-void FAppFramework::Startup(const vector<wstring>& Args)
+void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 {
-	for(const wstring& Arg : Args)
+	for(const  std::wstring& Arg : Args)
 	{
-		const map<wstring, ECommandLine>::iterator& SearchIt = CommandLineArray.find(Arg);
+		const std::map< std::wstring, ECommandLine>::iterator& SearchIt = CommandLineArray.find(Arg);
 		const ECommandLine CommandLine = SearchIt != CommandLineArray.end() ? SearchIt->second : ECommandLine::Unknow;
 		switch (CommandLine)
 		{
@@ -161,12 +161,14 @@ void FAppFramework::Startup(const vector<wstring>& Args)
 
 void FAppFramework::Initialize()
 {
-	Viewer.Initialize();
+	Viewer = std::make_shared<SViewer>();
+	Viewer->Initialize();
 }
 
 void FAppFramework::Shutdown()
 {
-	Viewer.Shutdown();
+	Viewer->Shutdown();
+	Viewer.reset();
 
 	// internal
 	ShutdownGUI();
@@ -177,7 +179,7 @@ void FAppFramework::Shutdown()
 
 void FAppFramework::Render()
 {
-	Viewer.Render();
+	Viewer->Render();
 	OnRender.Broadcast();
 }
 

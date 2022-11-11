@@ -8,15 +8,22 @@
 SViewer::SViewer()
 {}
 
+std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
+{
+	const std::map<EWindowsType, std::shared_ptr<SWindow>>::iterator& SearchIt = Windows.find(Type);
+	return SearchIt != Windows.end() ? SearchIt->second : nullptr;
+}
+
 void SViewer::Initialize()
 {
-	Windows = { std::make_shared<SSprite>(),
-				std::make_shared<SImageList>(),
-				std::make_shared<SPalette>(), };
+	Windows = { { EWindowsType::ImageList,	std::make_shared<SImageList>()	},
+				{ EWindowsType::Sprite,		std::make_shared<SSprite>()		},
+				{ EWindowsType::Palette,	std::make_shared<SPalette>()	},
+			  };
 
-	for (int i = 0; i < Windows.size(); i++)
+	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
-		Windows.at(i)->Initialize();
+		Window.second->NativeInitialize(shared_from_this());
 	}
 }
 
@@ -33,19 +40,19 @@ void SViewer::Render()
 	{
 		if (ImGui::BeginMenu("Windows"))
 		{
-			for (int32_t i = 0; i < Windows.size(); i++)
+			for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 			{
-				if (Windows.at(i)->IsIncludeInWindows())
+				if (Window.second->IsIncludeInWindows())
 				{
-					if (ImGui::MenuItem(Windows.at(i)->GetName().c_str(), 0, Windows.at(i)->IsOpen()))
+					if (ImGui::MenuItem(Window.second->GetName().c_str(), 0, Window.second->IsOpen()))
 					{
-						if (Windows.at(i)->IsOpen())
+						if (Window.second->IsOpen())
 						{
-							Windows.at(i)->Close();
+							Window.second->Close();
 						}
 						else
 						{
-							Windows.at(i)->Open();
+							Window.second->Open();
 						}
 					}
 				}
@@ -54,41 +61,11 @@ void SViewer::Render()
 			ImGui::EndMenu();
 		}
 
-		//if (ImGui::BeginMenu("Options"))
-		//{
-		//	ImGui::MenuItem("Only affects the UI. For example,", 0, false, false);
-		//	ImGui::MenuItem("how often the Registers", 0, false, false);
-		//	ImGui::MenuItem("Window updates values etc.", 0, false, false);
-		//	if (ImGui::DragInt("FPS", &_TargetFPS, 1, 5, 60))
-		//	{
-		//		SetFPS(_TargetFPS);
-		//	}
-		//	ImGui::MenuItem("Default is 3.2mhz.", 0, false, false);
-		//	ImGui::MenuItem("Beware: It will affect DELA/DELB.", 0, false, false);
-		//	if (ImGui::DragFloat("CPU Clock", &cpu_speed, 0.1f, 0.1f, 10.0f, "%.1fmhz"))
-		//	{
-		//		if (cpu_speed < 0.1f)
-		//			cpu_speed = 0.1f;
-		//		if (cpu_speed > 10.0f)
-		//			cpu_speed = 10.0f;
-		//		Simulation::SetClock((int)(cpu_speed * 1000000), cpu_accuracy);
-		//	}
-		//	ImGui::MenuItem("CPU cycles are divided into steps.", 0, false, false);
-		//	ImGui::MenuItem("Warning: Too many slows the clock speed.", 0, false, false);
-		//	if (ImGui::DragInt("Clock Accuracy", &cpu_accuracy, 1, 10, 1000))
-		//	{
-		//		if (cpu_accuracy < 1)
-		//			cpu_accuracy = 1;
-		//		Simulation::SetClock((int)(cpu_speed * 1000000), cpu_accuracy);
-		//	}
-		//	ImGui::EndMenu();
-		//}
-
 		ImGui::EndMainMenuBar();
 	}
 
-	for (int32_t i = 0; i < Windows.size(); i++)
+	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
-		Windows.at(i)->Render();
+		Window.second->Render();
 	}
 }

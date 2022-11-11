@@ -21,28 +21,29 @@
 #include "Viewer\Viewer.h"
 #include "Delegates.h"
 
-using namespace std;
+class FImageBase;
 
-class FAppFramework : enable_shared_from_this<FAppFramework>
+class FAppFramework : public std::enable_shared_from_this<FAppFramework>
 {
-public:
-	DECLARE_MULTICAST_DELEGATE(FOnRender);
+	friend FImageBase;
+	DECLARE_MULTICAST_DELEGATE(FRenderDelegate);
 
+public:
 	FAppFramework();
 	virtual ~FAppFramework();
 	static FAppFramework& Get();
 
-	int32_t Launch(const vector<wstring>& Args, int32_t Width = -1, int32_t Height = -1);
+	int32_t Launch(const std::vector<std::wstring>& Args, int32_t Width = -1, int32_t Height = -1);
 	void Release();
 
-	virtual void Startup(const vector<wstring>& Args);
+	virtual void Startup(const  std::vector<std::wstring>& Args);
 	virtual void Initialize();
 	virtual void Shutdown();
 	virtual void Tick(float DeltaTime) {};
 	virtual void Render();
 	virtual void SetRectWindow(uint16_t Width, uint16_t Height);
 
-	FOnRender OnRender;
+	FRenderDelegate OnRender;
 
 private:
 	void Register();
@@ -73,8 +74,8 @@ private:
 	uint32_t WindowWidth;
 	uint32_t WindowHeight;
 
-	wstring ClassName;
-	wstring WindowName;
+	std::wstring ClassName;
+	std::wstring WindowName;
 
 	bool bVsync;
 
@@ -84,5 +85,5 @@ private:
 	ImFont* SevenSegmentFont;
 	int32_t FontSize;
 
-	SViewer Viewer;
+	std::shared_ptr<SViewer> Viewer;
 };
