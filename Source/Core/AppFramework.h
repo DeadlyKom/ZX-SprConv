@@ -1,25 +1,7 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-
-#include <d3d11.h>
-#include <tchar.h>
-#include <stdint.h>
-#include <windows.h>
-
-#include <map>
-#include <vector>
-#include <memory>
-#include <string>
-#include <codecvt>
-#include <functional>
-#include <algorithm>
-
-#include "imgui.h"
-
-#include "Utils.h"
+#include <CoreMinimal.h>
 #include "Viewer\Viewer.h"
-#include "Delegates.h"
 
 class FImageBase;
 
@@ -42,6 +24,9 @@ public:
 	virtual void Tick(float DeltaTime) {};
 	virtual void Render();
 	virtual void SetRectWindow(uint16_t Width, uint16_t Height);
+
+	std::shared_ptr<SViewer> GetViewer() const { return Viewer; };
+	std::string LoadShaderResource(WORD ID);
 
 	FRenderDelegate OnRender;
 

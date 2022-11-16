@@ -1,18 +1,7 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
+#include <CoreMinimal.h>
 
-#include <string>
-#include <stdio.h>
-#include <stdint.h>
-#include <windows.h>
-#include <functional>
-#include "imgui.h"
-#include "Delegates.h"
-#include "Image.h"
-#include "Viewer\Windows\FileDialog.h"
-
-#define INDEX_NONE (-1)
 #define BUFFER_SIZE 512
 
 namespace Utils

@@ -16,6 +16,9 @@
     <Filter Include="Source\Fonts">
       <UniqueIdentifier>{d5379dd3-69f0-4998-b00b-9d36928cea54}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Shader">
+      <UniqueIdentifier>{18aff063-1eff-4671-be2c-abff25d1fc48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -97,6 +100,15 @@
     <ClInclude Include="..\Source\Core\Image.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\Core\CoreMinimal.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Core\Math_.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Core\Transform.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZX-Convert.rc" />
@@ -104,5 +116,15 @@
   <ItemGroup>
     <Image Include="Icone.ico" />
     <Image Include="IconeWindow.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\Source\Shader\Grid.hlsl">
+      <Filter>Source\Shader</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Source\Shader\MarchingAnts.hlsli">
+      <Filter>Source\Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

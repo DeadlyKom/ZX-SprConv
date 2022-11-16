@@ -17,20 +17,23 @@ std::shared_ptr<FImage> FImageBase::Load(std::string Filename)
 {
 	std::shared_ptr<FImage> Image(new FImage());
 
+	uint32_t Width, Height;
 	// load from disk into a raw RGBA buffer
-	uint8_t* ImageData = stbi_load(Filename.c_str(), (int*)&Image->Width, (int*)&Image->Height, NULL, 4);
+	uint8_t* ImageData = stbi_load(Filename.c_str(), (int*)&Width, (int*)&Height, NULL, 4);
 	if (ImageData == nullptr)
 	{
 		return nullptr;
 	}
+	Image->Width = (float)Width;
+	Image->Height = (float)Height;
 
 	FAppFramework& Framework = FAppFramework::Get();
 
 	// create texture
 	D3D11_TEXTURE2D_DESC Texture2D;
 	ZeroMemory(&Texture2D, sizeof(Texture2D));
-	Texture2D.Width = Image->Width;
-	Texture2D.Height = Image->Height;
+	Texture2D.Width = Width;
+	Texture2D.Height = Height;
 	Texture2D.MipLevels = 1;
 	Texture2D.ArraySize = 1;
 	Texture2D.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -42,7 +45,7 @@ std::shared_ptr<FImage> FImageBase::Load(std::string Filename)
 	ID3D11Texture2D* Texture = NULL;
 	D3D11_SUBRESOURCE_DATA SubResource;
 	SubResource.pSysMem = ImageData;
-	SubResource.SysMemPitch = Texture2D.Width * 4;
+	SubResource.SysMemPitch = Width * 4;
 	SubResource.SysMemSlicePitch = 0;
 	Framework.Device->CreateTexture2D(&Texture2D, &SubResource, &Texture);
 

@@ -162,12 +162,16 @@ void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 void FAppFramework::Initialize()
 {
 	Viewer = std::make_shared<SViewer>();
-	Viewer->Initialize();
+
+	FNativeDataInitialize Data;
+	Data.Device = Device;
+	Data.DeviceContext = DeviceContext;
+	Viewer->NativeInitialize(Data);
 }
 
 void FAppFramework::Shutdown()
 {
-	Viewer->Shutdown();
+	Viewer->Destroy();
 	Viewer.reset();
 
 	// internal
@@ -191,6 +195,23 @@ void FAppFramework::SetRectWindow(uint16_t Width, uint16_t Height)
 		SwapChain->ResizeBuffers(0, (UINT)Width, (UINT)Height, DXGI_FORMAT_UNKNOWN, 0);
 		CreateRenderTarget();
 	}
+}
+
+std::string FAppFramework::LoadShaderResource(WORD ID)
+{
+	HRSRC hRes = FindResource(hInstance, MAKEINTRESOURCE(ID), TEXT("SHADER"));
+	HGLOBAL hGlob = hRes != NULL ? LoadResource(hInstance, hRes) : NULL;
+	LPVOID lpResLock = hGlob != NULL ? LockResource(hGlob) : NULL;
+	if (lpResLock == NULL)
+	{
+		return "";
+	}
+
+	DWORD Size = SizeofResource(hInstance, hRes);
+	const char* pData = reinterpret_cast<const char*>(LockResource(hGlob));
+	std::string Result(pData, Size);
+	FreeResource(hGlob);
+	return Result;
 }
 
 void FAppFramework::Register()
@@ -401,6 +422,8 @@ void FAppFramework::Idle()
 
 	Render();
 
+	//ImGui::ShowMetricsWindow();
+
 	ImGui::PopFont();
 
 	// rendering ImGui frame
@@ -411,7 +434,7 @@ void FAppFramework::Idle()
 		DeviceContext->ClearRenderTargetView(RenderTargetView, clear_color_with_alpha);
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-		// Update and Render additional Platform Windows
+		// update and Render additional Platform Windows
 		if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			ImGui::UpdatePlatformWindows();

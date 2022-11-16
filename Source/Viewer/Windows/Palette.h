@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core\Window.h"
+#include <CoreMinimal.h>
 
 class SPalette : public SWindow
 {

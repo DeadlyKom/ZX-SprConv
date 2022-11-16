@@ -14,23 +14,21 @@ std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
 	return SearchIt != Windows.end() ? SearchIt->second : nullptr;
 }
 
-void SViewer::Initialize()
+void SViewer::NativeInitialize(FNativeDataInitialize Data)
 {
 	Windows = { { EWindowsType::ImageList,	std::make_shared<SImageList>()	},
 				{ EWindowsType::Sprite,		std::make_shared<SSprite>()		},
 				{ EWindowsType::Palette,	std::make_shared<SPalette>()	},
 			  };
-
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
-		Window.second->NativeInitialize(shared_from_this());
+		Data.Parent = shared_from_this();
+		Window.second->NativeInitialize(Data);
 	}
 }
 
-void SViewer::Shutdown()
-{
-
-}
+void SViewer::Initialize()
+{}
 
 void SViewer::Render()
 {
@@ -67,5 +65,13 @@ void SViewer::Render()
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
 		Window.second->Render();
+	}
+}
+
+void SViewer::Destroy()
+{
+	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
+	{
+		Window.second->Destroy();
 	}
 }

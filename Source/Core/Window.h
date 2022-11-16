@@ -2,7 +2,17 @@
 
 #include <memory>
 #include <string>
+#include <d3d11.h>
 #include "imgui.h"
+
+class SWindow;
+
+struct FNativeDataInitialize
+{
+	std::shared_ptr<SWindow> Parent = nullptr;
+	ID3D11Device* Device = nullptr;
+	ID3D11DeviceContext* DeviceContext = nullptr;
+};
 
 class SWindow : public std::enable_shared_from_this<SWindow>
 {
@@ -12,9 +22,9 @@ public:
 		, Parent(nullptr)
 	{}
 
-	void NativeInitialize(std::shared_ptr<SWindow> _Parent) 
+	virtual void NativeInitialize(FNativeDataInitialize Data)
 	{
-		Parent = _Parent;
+		Parent = Data.Parent;
 		Initialize();
 	}
 	virtual void Initialize() {}
@@ -23,7 +33,7 @@ public:
 		bAppearing = ++TickCounter < 3;
 	}
 	virtual void Update() {}
-	virtual void PreDestroy() {}
+	virtual void Destroy() {}
 
 	virtual void SetOpen(bool _bOpen) { bOpen = _bOpen; }
 	virtual void Open() { bOpen = true; }

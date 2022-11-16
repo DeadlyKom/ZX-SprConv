@@ -1,5 +1,6 @@
 #include "ImageList.h"
 #include "Core\Utils.h"
+#include "Viewer\Windows\FileDialog.h"
 
 void SImageList::Initialize()
 {

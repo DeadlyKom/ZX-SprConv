@@ -1,21 +1,24 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-
-#include <memory>
-#include <string>
-#include <vector>
-#include <d3d11.h>
-#include <stdint.h>
-#include <windows.h>
-#include "imgui.h"
+#include <CoreMinimal.h>
 
 struct FImage
 {
-	void Draw() { ImGui::Image((void*)Texture, ImVec2((float)Width, (float)Height)); }
+	FImage()
+		: Texture (nullptr)
+	{}
 
-	uint32_t Width;
-	uint32_t Height;
+	void Draw() { ImGui::Image((void*)Texture, Size); }
+
+	union
+	{
+		ImVec2 Size;
+		struct
+		{
+			float Width;
+			float Height;
+		};
+	};
 
 	ID3D11ShaderResourceView* Texture;
 };

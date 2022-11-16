@@ -1,16 +1,6 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-
-#include <map>
-#include <string>
-#include <stdint.h>
-#include <vector>
-#include <windows.h>
-#include <memory>
-
-#include "imgui.h"
-#include "Core\Window.h"
+#include <CoreMinimal.h>
 
 enum class EWindowsType
 {
@@ -26,9 +16,10 @@ public:
 
 	std::shared_ptr<SWindow> GetWindow(EWindowsType Type);
 
-	virtual void Initialize();
-	virtual void Shutdown();
-	virtual void Render();
+	virtual void NativeInitialize(FNativeDataInitialize Data) override;
+	virtual void Initialize() override;
+	virtual void Render() override;
+	virtual void Destroy() override;
 
 private:
 	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;

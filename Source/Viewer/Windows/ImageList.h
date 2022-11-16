@@ -1,9 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <filesystem>
-#include "Core\Window.h"
-#include "core\Delegates.h"
+#include <CoreMinimal.h>
 
 class SImageList : public SWindow
 {

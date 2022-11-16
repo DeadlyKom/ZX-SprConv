@@ -1,6 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "Resource.h"
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -55,6 +55,16 @@ END
 IDI_SMALL               ICON                    "Icone.ico"
 
 IDI_WINDOW              ICON                    "IconeWindow.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// SHADER
+//
+
+IDR_PS_GRID             SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\Grid.hlsl"
+
+IDR_PS_MARCHING_ANTS    SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\MarchingAnts.hlsli"
 
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////

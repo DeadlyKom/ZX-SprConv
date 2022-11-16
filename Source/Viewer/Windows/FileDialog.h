@@ -1,11 +1,6 @@
 #pragma once
 
-#include <string>
-#include <functional>
-#include <filesystem>
-#include "Core\Delegates.h"
-#include "Core\Window.h"
-#include "imgui.h"
+#include <CoreMinimal.h>
 
 enum class EFileSortOrder
 {
