@@ -9,6 +9,7 @@ public:
 	virtual void NativeInitialize(FNativeDataInitialize Data) override;
 	virtual void Initialize() override;
 	virtual void Render() override;
+	virtual void Tick(float DeltaTime);
 	virtual void Destroy() override;
 
 	// callback
@@ -20,6 +21,9 @@ private:
 	void SetScale(ImVec2 NewScale);
 	void SetImagePosition(ImVec2 NewPosition);
 	void RoundImagePosition();
+	void ChangeScale();
+	void CreateTextureMA();
+	void UpdateTextureMA();
 	Transform2D GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize);
 
 	// event
@@ -42,34 +46,33 @@ private:
 	ImVec4 GridColor = { 0.025f, 0.025f, 0.15f, 0.0f };
 	ImVec4 BackgroundColor = { 0.0f, 1.0f, 0.0f, 0.0f };	// color used for alpha blending
 
-	ImVec2 uv0;
-	ImVec2 uv1;
+	ImVec2 ScaleMin = { 0.03125f, 0.03125f };
+	ImVec2 ScaleMax = { 8, 8 };
 
-	ImVec2 ScaleMin = { 0.02f, 0.02f };
-	ImVec2 ScaleMax = { 500, 500 };
+	float PixelAspectRatio = 1.0f;							// values other than 1 not supported yet
+	float MinimumGridSize = 4.0f;							// don't draw the grid if lines would be closer than MinimumGridSize pixels
 
-	float PixelAspectRatio = 1.0f;							// Values other than 1 not supported yet
-	float MinimumGridSize = 4.0f;							// Don't draw the grid if lines would be closer than MinimumGridSize pixels
+	float ZoomRate = 2.0f;									// how fast mouse wheel affects zoom
 
-	float ZoomRate = 2.0f;									// How fast mouse wheel affects zoom
-
-	// View State
-	bool bDragging = false;									// Is user currently dragging to pan view
+	// view state
+	bool bDragging = false;									// is user currently dragging to pan view
 	
-	ImVec2 ImagePosition = { 0.5f, 0.5f };					// The UV value at the center of the current view
+	ImVec2 ImagePosition = { 0.5f, 0.5f };					// the UV value at the center of the current view
 	ImVec2 Scale = { 1.0f, 1.0f };							// 1 pixel is 1 texel
+	ImVec2 OldScale = { 1.0f, 1.0f };
 	
-	ImVec2 PanelTopLeftPixel = { 0, 0 };					// Top left of view in ImGui pixel coordinates
-	ImVec2 PanelSize = { 0, 0 };							// Size of area allocated to drawing the image in pixels.
+	ImVec2 PanelTopLeftPixel = { 0.0f, 0.0f };				// top left of view in ImGui pixel coordinates
+	ImVec2 PanelSize = { 0.0f, 0.0f };						// size of area allocated to drawing the image in pixels.
 
-	ImVec2 ViewTopLeftPixel = { 0, 0 };						// Position in ImGui pixel coordinates
-	ImVec2 ViewSize = { 0, 0 };								// Rendered size of current image. This could be smaller than panel size if user has zoomed out.
-	ImVec2 ViewSizeUV = { 0, 0 };							// Visible region of the texture in UV coordinates
+	ImVec2 ViewTopLeftPixel = { 0.0f, 0.0f };				// position in ImGui pixel coordinates
+	ImVec2 ViewSize = { 0.0f, 0.0f };						// rendered size of current image. This could be smaller than panel size if user has zoomed out.
+	ImVec2 ViewSizeUV = { 0.0f, 0.0f };						// visible region of the texture in UV coordinates
 	
-	/* Conversion transforms to go back and forth between screen pixels  (what ImGui considers screen pixels) and texels*/
+	/* conversion transforms to go back and forth between screen pixels  (what ImGui considers screen pixels) and texels*/
 	Transform2D TexelsToPixels;
 	Transform2D PixelsToTexels;
 
+	uint32_t* MarchingAntsData;
 	std::shared_ptr<FImage> Image;
 	std::shared_ptr<FImage> MarchingAnts;
 };

@@ -2,6 +2,7 @@
 #include "Image.h"
 #include "Fonts\MonoLisa.cpp"
 #include "Fonts\SevenSegment.cpp"
+#include "Fonts\ZX-Spectrum.cpp"
 #include "Viewer\Windows\FileDialog.h"
 
 const ImWchar FontRanges[] = { 0x0020, 0x03ff, 0 };

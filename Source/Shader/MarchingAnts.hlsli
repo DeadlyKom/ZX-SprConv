@@ -20,28 +20,33 @@ Texture2D Texture0;
 
 float4 main(PS_INPUT Input) : SV_TARGET
 {
-    const int2 texAddrOffsets[8] = {
-            int2(-1, -1),   // 0
-            int2( 0, -1),   // 1
-            int2( 1, -1),   // 2
-            int2(-1,  0),   // 3
-            int2( 1,  0),   // 4
-            int2(-1,  1),   // 5
-            int2( 0,  1),   // 6
-            int2( 1,  1),   // 7
+    const int2 TexAddrOffsets[8] =
+    {
+            int2(-1, -1),
+            int2( 0, -1),
+            int2( 1, -1),
+            int2(-1,  0),
+            int2( 1,  0),
+            int2(-1,  1),
+            int2( 0,  1),
+            int2( 1,  1),
     };
 
-    float lum[8];
+    uint Width, Height, Levels;
+    Texture0.GetDimensions(0, Width, Height, Levels);
+    //return Texture0.Load(int3((int2(Input.uv * float2(Width, Height))), 0));
+
+    float Lum[8];
     for (int i = 0; i < 8; ++i)
     {
-        float3 color = Texture0.Load(int3((int2(Input.uv * TextureSize * 16.0) + texAddrOffsets[i]), 0));
-        lum[i] = sqrt((color.x * color.x) + (color.y * color.y) + (color.z * color.z));
+        float3 Color = Texture0.Load(int3((int2(Input.uv * float2(Width, Height) ) + TexAddrOffsets[i]), 0));
+        Lum[i] = sqrt((Color.x* Color.x) + (Color.y * Color.y) + (Color.z * Color.z));
     }
 
-    float x = 1 * lum[0] + 2 * lum[3] + 1 * lum[5] - 1 * lum[2] - 2 * lum[4] - 1 * lum[7];
-    float y = 1 * lum[0] + 2 * lum[1] + 1 * lum[2] - 1 * lum[5] - 2 * lum[6] - 1 * lum[7];
-    float sobel = sqrt(x * x + y * y);
+    float x = 1 * Lum[0] + 2 * Lum[3] + 1 * Lum[5] - 1 * Lum[2] - 2 * Lum[4] - 1 * Lum[7];
+    float y = 1 * Lum[0] + 2 * Lum[1] + 1 * Lum[2] - 1 * Lum[5] - 2 * Lum[6] - 1 * Lum[7];
+    float Sobel = sqrt(x * x + y * y);
 
-    float c = ((int)(Input.pos.x + Input.pos.y + TimeCounter * 16) % 4);
-    return (c < 2 ? float4(0, 0, 0, sobel) : float4(1, 1, 1, sobel));
+    float C = ((int)(Input.pos.x + Input.pos.y + TimeCounter * 16) % 4);
+    return (C < 2 ? float4(0, 0, 0, Sobel) : float4(1, 1, 1, Sobel));
 }

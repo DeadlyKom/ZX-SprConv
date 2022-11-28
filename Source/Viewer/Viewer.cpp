@@ -68,6 +68,14 @@ void SViewer::Render()
 	}
 }
 
+void SViewer::Tick(float DeltaTime)
+{
+	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
+	{
+		Window.second->Tick(DeltaTime);
+	}
+}
+
 void SViewer::Destroy()
 {
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)

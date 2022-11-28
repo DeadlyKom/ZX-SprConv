@@ -43,6 +43,7 @@ SSprite::SSprite()
 	, PS_MarchingAnts(nullptr)
 	, PS_Grid(nullptr)
 	, PCB_MarchingAnts(nullptr)
+	, MarchingAntsData(nullptr)
 {}
 
 void SSprite::NativeInitialize(FNativeDataInitialize Data)
@@ -135,7 +136,13 @@ void SSprite::Initialize()
 	// ToDo debug
 	{
 		Image = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7.png");
-		MarchingAnts = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7_MA.png");
+		//MarchingAnts = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7_MA.png");
+		if (Image != nullptr)
+		{
+			MarchingAntsData = new uint32_t[Image->GetLength()];
+			ZeroMemory(MarchingAntsData, Image->GetLength() * Image->GetFormatSize());
+			CreateTextureMA();
+		}
 	}
 }
 
@@ -178,7 +185,7 @@ void SSprite::Render()
 		{
 			// not big enough to horizontally fill view
 			viewSize.x = ImFloor(TextureSizePixels.x);
-			DrawImageOffset.x += ImFloor((AvailablePanelSize.x - TextureSizePixels.x) / 2);
+			DrawImageOffset.x += ImFloor((AvailablePanelSize.x - TextureSizePixels.x) * 0.5f);
 			uv0.x = 0.0f;
 			uv1.x = 1.0f;
 			viewSizeUV.x = 1.0f;
@@ -188,7 +195,7 @@ void SSprite::Render()
 		{
 			// not big enough to vertically fill view
 			viewSize.y = ImFloor(TextureSizePixels.y);
-			DrawImageOffset.y += ImFloor((AvailablePanelSize.y - TextureSizePixels.y) / 2);
+			DrawImageOffset.y += ImFloor((AvailablePanelSize.y - TextureSizePixels.y) * 0.5f);
 			uv0.y = 0.0f;
 			uv1.y = 1.0f;
 			viewSizeUV.y = 1.0f;
@@ -200,6 +207,8 @@ void SSprite::Render()
 	ViewSizeUV = viewSizeUV;
 
 	{
+		ChangeScale();
+
 		// see comment above
 		ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f;
 
@@ -214,12 +223,15 @@ void SSprite::Render()
 		ImRect bb(window->DC.CursorPos, window->DC.CursorPos + viewSize);
 
 		// callback for using our own image shader 
-		ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Image->Texture);
-		ImGui::GetWindowDrawList()->AddImage(Image->Texture, bb.Min, bb.Max, uv0, uv1);
+		ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Image->GetShaderResourceView());
+		ImGui::GetWindowDrawList()->AddImage(Image->GetShaderResourceView(), bb.Min, bb.Max, uv0, uv1);
 
-		// callback for using our own image shader 
-		ImGui::GetWindowDrawList()->AddCallback(DrawCallback, MarchingAnts->Texture);
-		ImGui::GetWindowDrawList()->AddImage(MarchingAnts->Texture, bb.Min, bb.Max, uv0, uv1);
+		if (MarchingAnts != nullptr)
+		{
+			// callback for using our own image shader 
+			ImGui::GetWindowDrawList()->AddCallback(DrawCallback, MarchingAnts->GetShaderResourceView());
+			ImGui::GetWindowDrawList()->AddImage(MarchingAnts->GetShaderResourceView(), bb.Min, bb.Max, uv0, uv1);
+		}
 
 		// reset callback for using our own image shader 
 		ImGui::GetWindowDrawList()->AddCallback(ImDrawCallback_ResetRenderState, nullptr);
@@ -239,7 +251,6 @@ void SSprite::Render()
 
 		// dragging
 		{
-
 			// start drag
 			if (!bDragging && Hovered && IO.MouseClicked[ImGuiMouseButton_Left])
 			{
@@ -260,13 +271,13 @@ void SSprite::Render()
 			}
 		}
 
-		if (Hovered && IO.MouseWheel != 0)
+		if (Hovered && IO.MouseWheel != 0.0f)
 		{
 			float LocalScale = Scale.y;
 			float PrevScale = LocalScale;
 
 			bool keepTexelSizeRegular = LocalScale > MinimumGridSize;
-			if (IO.MouseWheel > 0)
+			if (IO.MouseWheel > 0.0f)
 			{
 				LocalScale *= ZoomRate;
 				if (keepTexelSizeRegular)
@@ -288,36 +299,43 @@ void SSprite::Render()
 			}
 			/* to make it easy to get back to 1:1 size we ensure that we stop
 			 * here without going straight past it*/
-			if ((PrevScale < 1 && LocalScale > 1) || (PrevScale > 1 && LocalScale < 1))
+			if ((PrevScale < 1.0f && LocalScale > 1.0f) || (PrevScale > 1.0f && LocalScale < 1.0f))
 			{
-				LocalScale = 1;
+				LocalScale = 1.0f;
 			}
 			SetScale(ImVec2(PixelAspectRatio * LocalScale, LocalScale));
 			SetImagePosition(ImagePosition + (MouseUV - ImagePosition) * (1.0f - PrevScale / LocalScale));
 		}
 	}
 
-	//{
-	//	ImGui::Text("PixelAspectRatio : %f", PixelAspectRatio);
-	//	ImGui::Text("MinimumGridSize : %f", MinimumGridSize);
-	//	ImGui::Text("ZoomRate : %f", ZoomRate);
-	//	ImGui::Text("bDragging : %i", bDragging);
-	//
-	//	ImGui::Text("ContentRegionAvail : (%f, %f)", ContentRegionAvail.x, ContentRegionAvail.y);
-	//	ImGui::Text("ImagePosition : (%f, %f)", ImagePosition.x, ImagePosition.y);
-	//	ImGui::Text("Scale : (%f, %f)", Scale.x, Scale.y);
-	//	ImGui::Text("PanelTopLeftPixel : (%f, %f)", PanelTopLeftPixel.x, PanelTopLeftPixel.y);
-	//	ImGui::Text("PanelSize : (%f, %f)", PanelSize.x, PanelSize.y);
-	//	ImGui::Text("ViewTopLeftPixel : (%f, %f)", ViewTopLeftPixel.x, ViewTopLeftPixel.y);
-	//	ImGui::Text("ViewSize : (%f, %f)", ViewSize.x, ViewSize.y);
-	//	ImGui::Text("ViewSizeUV : (%f, %f)", ViewSizeUV.x, ViewSizeUV.y);
-	//	ImGui::Text("UV0 : (%f, %f)", uv0.x, uv0.y);
-	//	ImGui::Text("UV1 : (%f, %f)", uv1.x, uv1.y);
-	//}
+	{
+		ImGui::Begin("Debug");
+
+		ImGui::Text("PixelAspectRatio : %f", PixelAspectRatio);
+		ImGui::Text("MinimumGridSize : %f", MinimumGridSize);
+		ImGui::Text("ZoomRate : %f", ZoomRate);
+		ImGui::Text("bDragging : %i", bDragging);
+
+		ImGui::Text("ContentRegionAvail : (%f, %f)", ContentRegionAvail.x, ContentRegionAvail.y);
+		ImGui::Text("ImagePosition : (%f, %f)", ImagePosition.x, ImagePosition.y);
+		ImGui::Text("Scale : (%f, %f)", Scale.x, Scale.y);
+		ImGui::Text("PanelTopLeftPixel : (%f, %f)", PanelTopLeftPixel.x, PanelTopLeftPixel.y);
+		ImGui::Text("PanelSize : (%f, %f)", PanelSize.x, PanelSize.y);
+		ImGui::Text("ViewTopLeftPixel : (%f, %f)", ViewTopLeftPixel.x, ViewTopLeftPixel.y);
+		ImGui::Text("ViewSize : (%f, %f)", ViewSize.x, ViewSize.y);
+		ImGui::Text("ViewSizeUV : (%f, %f)", ViewSizeUV.x, ViewSizeUV.y);
+		ImGui::Text("UV0 : (%f, %f)", uv0.x, uv0.y);
+		ImGui::Text("UV1 : (%f, %f)", uv1.x, uv1.y);
+		
+		ImGui::End();
+	}
 
 	ImGui::End();
+}
 
-	TimeCounter += 1.0f / 60.0f;
+void SSprite::Tick(float DeltaTime)
+{
+	TimeCounter += DeltaTime;
 }
 
 void SSprite::Destroy()
@@ -352,6 +370,10 @@ void SSprite::Destroy()
 		PS_MarchingAnts->Release();
 		PS_MarchingAnts = nullptr;
 	}
+	if (MarchingAntsData != nullptr)
+	{
+		delete[] MarchingAntsData;
+	}
 }
 
 void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
@@ -361,7 +383,7 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 		return;
 	}
 
-	if (CMD->UserCallbackData == Image->Texture)
+	if (CMD->UserCallbackData == Image->GetShaderResourceView())
 	{
 		if (PS_Grid == nullptr || PCB_Grid == nullptr)
 		{
@@ -389,7 +411,7 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 		DeviceContext->PSSetShader(PS_Grid, NULL, 0);
 		DeviceContext->PSSetConstantBuffers(0, 1, &PCB_Grid);
 	}
-	else if (CMD->UserCallbackData == MarchingAnts->Texture)
+	else if (CMD->UserCallbackData == MarchingAnts->GetShaderResourceView())
 	{
 		if (PS_MarchingAnts == nullptr || PCB_MarchingAnts == nullptr)
 		{
@@ -487,6 +509,61 @@ void SSprite::RoundImagePosition()
 	ImagePosition = (TopLeftSubTexel + ViewSize * 0.5f) / (Scale * Image->Size);
 }
 
+void SSprite::ChangeScale()
+{
+	if (Scale == OldScale)
+	{
+		return;
+	}
+	OldScale = Scale;
+
+	UpdateTextureMA();
+}
+
+void SSprite::CreateTextureMA()
+{
+	if (MarchingAnts == nullptr)
+	{
+		const uint32_t Width = (uint32_t)Image->Width;
+		const uint32_t Height = (uint32_t)Image->Height;
+		
+		// fill
+		ImVec2 Size = { 32, 32 };
+		ImVec2 Position = { 64, 32 };
+		for (uint32_t y = (uint32_t)Position.y; y < (uint32_t)(Position.y + Size.y); ++y)
+		{
+			for (uint32_t x = (uint32_t)Position.x; x < (uint32_t)(Position.x + Size.x); ++x)
+			{
+				MarchingAntsData[y * Width + x] = ImColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+
+		//
+		uint32_t* ImageData = new uint32_t[Width * Height];
+		for (uint32_t y = 0; y < Height; ++y)
+		{
+			for (uint32_t x = 0; x < Width; ++x)
+			{
+				ImU32& Color = MarchingAntsData[y * Width + x];
+				ImageData[y * Width + x] = (ImU32)Color;
+			}
+		}
+
+		MarchingAnts = FImageBase::Get().CreateTexture(ImageData, Image->Size, D3D11_CPU_ACCESS_FLAG::D3D11_CPU_ACCESS_WRITE, D3D11_USAGE::D3D11_USAGE_DYNAMIC);
+		delete[] ImageData;
+	}
+}
+
+void SSprite::UpdateTextureMA()
+{
+	if (MarchingAnts == nullptr)
+	{
+		return;
+	}
+
+	MarchingAnts->Resize(MarchingAntsData, Image->Size, Image->Size * Scale);
+}
+
 Transform2D SSprite::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
 {
 	ImVec2 uvToPixel = screenViewSize / uvViewSize;
@@ -500,5 +577,29 @@ Transform2D SSprite::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSi
 
 void SSprite::OnSelectedFileImage(const std::filesystem::directory_entry& Path)
 {
+	if (Image != nullptr)
+	{
+		Image->Release();
+		Image = nullptr;
+	}
+	if (MarchingAnts != nullptr)
+	{
+		MarchingAnts->Release();
+		MarchingAnts = nullptr;
+	}
+	if (MarchingAntsData != nullptr)
+	{
+		delete[] MarchingAntsData;
+		MarchingAntsData = nullptr;
+	}
+
 	Image = Utils::LoadImage(Path.path().string());
+	if (Image != nullptr)
+	{
+		MarchingAntsData = new uint32_t[Image->GetLength()];
+		ZeroMemory(MarchingAntsData, Image->GetLength() * Image->GetFormatSize());
+		CreateTextureMA();
+	}
+
+	Scale = OldScale = { 1.0f, 1.0f };
 }

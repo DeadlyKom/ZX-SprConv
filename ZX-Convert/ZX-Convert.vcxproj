@@ -154,6 +154,7 @@
     <ClCompile Include="..\Source\Fonts\Fonts.cpp" />
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp" />
     <ClCompile Include="..\Source\Fonts\SevenSegment.cpp" />
+    <ClCompile Include="..\Source\Fonts\ZX-Spectrum.cpp" />
     <ClCompile Include="..\Source\Viewer\Viewer.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\FileDialog.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\ImageList.cpp" />

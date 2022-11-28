@@ -61,6 +61,9 @@
     <ClCompile Include="..\Source\Core\Image.cpp">
       <Filter>Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Fonts\ZX-Spectrum.cpp">
+      <Filter>Source\Fonts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h">

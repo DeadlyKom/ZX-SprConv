@@ -7,6 +7,7 @@ class FImageBase;
 
 class FAppFramework : public std::enable_shared_from_this<FAppFramework>
 {
+	friend FImage;
 	friend FImageBase;
 	DECLARE_MULTICAST_DELEGATE(FRenderDelegate);
 
@@ -21,7 +22,7 @@ public:
 	virtual void Startup(const  std::vector<std::wstring>& Args);
 	virtual void Initialize();
 	virtual void Shutdown();
-	virtual void Tick(float DeltaTime) {};
+	virtual void Tick(float DeltaTime);
 	virtual void Render();
 	virtual void SetRectWindow(uint16_t Width, uint16_t Height);
 

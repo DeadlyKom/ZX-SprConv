@@ -84,7 +84,6 @@ FAppFramework::FAppFramework()
 	, Font(nullptr)
 	, SevenSegmentFont(nullptr)
 	, FontSize(15)
-	//, HandleCounter(0)
 {
 	ScreenWidth = GetSystemMetrics(SM_CXSCREEN);
 	ScreenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -171,14 +170,22 @@ void FAppFramework::Initialize()
 
 void FAppFramework::Shutdown()
 {
-	Viewer->Destroy();
-	Viewer.reset();
+	if (Viewer != nullptr)
+	{
+		Viewer->Destroy();
+		Viewer.reset();
+	}
 
 	// internal
 	ShutdownGUI();
 	CleanupDeviceD3D();
 	DestroyWindow(hwndAppFramework);
 	Release();
+}
+
+void FAppFramework::Tick(float DeltaTime)
+{
+	Viewer->Tick(DeltaTime);
 }
 
 void FAppFramework::Render()
@@ -283,11 +290,11 @@ bool FAppFramework::CreateDeviceD3D()
 	sd.Windowed = TRUE;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	UINT createDeviceFlags = 0;
-	//createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-	D3D_FEATURE_LEVEL featureLevel;
-	const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-	if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &featureLevel, &DeviceContext) != S_OK)
+	UINT CreateDeviceFlags = 0;
+	CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+	D3D_FEATURE_LEVEL FeatureLevel;
+	const D3D_FEATURE_LEVEL FeatureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
+	if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, CreateDeviceFlags, FeatureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &FeatureLevel, &DeviceContext) != S_OK)
 	{
 		return false;
 	}
@@ -409,7 +416,8 @@ int32_t FAppFramework::Run()
 
 void FAppFramework::Idle()
 {
-	Tick(0.0f);
+	const float DeltaTime = 1.0f / 60.0f;
+	Tick(DeltaTime);
 
 	// prepare ImGui frame
 	{
@@ -423,6 +431,8 @@ void FAppFramework::Idle()
 	Render();
 
 	//ImGui::ShowMetricsWindow();
+	//ImGui::ShowDebugLogWindow();
+	//ImGui::ShowStackToolWindow();
 
 	ImGui::PopFont();
 

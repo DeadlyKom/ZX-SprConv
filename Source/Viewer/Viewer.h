@@ -19,6 +19,7 @@ public:
 	virtual void NativeInitialize(FNativeDataInitialize Data) override;
 	virtual void Initialize() override;
 	virtual void Render() override;
+	virtual void Tick(float DeltaTime) override;
 	virtual void Destroy() override;
 
 private:

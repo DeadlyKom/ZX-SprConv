@@ -32,6 +32,7 @@ public:
 	{
 		bAppearing = ++TickCounter < 3;
 	}
+	virtual void Tick(float DeltaTime) {};
 	virtual void Update() {}
 	virtual void Destroy() {}
 
