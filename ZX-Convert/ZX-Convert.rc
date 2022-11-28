@@ -64,7 +64,7 @@ IDI_WINDOW              ICON                    "IconeWindow.ico"
 
 IDR_PS_GRID             SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\Grid.hlsl"
 
-IDR_PS_MARCHING_ANTS    SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\MarchingAnts.hlsli"
+IDR_PS_MARCHING_ANTS    SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\MarchingAnts.hlsl"
 
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////

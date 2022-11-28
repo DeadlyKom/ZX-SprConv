@@ -6,8 +6,14 @@
 #include "Core\AppFramework.h"
 #include "..\ZX-Convert\Resource.h"
 
+#define ATTRIBUTE_GRID          1 << 0
+#define GRID					1 << 1
+#define PIXEL_GRID              1 << 2
+#define FORCE_NEAREST_SAMPLING  1 << 31
+
 namespace
 {
+
 	void DrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 	{
 		std::shared_ptr<SViewer> Viewer = FAppFramework::Get().GetViewer();
@@ -27,12 +33,12 @@ namespace Shader
 	{
 		float GridColor[4];
 		float GridWidth[2];
-		bool  AttributeGrid;
+		int	  Flags;
 		float TimeCounter;
 		float BackgroundColor[3];
-		bool  ForceNearestSampling;
+		int   Dummy;
 		float TextureSize[2];
-		float Dummy[2];
+		float GridSize[2];
 	};
 }
 
@@ -126,8 +132,7 @@ void SSprite::Initialize()
 	bIncludeInWindows = true;
 	Name = "Sprite Editor";
 
-	std::shared_ptr<SViewer> Viewer = std::dynamic_pointer_cast<SViewer>(Parent);
-	std::shared_ptr<SImageList> ImageList = Viewer ? std::dynamic_pointer_cast<SImageList>(Viewer->GetWindow(EWindowsType::ImageList)) : nullptr;
+	std::shared_ptr<SImageList> ImageList = std::dynamic_pointer_cast<SImageList>(GetParent()->GetWindow(EWindowsType::ImageList));
 	if (ImageList)
 	{
 		ImageList->OnSelectedImage.AddSP(std::dynamic_pointer_cast<SSprite>(shared_from_this()), &SSprite::OnSelectedFileImage);
@@ -161,7 +166,10 @@ void SSprite::Render()
 
 	ImVec2 Size(0.0f, 0.0f);
 	ImGui::Begin("Sprite Editor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
-	ImGui::Checkbox("Attribute Grid", &AttributeGrid);
+	ImGui::Checkbox("Attribute Grid", &GetParent()->GetViewFlags().bAttributeGrid);
+	ImGui::Checkbox("Grid", &GetParent()->GetViewFlags().bGrid);
+	ImGui::Checkbox("Pixel Grid", &GetParent()->GetViewFlags().bPixelGrid);
+	ImGui::DragInt2("Grid", GetParent()->GetViewFlags().GridSize, 0.3f, 1, 256);
 
 	// calculate panel size
 	const float BorderWidth = 1.0f;
@@ -179,7 +187,7 @@ void SSprite::Render()
 	ImVec2 viewSize = AvailablePanelSize;
 
 	{
-		/* Don't crop the texture to UV [0,1] range.  What you see outside this
+		/* don't crop the texture to UV [0,1] range.  What you see outside this
 		 * range will depend on API and texture properties */
 		if (TextureSizePixels.x < AvailablePanelSize.x)
 		{
@@ -403,11 +411,34 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 			memcpy(ConstantBuffer->GridWidth, &GridWidth, sizeof(GridWidth));
 			memcpy(ConstantBuffer->BackgroundColor, &BackgroundColor, sizeof(float) * 3);
 			memcpy(ConstantBuffer->TextureSize, &Image->Size, sizeof(Image->Size));
-			ConstantBuffer->AttributeGrid = AttributeGrid;
-			ConstantBuffer->ForceNearestSampling = ForceNearestSampling;
+
+			{
+				uint32_t Flags = 0;
+				FViewFlags& ViewFlags = GetParent()->GetViewFlags();
+				if (ViewFlags.bAttributeGrid)
+				{
+					Flags |= ATTRIBUTE_GRID;
+				}
+				if (ViewFlags.bGrid)
+				{
+					Flags |= GRID;
+				}
+				if (ViewFlags.bPixelGrid)
+				{
+					Flags |= PIXEL_GRID;
+				}
+				if (bForceNearestSampling)
+				{
+					Flags |= FORCE_NEAREST_SAMPLING;
+				}
+				ConstantBuffer->Flags = Flags;
+
+				ConstantBuffer->GridSize[0] = float(ViewFlags.GridSize[0]);
+				ConstantBuffer->GridSize[1] = float(ViewFlags.GridSize[1]);
+			}
 			DeviceContext->Unmap(PCB_Grid, 0);
 		}
-		// Activate shader and buffer
+		// activate shader and buffer
 		DeviceContext->PSSetShader(PS_Grid, NULL, 0);
 		DeviceContext->PSSetConstantBuffers(0, 1, &PCB_Grid);
 	}
@@ -431,9 +462,7 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 			memcpy(ConstantBuffer->GridWidth, &GridWidth, sizeof(GridWidth));
 			memcpy(ConstantBuffer->BackgroundColor, &BackgroundColor, sizeof(float) * 3);
 			memcpy(ConstantBuffer->TextureSize, &Image->Size, sizeof(Image->Size));
-			ConstantBuffer->AttributeGrid = AttributeGrid;
 			ConstantBuffer->TimeCounter = TimeCounter;
-			ConstantBuffer->ForceNearestSampling = ForceNearestSampling;
 			DeviceContext->Unmap(PCB_MarchingAnts, 0);
 		}
 		// Activate shader and buffer
@@ -444,7 +473,7 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 
 void SSprite::UpdateShader()
 {
-	if (/*HasFlag(inspector->Flags, InspectorFlags_NoGrid) == false &&*/ Scale.y > MinimumGridSize)
+	if (Scale.y > MinimumGridSize)
 	{
 		// enable grid in shader
 		GridColor.w = 1.0f;
@@ -456,7 +485,7 @@ void SSprite::UpdateShader()
 		GridColor.w = 0.0f;
 	}
 
-	ForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
+	bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
 }
 
 void SSprite::SetScale(ImVec2 NewScale)
@@ -466,7 +495,7 @@ void SSprite::SetScale(ImVec2 NewScale)
 	Scale = NewScale;
 
 	// only force nearest sampling if zoomed in
-	ForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
+	bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
 	GridWidth = ImVec2(1.0f / Scale.x, 1.0f / Scale.y);
 }
 
@@ -487,14 +516,14 @@ void SSprite::RoundImagePosition()
 	{
 		return;
 	}
-	/* When ShowWrap mode is disabled the limits are a bit more strict. We
+	/* when ShowWrap mode is disabled the limits are a bit more strict. We
 	 * try to keep it so that the user cannot pan past the edge of the
 	 * texture at all.*/
 	ImVec2 AbsViewSizeUV = Math::Abs(ViewSizeUV);
 	ImagePosition = ImMax(ImagePosition - AbsViewSizeUV * 0.5f, ImVec2(0.0f, 0.0f)) + AbsViewSizeUV * 0.5f;
 	ImagePosition = ImMin(ImagePosition + AbsViewSizeUV * 0.5f, ImVec2(1.0f, 1.0f)) - AbsViewSizeUV * 0.5f;
 
-	/* If inspector->scale is 1 then we should ensure that pixels are aligned
+	/* if inspector->scale is 1 then we should ensure that pixels are aligned
 	 * with texel centers to get pixel-perfect texture rendering*/
 	ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
 

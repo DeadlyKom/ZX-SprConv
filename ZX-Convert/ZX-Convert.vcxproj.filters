@@ -64,6 +64,9 @@
     <ClCompile Include="..\Source\Fonts\ZX-Spectrum.cpp">
       <Filter>Source\Fonts</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Viewer\ViewChild.cpp">
+      <Filter>Source\Viewer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h">
@@ -112,6 +115,9 @@
     <ClInclude Include="..\Source\Core\Transform.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\Viewer\ViewChild.h">
+      <Filter>Source\Viewer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZX-Convert.rc" />
@@ -126,7 +132,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Source\Shader\MarchingAnts.hlsli">
+    <None Include="..\Source\Shader\MarchingAnts.hlsl">
       <Filter>Source\Shader</Filter>
     </None>
   </ItemGroup>

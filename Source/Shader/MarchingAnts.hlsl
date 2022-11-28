@@ -2,11 +2,12 @@ cbuffer pixelBuffer :register(b0)
 {
     float4   GridColor;
     float2   GridWidth;
-    bool     AttributeGrid;
+    int      Flags;
     float    TimeCounter;
     float3   BackgroundColor;
-    bool     ForceNearestSampling;
+    int      Dummy;
     float2   TextureSize;
+    float2   GridSize;
 };
 
 struct PS_INPUT

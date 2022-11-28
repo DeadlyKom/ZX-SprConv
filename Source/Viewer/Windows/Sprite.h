@@ -1,8 +1,9 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include "Viewer\ViewChild.h"
 
-class SSprite : public SWindow
+class SSprite : public SViewChild
 {
 public:
 	SSprite();
@@ -38,8 +39,7 @@ private:
 	ID3D11Buffer* PCB_Grid;
 	ID3D11Buffer* PCB_MarchingAnts;
 
-	bool ForceNearestSampling = true;						// if true fragment shader will always sample from texel centers
-	bool AttributeGrid = false;
+	bool bForceNearestSampling = true;						// if true fragment shader will always sample from texel centers
 	float  PremultiplyAlpha = 0.0f;							// if 1 then color will be multiplied by alpha in shader, before blend stage
 	float  DisableFinalAlpha = 0.0f;						// if 1 then fragment shader will always output alpha = 1
 	ImVec2 GridWidth = { 0.0f, 0.0f };						// width in UV coords of grid line

@@ -9,6 +9,14 @@ enum class EWindowsType
 	Palette,
 };
 
+struct FViewFlags
+{
+	bool bAttributeGrid = false;
+	bool bGrid = true;
+	bool bPixelGrid = false;
+	int GridSize[2] = { 16, 16 };
+};
+
 class SViewer : public SWindow
 {
 public:
@@ -22,6 +30,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroy() override;
 
+	FViewFlags& GetViewFlags() { return ViewFlags; }
+
 private:
+	FViewFlags ViewFlags;
 	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;
 };

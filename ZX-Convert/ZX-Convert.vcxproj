@@ -155,6 +155,7 @@
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp" />
     <ClCompile Include="..\Source\Fonts\SevenSegment.cpp" />
     <ClCompile Include="..\Source\Fonts\ZX-Spectrum.cpp" />
+    <ClCompile Include="..\Source\Viewer\ViewChild.cpp" />
     <ClCompile Include="..\Source\Viewer\Viewer.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\FileDialog.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\ImageList.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="..\Source\Core\Utils.h" />
     <ClInclude Include="..\Source\Core\Window.h" />
     <ClInclude Include="..\Source\Fonts\Fonts.h" />
+    <ClInclude Include="..\Source\Viewer\ViewChild.h" />
     <ClInclude Include="..\Source\Viewer\Viewer.h" />
     <ClInclude Include="..\Source\Viewer\Windows\FileDialog.h" />
     <ClInclude Include="..\Source\Viewer\Windows\ImageList.h" />
@@ -195,10 +197,11 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <FileType>Document</FileType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Source\Shader\MarchingAnts.hlsli" />
+    <None Include="..\Source\Shader\MarchingAnts.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
