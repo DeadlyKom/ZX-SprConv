@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include "Image.h"
 #include "Fonts\MonoLisa.cpp"
+#include "AppFramework.h"
 #include "Fonts\SevenSegment.cpp"
 #include "Fonts\ZX-Spectrum.cpp"
 #include "Viewer\Windows\FileDialog.h"
@@ -15,6 +16,11 @@ ImFont* Utils::LoadFont(int32_t Size, int32_t Index)
 std::shared_ptr<FImage> Utils::LoadImage(std::string Filename)
 {
 	return FImageBase::Get().Load(Filename);
+}
+
+std::shared_ptr<FImage> Utils::LoadImageFromResource(WORD ID, std::wstring Folder)
+{
+	return FImageBase::Get().FromMemory(FAppFramework::Get().FromResource(ID, Folder));
 }
 
 DelegateHandle Utils::OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path Path /*= ""*/, std::string FilterTypes /*= "*.*"*/)

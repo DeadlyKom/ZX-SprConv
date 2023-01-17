@@ -16,6 +16,7 @@ public:
 	virtual ~FImageBase();
 
 	std::shared_ptr<FImage> Load(std::string Filename);
+	std::shared_ptr<FImage> FromMemory(std::vector<char> Memory);
 	std::shared_ptr<FImage> CreateTexture(void* ImageData, const ImVec2& Size, UINT CPUAccessFlags = 0, D3D11_USAGE Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT);
 
 protected:

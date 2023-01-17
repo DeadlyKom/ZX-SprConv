@@ -69,6 +69,57 @@ std::shared_ptr<FImage> FImageBase::Load(std::string Filename)
 	return Image;
 }
 
+std::shared_ptr<FImage> FImageBase::FromMemory(std::vector<char> Memory)
+{
+	std::shared_ptr<FImage> Image(new FImage());
+
+	uint32_t Width, Height;
+	// load from disk into a raw RGBA buffer
+	uint8_t* ImageData = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(Memory.data()), (int)Memory.size(), (int*)&Width, (int*)&Height, NULL, 4);
+	if (ImageData == nullptr)
+	{
+		return nullptr;
+	}
+	Image->Width = (float)Width;
+	Image->Height = (float)Height;
+
+	FAppFramework& Framework = FAppFramework::Get();
+
+	// create texture
+	D3D11_TEXTURE2D_DESC Texture2D;
+	ZeroMemory(&Texture2D, sizeof(Texture2D));
+	Texture2D.Width = Width;
+	Texture2D.Height = Height;
+	Texture2D.MipLevels = 1;
+	Texture2D.ArraySize = 1;
+	Texture2D.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	Texture2D.SampleDesc.Count = 1;
+	Texture2D.Usage = D3D11_USAGE_DEFAULT;
+	Texture2D.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	Texture2D.CPUAccessFlags = 0;
+
+	ID3D11Texture2D* Texture = nullptr;
+	D3D11_SUBRESOURCE_DATA SubResource;
+	SubResource.pSysMem = ImageData;
+	SubResource.SysMemPitch = Width * 4;
+	SubResource.SysMemSlicePitch = 0;
+	Framework.Device->CreateTexture2D(&Texture2D, &SubResource, &Texture);
+
+	// Create texture view
+	D3D11_SHADER_RESOURCE_VIEW_DESC SRVD;
+	ZeroMemory(&SRVD, sizeof(SRVD));
+	SRVD.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	SRVD.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	SRVD.Texture2D.MipLevels = Texture2D.MipLevels;
+	SRVD.Texture2D.MostDetailedMip = 0;
+	Framework.Device->CreateShaderResourceView(Texture, &SRVD, &Image->ShaderResourceView);
+	Texture->Release();
+
+	stbi_image_free(ImageData);
+	ImagesInfo.push_back(Image);
+	return Image;
+}
+
 std::shared_ptr<FImage> FImageBase::CreateTexture(void* ImageData, const ImVec2& Size, UINT CPUAccessFlags /*= 0*/, D3D11_USAGE Usage /*= D3D11_USAGE::D3D11_USAGE_DEFAULT*/)
 {
 	std::shared_ptr<FImage> Image(new FImage());

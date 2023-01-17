@@ -19,6 +19,9 @@
 #include <windows.h>
 
 #include "imgui.h"
+#define IM_VEC2_CLASS_EXTRA
+inline bool operator==(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x == rhs.x && lhs.y == rhs.y; } \
+inline bool operator!=(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x != rhs.x || lhs.y != rhs.y; }
 #include "imgui_internal.h"
 
 #include "Window.h"
@@ -29,3 +32,5 @@
 struct FImage;
 
 enum class EDialogMode;
+
+#include "..\ZX-Convert\Resource.h"

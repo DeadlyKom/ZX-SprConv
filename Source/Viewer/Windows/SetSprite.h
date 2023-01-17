@@ -2,7 +2,7 @@
 
 #include <CoreMinimal.h>
 
-class SSequencer : public SWindow
+class SSetSprite : public SWindow
 {
 public:
 	virtual void Initialize() override;

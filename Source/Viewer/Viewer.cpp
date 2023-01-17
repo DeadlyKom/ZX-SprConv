@@ -2,8 +2,12 @@
 #include "Core\Window.h"
 
 #include "Windows/Sprite.h"
+#include "Windows/Tools.h"
 #include "Windows/ImageList.h"
 #include "Windows/Palette.h"
+#include "Windows/BuildSprite.h"
+#include "Windows/Sequencer.h"
+#include "Windows/SetSprite.h"
 
 SViewer::SViewer()
 {}
@@ -16,9 +20,13 @@ std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
 
 void SViewer::NativeInitialize(FNativeDataInitialize Data)
 {
-	Windows = { { EWindowsType::ImageList,	std::make_shared<SImageList>()	},
-				{ EWindowsType::Sprite,		std::make_shared<SSprite>()		},
-				{ EWindowsType::Palette,	std::make_shared<SPalette>()	},
+	Windows = { { EWindowsType::ImageList,		std::make_shared<SImageList>()	},
+				{ EWindowsType::Tools,			std::make_shared<STools>()		},
+				{ EWindowsType::Sprite,			std::make_shared<SSprite>()		},
+				{ EWindowsType::Palette,		std::make_shared<SPalette>()	},
+				{ EWindowsType::BuildSprite,	std::make_shared<SBuildSprite>()},
+				{ EWindowsType::Sequencer,		std::make_shared<SSequencer>()	},
+				{ EWindowsType::SetSprite,		std::make_shared<SSetSprite>()	},
 			  };
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{

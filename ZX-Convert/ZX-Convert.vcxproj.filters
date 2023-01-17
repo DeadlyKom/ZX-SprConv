@@ -67,6 +67,15 @@
     <ClCompile Include="..\Source\Viewer\ViewChild.cpp">
       <Filter>Source\Viewer</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\SetSprite.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\BuildSprite.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Viewer\Windows\Tools.cpp">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h">
@@ -118,6 +127,15 @@
     <ClInclude Include="..\Source\Viewer\ViewChild.h">
       <Filter>Source\Viewer</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\SetSprite.h">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\BuildSprite.h">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Viewer\Windows\Tools.h">
+      <Filter>Source\Viewer\Windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZX-Convert.rc" />
@@ -125,6 +143,9 @@
   <ItemGroup>
     <Image Include="Icone.ico" />
     <Image Include="IconeWindow.ico" />
+    <Image Include="..\Resource\Icons\marquee.png" />
+    <Image Include="..\Resource\Icons\pan.png" />
+    <Image Include="..\Resource\Icons\eraser.png" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Source\Shader\Grid.hlsl">

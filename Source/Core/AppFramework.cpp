@@ -221,6 +221,23 @@ std::string FAppFramework::LoadShaderResource(WORD ID)
 	return Result;
 }
 
+std::vector<char> FAppFramework::FromResource(WORD ID, std::wstring Folder /*= TEXT("")*/)
+{
+	HRSRC hRes = FindResource(hInstance, MAKEINTRESOURCE(ID), Folder.c_str());
+	HGLOBAL hGlob = hRes != NULL ? LoadResource(hInstance, hRes) : NULL;
+	LPVOID lpResLock = hGlob != NULL ? LockResource(hGlob) : NULL;
+	if (lpResLock == NULL)
+	{
+		return std::vector<char>();
+	}
+
+	DWORD Size = SizeofResource(hInstance, hRes);
+	const char* pData = reinterpret_cast<const char*>(LockResource(hGlob));
+	std::vector<char> Result(pData, pData + Size);
+	FreeResource(hGlob);
+	return Result;
+}
+
 void FAppFramework::Register()
 {
 	WNDCLASSEX wcex;

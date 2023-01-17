@@ -47,7 +47,7 @@ private:
 	ImVec4 BackgroundColor = { 0.0f, 1.0f, 0.0f, 0.0f };	// color used for alpha blending
 
 	ImVec2 ScaleMin = { 0.03125f, 0.03125f };
-	ImVec2 ScaleMax = { 8, 8 };
+	ImVec2 ScaleMax = { 16, 16 };
 
 	float PixelAspectRatio = 1.0f;							// values other than 1 not supported yet
 	float MinimumGridSize = 4.0f;							// don't draw the grid if lines would be closer than MinimumGridSize pixels

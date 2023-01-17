@@ -28,6 +28,7 @@ public:
 
 	std::shared_ptr<SViewer> GetViewer() const { return Viewer; };
 	std::string LoadShaderResource(WORD ID);
+	std::vector<char> FromResource(WORD ID, std::wstring Folder = TEXT(""));
 
 	FRenderDelegate OnRender;
 

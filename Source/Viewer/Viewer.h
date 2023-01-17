@@ -5,15 +5,19 @@
 enum class EWindowsType
 {
 	ImageList = 0,
+	Tools,
 	Sprite,
 	Palette,
+	BuildSprite,
+	Sequencer,
+	SetSprite,
 };
 
 struct FViewFlags
 {
 	bool bAttributeGrid = false;
-	bool bGrid = true;
-	bool bPixelGrid = false;
+	bool bGrid = false;
+	bool bPixelGrid = true;
 	int GridSize[2] = { 16, 16 };
 };
 

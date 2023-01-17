@@ -4,7 +4,6 @@
 #include "Viewer\Viewer.h"
 #include "Viewer\Windows\ImageList.h"
 #include "Core\AppFramework.h"
-#include "..\ZX-Convert\Resource.h"
 
 #define ATTRIBUTE_GRID          1 << 0
 #define GRID					1 << 1

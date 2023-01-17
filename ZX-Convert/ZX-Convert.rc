@@ -66,6 +66,18 @@ IDR_PS_GRID             SHADER                  "C:\\Work\\Learning\\Tools\\ZX-S
 
 IDR_PS_MARCHING_ANTS    SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\MarchingAnts.hlsl"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_TOOL_MARQUEE        PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\marquee.png"
+
+IDB_TOOL_PAN            PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\pan.png"
+
+IDB_TOOL_ERASER         PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\eraser.png"
+
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////
 

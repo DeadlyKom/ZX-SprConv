@@ -157,11 +157,14 @@
     <ClCompile Include="..\Source\Fonts\ZX-Spectrum.cpp" />
     <ClCompile Include="..\Source\Viewer\ViewChild.cpp" />
     <ClCompile Include="..\Source\Viewer\Viewer.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\BuildSprite.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\FileDialog.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\ImageList.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Palette.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Sequencer.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\SetSprite.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Sprite.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\Tools.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -176,17 +179,23 @@
     <ClInclude Include="..\Source\Fonts\Fonts.h" />
     <ClInclude Include="..\Source\Viewer\ViewChild.h" />
     <ClInclude Include="..\Source\Viewer\Viewer.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\BuildSprite.h" />
     <ClInclude Include="..\Source\Viewer\Windows\FileDialog.h" />
     <ClInclude Include="..\Source\Viewer\Windows\ImageList.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Palette.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Sequencer.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\SetSprite.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Sprite.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\Tools.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZX-Convert.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\Resource\Icons\eraser.png" />
+    <Image Include="..\Resource\Icons\marquee.png" />
+    <Image Include="..\Resource\Icons\pan.png" />
     <Image Include="Icone.ico" />
     <Image Include="IconeWindow.ico" />
   </ItemGroup>
