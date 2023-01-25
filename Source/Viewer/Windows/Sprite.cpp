@@ -12,7 +12,6 @@
 
 namespace
 {
-
 	void DrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 	{
 		std::shared_ptr<SViewer> Viewer = FAppFramework::Get().GetViewer();
@@ -39,16 +38,17 @@ namespace Shader
 		float TextureSize[2];
 		float GridSize[2];
 	};
+
+	void* LINE_ID = (void*)0x10FFFFFF;
 }
 
 SSprite::SSprite()
 	: Device(nullptr)
 	, DeviceContext(nullptr)
 	, PCB_Grid(nullptr)
-	, PS_MarchingAnts(nullptr)
 	, PS_Grid(nullptr)
+	, PS_LineMarchingAnts(nullptr)
 	, PCB_MarchingAnts(nullptr)
-	, MarchingAntsData(nullptr)
 {}
 
 void SSprite::NativeInitialize(FNativeDataInitialize Data)
@@ -95,9 +95,9 @@ void SSprite::NativeInitialize(FNativeDataInitialize Data)
 		}
 	}
 
-	// 'marching ants' pixel shader
+	// 'line marching ants' pixel shader
 	{
-		std::string PS = FAppFramework::Get().LoadShaderResource(IDR_PS_MARCHING_ANTS);
+		std::string PS = FAppFramework::Get().LoadShaderResource(IDR_PS_LINE);
 		if (FAILED(D3DCompile(PS.c_str(), PS.size(), NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &PixelShaderBlob, &ErrorBlob)))
 		{
 			std::string Error((const char*)ErrorBlob->GetBufferPointer());
@@ -106,7 +106,7 @@ void SSprite::NativeInitialize(FNativeDataInitialize Data)
 			return;
 		}
 
-		if (Device->CreatePixelShader(PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize(), NULL, &PS_MarchingAnts) != S_OK)
+		if (Device->CreatePixelShader(PixelShaderBlob->GetBufferPointer(), PixelShaderBlob->GetBufferSize(), NULL, &PS_LineMarchingAnts) != S_OK)
 		{
 			PixelShaderBlob->Release();
 			return;
@@ -131,7 +131,7 @@ void SSprite::Initialize()
 	bIncludeInWindows = true;
 	Name = "Sprite Editor";
 
-	std::shared_ptr<SImageList> ImageList = std::dynamic_pointer_cast<SImageList>(GetParent()->GetWindow(EWindowsType::ImageList));
+	std::shared_ptr<SImageList> ImageList = GetWindow<SImageList>(EWindowsType::ImageList);
 	if (ImageList)
 	{
 		ImageList->OnSelectedImage.AddSP(std::dynamic_pointer_cast<SSprite>(shared_from_this()), &SSprite::OnSelectedFileImage);
@@ -140,13 +140,6 @@ void SSprite::Initialize()
 	// ToDo debug
 	{
 		Image = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7.png");
-		//MarchingAnts = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7_MA.png");
-		if (Image != nullptr)
-		{
-			MarchingAntsData = new uint32_t[Image->GetLength()];
-			ZeroMemory(MarchingAntsData, Image->GetLength() * Image->GetFormatSize());
-			CreateTextureMA();
-		}
 	}
 }
 
@@ -165,10 +158,13 @@ void SSprite::Render()
 
 	ImVec2 Size(0.0f, 0.0f);
 	ImGui::Begin("Sprite Editor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
-	ImGui::Checkbox("Attribute Grid", &GetParent()->GetViewFlags().bAttributeGrid);
-	ImGui::Checkbox("Grid", &GetParent()->GetViewFlags().bGrid);
-	ImGui::Checkbox("Pixel Grid", &GetParent()->GetViewFlags().bPixelGrid);
-	ImGui::DragInt2("Grid", GetParent()->GetViewFlags().GridSize, 0.3f, 1, 256);
+	if (false)
+	{
+		ImGui::Checkbox("Attribute Grid", &GetParent()->GetViewFlags().bAttributeGrid);
+		ImGui::Checkbox("Grid", &GetParent()->GetViewFlags().bGrid);
+		ImGui::Checkbox("Pixel Grid", &GetParent()->GetViewFlags().bPixelGrid);
+		ImGui::DragInt2("Grid", GetParent()->GetViewFlags().GridSize, 0.3f, 1, 256);
+	}
 
 	// calculate panel size
 	const float BorderWidth = 1.0f;
@@ -177,10 +173,10 @@ void SSprite::Render()
 
 	RoundImagePosition();
 
-	ImVec2 TextureSizePixels = Scale * Image->Size;					// size whole texture would appear on screen
+	TextureSizePixels = Scale * Image->Size;					// size whole texture would appear on screen
 	ImVec2 viewSizeUV = AvailablePanelSize / TextureSizePixels;		// cropped size in terms of UV
-	ImVec2 uv0 = ImagePosition - viewSizeUV * 0.5f;
-	ImVec2 uv1 = ImagePosition + viewSizeUV * 0.5f;
+	uv0 = ImagePosition - viewSizeUV * 0.5f;
+	uv1 = ImagePosition + viewSizeUV * 0.5f;
 
 	ImVec2 DrawImageOffset{ BorderWidth, BorderWidth };
 	ImVec2 viewSize = AvailablePanelSize;
@@ -226,18 +222,21 @@ void SSprite::Render()
 
 		UpdateShader();
 
-		ImGuiWindow* window = ImGui::GetCurrentWindow();
-		ImRect bb(window->DC.CursorPos, window->DC.CursorPos + viewSize);
+		ImGuiWindow* Window = ImGui::GetCurrentWindow();
+		ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + viewSize);
 
 		// callback for using our own image shader 
 		ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Image->GetShaderResourceView());
 		ImGui::GetWindowDrawList()->AddImage(Image->GetShaderResourceView(), bb.Min, bb.Max, uv0, uv1);
 
-		if (MarchingAnts != nullptr)
+		std::shared_ptr<SViewer> Viewer = GetParent();
+		if (Viewer && Viewer->IsMarqueeTool())
 		{
-			// callback for using our own image shader 
-			ImGui::GetWindowDrawList()->AddCallback(DrawCallback, MarchingAnts->GetShaderResourceView());
-			ImGui::GetWindowDrawList()->AddImage(MarchingAnts->GetShaderResourceView(), bb.Min, bb.Max, uv0, uv1);
+			InputMarquee();
+		}
+		if (bMarqueeVisible)
+		{
+			DrawMarquee(bb);
 		}
 
 		// reset callback for using our own image shader 
@@ -248,7 +247,7 @@ void SSprite::Render()
 		TexelsToPixels = GetTexelsToPixels(ViewTopLeftPixel, viewSize, uv0, viewSizeUV, Image->Size);
 		PixelsToTexels = TexelsToPixels.Inverse();
 
-		ImVec2 MousePosition = ImGui::GetMousePos();
+		ImVec2 MousePosition = ImGui::GetMousePos(); 
 		ImVec2 MousePositionTexel = PixelsToTexels * MousePosition;
 		ImVec2 MouseUV = MousePositionTexel / Image->Size;
 		MousePositionTexel.x = Math::Modulus(MousePositionTexel.x, Image->Size.x);
@@ -257,24 +256,15 @@ void SSprite::Render()
 		const bool Hovered = ImGui::IsWindowHovered();
 
 		// dragging
+		//std::shared_ptr<SViewer> Viewer = GetParent();
+		if (Viewer)
 		{
-			// start drag
-			if (!bDragging && Hovered && IO.MouseClicked[ImGuiMouseButton_Left])
-			{
-				bDragging = true;
-			}
-			// carry on dragging
-			else if (bDragging)
+			bDragging = Viewer->IsHandTool();
+			if (bDragging)
 			{
 				ImVec2 uvDelta = IO.MouseDelta * viewSizeUV / viewSize;
 				ImagePosition -= uvDelta;
 				RoundImagePosition();
-			}
-
-			// end drag
-			if (bDragging && (IO.MouseReleased[ImGuiMouseButton_Left] || !IO.MouseDown[ImGuiMouseButton_Left]))
-			{
-				bDragging = false;
 			}
 		}
 
@@ -315,6 +305,7 @@ void SSprite::Render()
 		}
 	}
 
+	if (true)
 	{
 		ImGui::Begin("Debug");
 
@@ -333,7 +324,9 @@ void SSprite::Render()
 		ImGui::Text("ViewSizeUV : (%f, %f)", ViewSizeUV.x, ViewSizeUV.y);
 		ImGui::Text("UV0 : (%f, %f)", uv0.x, uv0.y);
 		ImGui::Text("UV1 : (%f, %f)", uv1.x, uv1.y);
-		
+		ImGui::Text("StartMarqueePosition : (%f, %f)", StartMarqueePosition.x, StartMarqueePosition.y);
+		ImGui::Text("EndMarqueePosition : (%f, %f)", EndMarqueePosition.x, EndMarqueePosition.y);
+
 		ImGui::End();
 	}
 
@@ -372,14 +365,10 @@ void SSprite::Destroy()
 		PCB_MarchingAnts->Release();
 		PCB_MarchingAnts = nullptr;
 	}
-	if (PS_MarchingAnts)
+	if (PS_LineMarchingAnts)
 	{
-		PS_MarchingAnts->Release();
-		PS_MarchingAnts = nullptr;
-	}
-	if (MarchingAntsData != nullptr)
-	{
-		delete[] MarchingAntsData;
+		PS_LineMarchingAnts->Release();
+		PS_LineMarchingAnts = nullptr;
 	}
 }
 
@@ -441,9 +430,9 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 		DeviceContext->PSSetShader(PS_Grid, NULL, 0);
 		DeviceContext->PSSetConstantBuffers(0, 1, &PCB_Grid);
 	}
-	else if (CMD->UserCallbackData == MarchingAnts->GetShaderResourceView())
+	else if (CMD->UserCallbackData == Shader::LINE_ID)
 	{
-		if (PS_MarchingAnts == nullptr || PCB_MarchingAnts == nullptr)
+		if (PS_LineMarchingAnts == nullptr || PCB_MarchingAnts == nullptr)
 		{
 			return;
 		}
@@ -457,15 +446,11 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 			}
 			// transfer shader options from shaderOptions to our backend specific pixel shader constant buffer
 			Shader::PIXEL_CONSTANT_BUFFER* ConstantBuffer = (Shader::PIXEL_CONSTANT_BUFFER*)MappedResource.pData;
-			memcpy(ConstantBuffer->GridColor, &GridColor, sizeof(GridColor));
-			memcpy(ConstantBuffer->GridWidth, &GridWidth, sizeof(GridWidth));
-			memcpy(ConstantBuffer->BackgroundColor, &BackgroundColor, sizeof(float) * 3);
-			memcpy(ConstantBuffer->TextureSize, &Image->Size, sizeof(Image->Size));
 			ConstantBuffer->TimeCounter = TimeCounter;
 			DeviceContext->Unmap(PCB_MarchingAnts, 0);
 		}
 		// Activate shader and buffer
-		DeviceContext->PSSetShader(PS_MarchingAnts, NULL, 0);
+		DeviceContext->PSSetShader(PS_LineMarchingAnts, NULL, 0);
 		DeviceContext->PSSetConstantBuffers(0, 1, &PCB_MarchingAnts);
 	}
 }
@@ -544,52 +529,6 @@ void SSprite::ChangeScale()
 		return;
 	}
 	OldScale = Scale;
-
-	UpdateTextureMA();
-}
-
-void SSprite::CreateTextureMA()
-{
-	if (MarchingAnts == nullptr)
-	{
-		const uint32_t Width = (uint32_t)Image->Width;
-		const uint32_t Height = (uint32_t)Image->Height;
-		
-		// fill
-		ImVec2 Size = { 32, 32 };
-		ImVec2 Position = { 64, 32 };
-		for (uint32_t y = (uint32_t)Position.y; y < (uint32_t)(Position.y + Size.y); ++y)
-		{
-			for (uint32_t x = (uint32_t)Position.x; x < (uint32_t)(Position.x + Size.x); ++x)
-			{
-				MarchingAntsData[y * Width + x] = ImColor(1.0f, 1.0f, 1.0f, 1.0f);
-			}
-		}
-
-		//
-		uint32_t* ImageData = new uint32_t[Width * Height];
-		for (uint32_t y = 0; y < Height; ++y)
-		{
-			for (uint32_t x = 0; x < Width; ++x)
-			{
-				ImU32& Color = MarchingAntsData[y * Width + x];
-				ImageData[y * Width + x] = (ImU32)Color;
-			}
-		}
-
-		MarchingAnts = FImageBase::Get().CreateTexture(ImageData, Image->Size, D3D11_CPU_ACCESS_FLAG::D3D11_CPU_ACCESS_WRITE, D3D11_USAGE::D3D11_USAGE_DYNAMIC);
-		delete[] ImageData;
-	}
-}
-
-void SSprite::UpdateTextureMA()
-{
-	if (MarchingAnts == nullptr)
-	{
-		return;
-	}
-
-	MarchingAnts->Resize(MarchingAntsData, Image->Size, Image->Size * Scale);
 }
 
 Transform2D SSprite::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
@@ -603,6 +542,66 @@ Transform2D SSprite::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSi
 	return transform;
 }
 
+ImVec2 SSprite::ConverPositionToPixel(const ImVec2& Position)
+{
+	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
+	return ImFloor((Position - ViewTopLeftPixel + uv0 / ImageSizeInv * Scale) / Scale);
+}
+
+void SSprite::InputMarquee()
+{
+	const ImGuiIO& IO = ImGui::GetIO();
+	if (!bMarqueeActive && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
+	{
+		StartMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos());
+		StartMarqueePosition = ImMax(StartMarqueePosition, ImVec2(0.0f, 0.0f));
+		StartMarqueePosition = ImMin(StartMarqueePosition, Image->Size * Scale);
+
+		EndMarqueePosition = StartMarqueePosition;
+		bMarqueeVisible = true;
+		bMarqueeActive = true;
+	}
+	else if (ImGui::IsKeyReleased(ImGuiKey_MouseLeft))
+	{
+	}
+	else if (ImGui::IsKeyDown(ImGuiKey_MouseLeft))
+	{
+		EndMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos() + Scale);
+		EndMarqueePosition = ImMax(EndMarqueePosition, ImVec2(0.0f, 0.0f));
+		EndMarqueePosition = ImMin(EndMarqueePosition, Image->Size * Scale);
+	}
+	else
+	{
+		bMarqueeActive = false;
+	}
+}
+
+void SSprite::DrawMarquee(const ImRect& Window)
+{
+	ImVec2 Start = StartMarqueePosition;
+	ImVec2 End = EndMarqueePosition;
+	
+	// clamp
+	{
+		const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
+		ImVec2 A = ImFloor(uv0 / ImageSizeInv);
+		Start = (Start - A) * Scale;
+		End = (End - A) * Scale;
+
+		Start = ImMax(Start, ImVec2(0.0f, 0.0f));
+		Start = ImMin(Start, Image->Size * Scale);
+		End = ImMax(End, ImVec2(0.0f, 0.0f));
+		End = ImMin(End, Image->Size * Scale);
+	}
+
+	ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
+	ImVec2 TopLeftPixel = ViewTopLeftPixel - (TopLeftSubTexel - ImFloor(TopLeftSubTexel / Scale) * Scale);
+
+	ImGui::GetWindowDrawList()->_FringeScale = 0.1f;
+	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Shader::LINE_ID);
+	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + Start, TopLeftPixel + End, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
+}
+
 void SSprite::OnSelectedFileImage(const std::filesystem::directory_entry& Path)
 {
 	if (Image != nullptr)
@@ -610,24 +609,7 @@ void SSprite::OnSelectedFileImage(const std::filesystem::directory_entry& Path)
 		Image->Release();
 		Image = nullptr;
 	}
-	if (MarchingAnts != nullptr)
-	{
-		MarchingAnts->Release();
-		MarchingAnts = nullptr;
-	}
-	if (MarchingAntsData != nullptr)
-	{
-		delete[] MarchingAntsData;
-		MarchingAntsData = nullptr;
-	}
 
 	Image = Utils::LoadImage(Path.path().string());
-	if (Image != nullptr)
-	{
-		MarchingAntsData = new uint32_t[Image->GetLength()];
-		ZeroMemory(MarchingAntsData, Image->GetLength() * Image->GetFormatSize());
-		CreateTextureMA();
-	}
-
 	Scale = OldScale = { 1.0f, 1.0f };
 }

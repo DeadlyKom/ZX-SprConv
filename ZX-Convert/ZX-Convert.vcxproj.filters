@@ -19,6 +19,9 @@
     <Filter Include="Source\Shader">
       <UniqueIdentifier>{18aff063-1eff-4671-be2c-abff25d1fc48}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Resource">
+      <UniqueIdentifier>{e194e0be-181e-4863-9a3f-b69c6147aa84}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -81,7 +84,6 @@
     <ClInclude Include="..\Source\Core\AppFramework.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h" />
     <ClInclude Include="..\Source\Viewer\Viewer.h">
       <Filter>Source\Viewer</Filter>
     </ClInclude>
@@ -136,16 +138,28 @@
     <ClInclude Include="..\Source\Viewer\Windows\Tools.h">
       <Filter>Source\Viewer\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Source\Resource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="ZX-Convert.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Icone.ico" />
-    <Image Include="IconeWindow.ico" />
-    <Image Include="..\Resource\Icons\marquee.png" />
-    <Image Include="..\Resource\Icons\pan.png" />
-    <Image Include="..\Resource\Icons\eraser.png" />
+    <Image Include="..\Resource\Icons\eraser.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="Icone.ico">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="IconeWindow.ico">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\marquee.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\pan.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\move.png" />
+    <Image Include="..\Resource\Icons\Hand.png" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Source\Shader\Grid.hlsl">
@@ -156,5 +170,13 @@
     <None Include="..\Source\Shader\MarchingAnts.hlsl">
       <Filter>Source\Shader</Filter>
     </None>
+    <None Include="..\Source\Shader\LineMarchingAnts.hlsl">
+      <Filter>Source\Shader</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ZX-Convert.rc">
+      <Filter>Source\Resource</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

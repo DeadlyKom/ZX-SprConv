@@ -2,6 +2,8 @@
 
 #include <CoreMinimal.h>
 
+enum class EToolType;
+
 enum class EWindowsType
 {
 	ImageList = 0,
@@ -36,7 +38,19 @@ public:
 
 	FViewFlags& GetViewFlags() { return ViewFlags; }
 
+	bool IsHandTool();
+	bool IsMarqueeTool();
+
 private:
+	void HandlerInput();
 	FViewFlags ViewFlags;
 	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;
+
+	EToolType LastSelectedTool;
+
+	template <typename T>
+	T* WindowCast(EWindowsType Type)
+	{
+		return static_cast<T*>(Windows[Type].get());
+	}
 };

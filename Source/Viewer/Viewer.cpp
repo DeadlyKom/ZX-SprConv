@@ -10,6 +10,7 @@
 #include "Windows/SetSprite.h"
 
 SViewer::SViewer()
+	: LastSelectedTool(EToolType::None)
 {}
 
 std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
@@ -78,6 +79,8 @@ void SViewer::Render()
 
 void SViewer::Tick(float DeltaTime)
 {
+	HandlerInput();
+
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
 		Window.second->Tick(DeltaTime);
@@ -89,5 +92,58 @@ void SViewer::Destroy()
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
 		Window.second->Destroy();
+	}
+}
+
+bool SViewer::IsHandTool()
+{
+	return WindowCast<STools>(EWindowsType::Tools)->GetSelected() == EToolType::Hand;
+}
+
+bool SViewer::IsMarqueeTool()
+{
+	return WindowCast<STools>(EWindowsType::Tools)->GetSelected() == EToolType::Marquee;
+}
+
+void SViewer::HandlerInput()
+{
+	const ImGuiIO& IO = ImGui::GetIO();
+	if (ImGui::IsKeyPressed(ImGuiMod_Ctrl))
+	{
+		EToolType TmpLastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Move);
+		if (TmpLastSelectedTool != EToolType::Move)
+		{
+			LastSelectedTool = TmpLastSelectedTool;
+		}
+	}
+	else if(ImGui::IsKeyReleased(ImGuiMod_Ctrl))
+	{
+		WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
+	}
+	else if (IO.MouseDown[ImGuiMouseButton_Middle])
+	{
+		EToolType TmpLastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Hand);
+		if (TmpLastSelectedTool != EToolType::Hand)
+		{
+			LastSelectedTool = TmpLastSelectedTool;
+		}
+	}
+	else if (IO.MouseReleased[ImGuiMouseButton_Middle])
+	{
+		WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
+	}
+
+	// hot keys
+	if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_M)])
+	{
+		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Marquee);
+	}
+	else if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_B)])
+	{
+		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Pan);
+	}
+	else if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_E)])
+	{
+		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Eraser);
 	}
 }

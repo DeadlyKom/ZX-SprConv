@@ -23,9 +23,10 @@ private:
 	void SetImagePosition(ImVec2 NewPosition);
 	void RoundImagePosition();
 	void ChangeScale();
-	void CreateTextureMA();
-	void UpdateTextureMA();
 	Transform2D GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize);
+	ImVec2 ConverPositionToPixel(const ImVec2& Position);
+	void InputMarquee();
+	void DrawMarquee(const ImRect& Window);
 
 	// event
 	void OnSelectedFileImage(const std::filesystem::directory_entry& Path);
@@ -35,7 +36,7 @@ private:
 	ID3D11Device* Device;
 	ID3D11DeviceContext* DeviceContext;
 	ID3D11PixelShader* PS_Grid;
-	ID3D11PixelShader* PS_MarchingAnts;
+	ID3D11PixelShader* PS_LineMarchingAnts;
 	ID3D11Buffer* PCB_Grid;
 	ID3D11Buffer* PCB_MarchingAnts;
 
@@ -47,7 +48,7 @@ private:
 	ImVec4 BackgroundColor = { 0.0f, 1.0f, 0.0f, 0.0f };	// color used for alpha blending
 
 	ImVec2 ScaleMin = { 0.03125f, 0.03125f };
-	ImVec2 ScaleMax = { 16, 16 };
+	ImVec2 ScaleMax = { 32, 32 };
 
 	float PixelAspectRatio = 1.0f;							// values other than 1 not supported yet
 	float MinimumGridSize = 4.0f;							// don't draw the grid if lines would be closer than MinimumGridSize pixels
@@ -67,12 +68,21 @@ private:
 	ImVec2 ViewTopLeftPixel = { 0.0f, 0.0f };				// position in ImGui pixel coordinates
 	ImVec2 ViewSize = { 0.0f, 0.0f };						// rendered size of current image. This could be smaller than panel size if user has zoomed out.
 	ImVec2 ViewSizeUV = { 0.0f, 0.0f };						// visible region of the texture in UV coordinates
+
+	//
+	ImVec2 TextureSizePixels;
+	ImVec2 uv0;
+	ImVec2 uv1;
+
+	//
+	bool bMarqueeActive = false;
+	bool bMarqueeVisible = false;
+	ImVec2 StartMarqueePosition;
+	ImVec2 EndMarqueePosition;
 	
 	/* conversion transforms to go back and forth between screen pixels  (what ImGui considers screen pixels) and texels*/
 	Transform2D TexelsToPixels;
 	Transform2D PixelsToTexels;
 
-	uint32_t* MarchingAntsData;
 	std::shared_ptr<FImage> Image;
-	std::shared_ptr<FImage> MarchingAnts;
 };

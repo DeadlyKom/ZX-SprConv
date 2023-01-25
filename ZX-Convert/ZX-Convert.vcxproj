@@ -194,7 +194,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Resource\Icons\eraser.png" />
+    <Image Include="..\Resource\Icons\Hand.png" />
     <Image Include="..\Resource\Icons\marquee.png" />
+    <Image Include="..\Resource\Icons\move.png" />
     <Image Include="..\Resource\Icons\pan.png" />
     <Image Include="Icone.ico" />
     <Image Include="IconeWindow.ico" />
@@ -208,6 +210,9 @@
       <FileType>Document</FileType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
     </FxCompile>
+    <None Include="..\Source\Shader\LineMarchingAnts.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Source\Shader\MarchingAnts.hlsl" />
