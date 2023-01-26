@@ -177,8 +177,20 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
         if (!ItemAdd(bb, 0))
             return;
 
+        // align
+        ImVec2 Align(0.0f, 0.0f);
+        if (flags & ImGuiTextFlags_AlignHorizontal)
+        {
+            Align.x = (window->WorkRect.GetSize().x - text_size.x) * 0.5f;
+        }
+        if (flags & ImGuiTextFlags_AlignVertical)
+        {
+            ImVec2 Rect(window->DC.CursorMaxPos - window->DC.CursorPosPrevLine);
+            Align.y = (Rect.y - text_size.y) * 0.5f;
+        }
+
         // Render (we don't hide text after ## in this end-user function)
-        RenderTextWrapped(bb.Min, text_begin, text_end, wrap_width);
+        RenderTextWrapped(bb.Min + Align, text_begin, text_end, wrap_width);
     }
     else
     {
@@ -1022,7 +1034,7 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
     return held;
 }
 
-void ImGui::Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+void ImGui::Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& border_col, const ImVec4& tint_col)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -1035,14 +1047,26 @@ void ImGui::Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2&
     if (!ItemAdd(bb, 0))
         return;
 
+    // align
+    ImVec2 Align(0.0f, 0.0f);
+    if (window->Flags & ImGuiWindowFlags_AlignHorizontal)
+    {
+        Align.x = (window->WorkRect.GetSize().x - size.x) * 0.5f;
+    }
+    if (window->Flags & ImGuiWindowFlags_AlignVertical)
+    {
+        ImVec2 Rect(window->DC.CursorMaxPos - window->DC.CursorPosPrevLine);
+        Align.y = (Rect.y - size.y) * 0.5f;
+    }
+
     if (border_col.w > 0.0f)
     {
-        window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0f);
-        window->DrawList->AddImage(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col));
+        window->DrawList->AddRect(bb.Min + Align, bb.Max + Align, GetColorU32(border_col), 0.0f);
+        window->DrawList->AddImage(user_texture_id, bb.Min + ImVec2(1, 1) + Align, bb.Max - ImVec2(1, 1) + Align, uv0, uv1, GetColorU32(tint_col));
     }
     else
     {
-        window->DrawList->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
+        window->DrawList->AddImage(user_texture_id, bb.Min + Align, bb.Max + Align, uv0, uv1, GetColorU32(tint_col));
     }
 }
 
@@ -1064,13 +1088,30 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
+    // align
+    ImVec2 Align(0.0f, 0.0f);
+    if (window->Flags & ImGuiWindowFlags_AlignHorizontal)
+    {
+        Align.x = (window->WorkRect.GetSize().x - size.x) * 0.5f;
+    }
+    if (window->Flags & ImGuiWindowFlags_AlignVertical)
+    {
+        ImVec2 Rect(window->DC.CursorMaxPos - window->DC.CursorPosPrevLine);
+        Align.y = (Rect.y - size.y) * 0.5f;
+    }
+
     // Render
     const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     RenderNavHighlight(bb, id);
-    RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+    if (!(window->Flags & ImGuiWindowFlags_NoBackground))
+    {
+        RenderFrame(bb.Min + Align, bb.Max + Align, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+    }
     if (bg_col.w > 0.0f)
-        window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
-    window->DrawList->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
+    {
+        window->DrawList->AddRectFilled(bb.Min + padding + Align, bb.Max - padding + Align, GetColorU32(bg_col));
+    }
+    window->DrawList->AddImage(texture_id, bb.Min + padding + Align, bb.Max - padding + Align, uv0, uv1, GetColorU32(tint_col));
 
     return pressed;
 }

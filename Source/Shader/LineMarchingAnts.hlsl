@@ -21,6 +21,6 @@ Texture2D Texture0;
 
 float4 main(PS_INPUT Input) : SV_TARGET
 {
-    float C = ((int)(Input.pos.x + Input.pos.y + TimeCounter * 16) % 8);
+    float C = ((int)(Input.pos.x + Input.pos.y - TimeCounter * 16) % 8);
     return (C < 4 ? float4(0, 0, 0, 1) : float4(1, 1, 1, 1));
 }

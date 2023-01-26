@@ -97,7 +97,7 @@ void SSprite::NativeInitialize(FNativeDataInitialize Data)
 
 	// 'line marching ants' pixel shader
 	{
-		std::string PS = FAppFramework::Get().LoadShaderResource(IDR_PS_LINE);
+		std::string PS = FAppFramework::Get().LoadShaderResource(IDR_PS_MA_LINE);
 		if (FAILED(D3DCompile(PS.c_str(), PS.size(), NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &PixelShaderBlob, &ErrorBlob)))
 		{
 			std::string Error((const char*)ErrorBlob->GetBufferPointer());

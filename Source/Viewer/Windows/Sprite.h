@@ -59,7 +59,7 @@ private:
 	bool bDragging = false;									// is user currently dragging to pan view
 	
 	ImVec2 ImagePosition = { 0.5f, 0.5f };					// the UV value at the center of the current view
-	ImVec2 Scale = { 1.0f, 1.0f };							// 1 pixel is 1 texel
+	ImVec2 Scale = { 4.0f, 4.0f };							// 1 pixel is 1 texel
 	ImVec2 OldScale = { 1.0f, 1.0f };
 	
 	ImVec2 PanelTopLeftPixel = { 0.0f, 0.0f };				// top left of view in ImGui pixel coordinates

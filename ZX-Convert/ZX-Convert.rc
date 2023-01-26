@@ -64,9 +64,7 @@ IDI_WINDOW              ICON                    "IconeWindow.ico"
 
 IDR_PS_GRID             SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\Grid.hlsl"
 
-IDR_PS_MARCHING_ANTS    SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\MarchingAnts.hlsl"
-
-IDR_PS_LINE             SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\LineMarchingAnts.hlsl"
+IDR_PS_MA_LINE          SHADER                  "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Source\\Shader\\LineMarchingAnts.hlsl"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -83,6 +81,18 @@ IDB_TOOL_ERASER         PNG                     "C:\\Work\\Learning\\Tools\\ZX-S
 IDB_TOOL_MOVE           PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\move.png"
 
 IDB_TOOL_HAND           PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\Hand.png"
+
+IDB_SEQUENCER_VISIBLE_ENABLE PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\visible enable.png"
+
+IDB_SEQUENCER_VISIBLE_DISABLE PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\visible disable.png"
+
+IDB_SEQUENCER_LOCK      PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\lock.png"
+
+IDB_SEQUENCER_UNLOCK    PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\unlock.png"
+
+IDB_LAYER_EMPTY         PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\layer_empty.png"
+
+IDB_LAYER_FILL          PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\layer_fill.png"
 
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////

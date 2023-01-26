@@ -170,6 +170,7 @@
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h" />
     <ClInclude Include="..\Source\Core\Delegates.h" />
+    <ClInclude Include="..\Source\Core\Sprite.h" />
     <ClInclude Include="..\Source\Core\Transform.h" />
     <ClInclude Include="..\Source\Core\Image.h" />
     <ClInclude Include="..\Source\Core\CoreMinimal.h" />
@@ -194,10 +195,16 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Resource\Icons\eraser.png" />
-    <Image Include="..\Resource\Icons\Hand.png" />
+    <Image Include="..\Resource\Icons\hand.png" />
+    <Image Include="..\Resource\Icons\layer_empty.png" />
+    <Image Include="..\Resource\Icons\layer_fill.png" />
+    <Image Include="..\Resource\Icons\lock.png" />
     <Image Include="..\Resource\Icons\marquee.png" />
     <Image Include="..\Resource\Icons\move.png" />
     <Image Include="..\Resource\Icons\pan.png" />
+    <Image Include="..\Resource\Icons\unlock.png" />
+    <Image Include="..\Resource\Icons\visible disable.png" />
+    <Image Include="..\Resource\Icons\visible enable.png" />
     <Image Include="Icone.ico" />
     <Image Include="IconeWindow.ico" />
   </ItemGroup>
@@ -213,9 +220,6 @@
     <None Include="..\Source\Shader\LineMarchingAnts.hlsl">
       <FileType>Document</FileType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Source\Shader\MarchingAnts.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

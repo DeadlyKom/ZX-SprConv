@@ -3,6 +3,7 @@
 #include <CoreMinimal.h>
 
 #define BUFFER_SIZE 512
+#pragma warning(disable : 4996)				//_CRT_SECURE_NO_WARNINGS
 
 namespace Utils
 {

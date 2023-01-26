@@ -1,6 +1,7 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include "Core\Sprite.h"
 
 enum class EToolType;
 
@@ -37,6 +38,7 @@ public:
 	virtual void Destroy() override;
 
 	FViewFlags& GetViewFlags() { return ViewFlags; }
+	FSprite& GetSelectedSprite();
 
 	bool IsHandTool();
 	bool IsMarqueeTool();
@@ -47,6 +49,7 @@ private:
 	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;
 
 	EToolType LastSelectedTool;
+	std::vector<FSprite> Sprites;
 
 	template <typename T>
 	T* WindowCast(EWindowsType Type)

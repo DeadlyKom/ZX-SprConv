@@ -924,6 +924,8 @@ enum ImGuiTextFlags_
 {
     ImGuiTextFlags_None                         = 0,
     ImGuiTextFlags_NoWidthForLargeClippedText   = 1 << 0,
+    ImGuiTextFlags_AlignVertical                = 1 << 1,
+    ImGuiTextFlags_AlignHorizontal              = 1 << 2,
 };
 
 enum ImGuiTooltipFlags_

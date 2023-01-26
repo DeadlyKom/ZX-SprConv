@@ -141,6 +141,9 @@
     <ClInclude Include="Resource.h">
       <Filter>Source\Resource</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\Core\Sprite.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Resource\Icons\eraser.png">
@@ -158,8 +161,30 @@
     <Image Include="..\Resource\Icons\pan.png">
       <Filter>Source\Resource</Filter>
     </Image>
-    <Image Include="..\Resource\Icons\move.png" />
-    <Image Include="..\Resource\Icons\Hand.png" />
+    <Image Include="..\Resource\Icons\visible disable.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\visible enable.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\unlock.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\move.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\lock.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\hand.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\layer_empty.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\layer_fill.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Source\Shader\Grid.hlsl">
@@ -167,9 +192,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Source\Shader\MarchingAnts.hlsl">
-      <Filter>Source\Shader</Filter>
-    </None>
     <None Include="..\Source\Shader\LineMarchingAnts.hlsl">
       <Filter>Source\Shader</Filter>
     </None>

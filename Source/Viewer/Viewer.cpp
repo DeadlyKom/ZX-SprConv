@@ -21,6 +21,8 @@ std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
 
 void SViewer::NativeInitialize(FNativeDataInitialize Data)
 {
+	Initialize();
+
 	Windows = { { EWindowsType::ImageList,		std::make_shared<SImageList>()	},
 				{ EWindowsType::Tools,			std::make_shared<STools>()		},
 				{ EWindowsType::Sprite,			std::make_shared<SSprite>()		},
@@ -37,7 +39,27 @@ void SViewer::NativeInitialize(FNativeDataInitialize Data)
 }
 
 void SViewer::Initialize()
-{}
+{
+	FSprite NewSprite;
+	NewSprite.NumFrame = 6;
+	NewSprite.Size = ImVec2(64.0f, 64.0f);
+	NewSprite.Pivot = ImVec2(32.0f, 32.0f);
+	NewSprite.Name = "Demo";
+
+	FSpriteLayer NewLayer1;
+	NewLayer1.bVisible = true;
+	NewLayer1.bLock = false;
+	NewLayer1.Name = "Layer 1";
+	NewSprite.Layers.push_back(NewLayer1);
+
+	FSpriteLayer NewLayer2;
+	NewLayer2.bVisible = true;
+	NewLayer2.bLock = false;
+	NewLayer2.Name = "Layer 2";
+	NewSprite.Layers.push_back(NewLayer2);
+	
+	Sprites.push_back(NewSprite);
+}
 
 void SViewer::Render()
 {
@@ -93,6 +115,11 @@ void SViewer::Destroy()
 	{
 		Window.second->Destroy();
 	}
+}
+
+FSprite& SViewer::GetSelectedSprite()
+{
+	return Sprites[0];
 }
 
 bool SViewer::IsHandTool()
