@@ -101,8 +101,6 @@ void SViewer::Render()
 
 void SViewer::Tick(float DeltaTime)
 {
-	HandlerInput();
-
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
 		Window.second->Tick(DeltaTime);
@@ -135,6 +133,15 @@ bool SViewer::IsMarqueeTool()
 void SViewer::HandlerInput()
 {
 	const ImGuiIO& IO = ImGui::GetIO();
+	const bool Shift = IO.KeyShift;
+	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
+	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
+	
+	//if (!ImGui::IsWindowFocused())
+	//{
+	//	return;
+	//}
+
 	if (ImGui::IsKeyPressed(ImGuiMod_Ctrl))
 	{
 		EToolType TmpLastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Move);

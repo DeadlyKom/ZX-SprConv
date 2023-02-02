@@ -22,27 +22,55 @@ void STools::Render()
 		return;
 	}
 
-	ImGui::Begin("Tools", &bOpen);
-	ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-	ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
-	ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-	if (ImGui::ImageButton("Tools##Marquee", ImageMarquee->GetShaderResourceView(), ImageMarquee->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, Selected == EToolType::Marquee ? SelectedColor : TintColor))
+	ImGui::Begin("Tools", &bOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize);
+
+	const float DefaultWidth = ImGui::GetContentRegionAvail().x;
+	auto ButtonLambda = [DefaultWidth](const char* ID, std::shared_ptr<FImage> Image, bool bSelectedCondition, float& AvailWidth) -> bool
+	{
+		if (!Image->IsValid())
+		{
+			return false;
+		}
+
+		const ImVec2 Padding = ImGui::GetStyle().FramePadding;
+		const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+		const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
+		const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		const float Width = Image->Size.x + Padding.x * 2.0f;
+
+		const bool bResult = ImGui::ImageButton(ID, Image->GetShaderResourceView(), Image->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bSelectedCondition ? SelectedColor : TintColor);
+
+		AvailWidth -= Width;
+		if (AvailWidth > Width)
+		{
+			ImGui::SameLine();
+		}
+		else if (AvailWidth < Width)
+		{
+			AvailWidth = DefaultWidth;
+		}
+
+		return bResult;
+	};
+
+	float AvailWidth = DefaultWidth;
+	if (ButtonLambda("Tools##Marquee", ImageMarquee, Selected == EToolType::Marquee, AvailWidth))
 	{
 		Selected = EToolType::Marquee;
 	}
-	else if (ImGui::ImageButton("Tools##Pan", ImagePan->GetShaderResourceView(), ImagePan->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, Selected == EToolType::Pan ? SelectedColor : TintColor))
+	if (ButtonLambda("Tools##Pan", ImagePan, Selected == EToolType::Pan, AvailWidth))
 	{
 		Selected = EToolType::Pan;
 	}
-	else if (ImGui::ImageButton("Tools##Eraser", ImageEraser->GetShaderResourceView(), ImageEraser->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, Selected == EToolType::Eraser ? SelectedColor : TintColor))
+	if (ButtonLambda("Tools##Eraser", ImageEraser, Selected == EToolType::Eraser, AvailWidth))
 	{
 		Selected = EToolType::Eraser;
 	}
-	else if (ImGui::ImageButton("Tools##Hand", ImageHand->GetShaderResourceView(), ImageHand->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, Selected == EToolType::Hand ? SelectedColor : TintColor))
+	if (ButtonLambda("Tools##Hand", ImageHand, Selected == EToolType::Hand, AvailWidth))
 	{
 		Selected = EToolType::Hand;
 	}
-	else if (ImGui::ImageButton("Tools##Move", ImageMove->GetShaderResourceView(), ImageMove->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, Selected == EToolType::Move ? SelectedColor : TintColor))
+	if (ButtonLambda("Tools##Move", ImageMove, Selected == EToolType::Move, AvailWidth))
 	{
 		Selected = EToolType::Move;
 	}

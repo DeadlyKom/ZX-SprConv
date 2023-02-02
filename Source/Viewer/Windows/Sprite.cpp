@@ -158,7 +158,7 @@ void SSprite::Render()
 
 	ImVec2 Size(0.0f, 0.0f);
 	ImGui::Begin("Sprite Editor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
-	if (false)
+	if (true)
 	{
 		ImGui::Checkbox("Attribute Grid", &GetParent()->GetViewFlags().bAttributeGrid);
 		ImGui::Checkbox("Grid", &GetParent()->GetViewFlags().bGrid);
@@ -550,7 +550,16 @@ ImVec2 SSprite::ConverPositionToPixel(const ImVec2& Position)
 
 void SSprite::InputMarquee()
 {
+	if (!ImGui::IsWindowFocused())
+	{
+		return;
+	}
+
 	const ImGuiIO& IO = ImGui::GetIO();
+	const bool Shift = IO.KeyShift;
+	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
+	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
+
 	if (!bMarqueeActive && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
 	{
 		StartMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos());
