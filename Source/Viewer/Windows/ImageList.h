@@ -1,8 +1,9 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include "Viewer\ViewChild.h"
 
-class SImageList : public SWindow
+class SImageList : public SViewChild
 {
 	DECLARE_MULTICAST_DELEGATE(FSelectedImageDelegate, const std::filesystem::directory_entry& /*Path*/);
 public:
@@ -12,9 +13,5 @@ public:
 	FSelectedImageDelegate OnSelectedImage;
 
 private:
-	void ShowMenuFiles();
-
 	int32_t FileSelectIndex;
-	DelegateHandle FileDialogHandle;
-	std::vector<std::filesystem::directory_entry> Files;
 };

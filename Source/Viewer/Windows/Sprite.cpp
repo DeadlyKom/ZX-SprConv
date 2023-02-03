@@ -158,13 +158,14 @@ void SSprite::Render()
 
 	ImVec2 Size(0.0f, 0.0f);
 	ImGui::Begin("Sprite Editor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
-	if (true)
-	{
-		ImGui::Checkbox("Attribute Grid", &GetParent()->GetViewFlags().bAttributeGrid);
-		ImGui::Checkbox("Grid", &GetParent()->GetViewFlags().bGrid);
-		ImGui::Checkbox("Pixel Grid", &GetParent()->GetViewFlags().bPixelGrid);
-		ImGui::DragInt2("Grid", GetParent()->GetViewFlags().GridSize, 0.3f, 1, 256);
-	}
+
+	//if (true)
+	//{
+	//	ImGui::Checkbox("Attribute Grid", &GetParent()->GetViewFlags().bAttributeGrid);
+	//	ImGui::Checkbox("Grid", &GetParent()->GetViewFlags().bGrid);
+	//	ImGui::Checkbox("Pixel Grid", &GetParent()->GetViewFlags().bPixelGrid);
+	//	ImGui::DragInt2("Grid", GetParent()->GetViewFlags().GridSize, 0.3f, 1, 256);
+	//}
 
 	// calculate panel size
 	const float BorderWidth = 1.0f;
@@ -305,7 +306,7 @@ void SSprite::Render()
 		}
 	}
 
-	if (true)
+	if (false)
 	{
 		ImGui::Begin("Debug");
 

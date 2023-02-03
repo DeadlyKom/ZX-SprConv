@@ -33,48 +33,60 @@ void SSequencer::Render()
 		return;
 	}
 
-	// Options
-	static ImGuiTableFlags Flags = 
-		ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
-		//| ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
-		| ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersInnerH
-		| ImGuiTableFlags_Borders
-		//| ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
-		| ImGuiTableFlags_SizingFixedFit;
-	const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
-	const int freeze_cols = 3;
-	const int freeze_rows = 2;
-	static float inner_width_with_scroll = 0.0f; // Auto-extend
-	static bool outer_size_enabled = true;
-	static float row_min_height = 0.0f; // Auto
-
-	FSprite& Sprite = GetParent()->GetSelectedSprite();
-	static ImVec2 outer_size_value = ImVec2(38.0f * (Sprite.NumFrame + 3) + 100.0f, TEXT_BASE_HEIGHT * (Sprite.Layers.size() + 1) * 1.7f);
-
-	bool bHovered;
 	ImGui::Begin("Sequencer", &bOpen);
 
-	const float inner_width_to_use = (Flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0.0f;
-	if (ImGui::BeginTable("Sequencer", 3 + Sprite.NumFrame, Flags, outer_size_enabled ? outer_size_value : ImVec2(0, 0), inner_width_to_use))
+	RenderControlButtons();
+	RenderSequencer();
+
+	ImGui::End();
+}
+
+void SSequencer::RenderControlButtons()
+{
+
+}
+
+void SSequencer::RenderSequencer()
+{
+	static ImGuiTableFlags Flags =
+		ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
+		| ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersInnerH
+		| ImGuiTableFlags_Borders
+		| ImGuiTableFlags_SizingFixedFit;
+
+	const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+	const int FreezeColums = 3;
+	const int FreezeRows = 2;
+	const float InnerWidthWithScroll = 0.0f;
+	const bool OuterSizeEnabled = true;
+	const float RowMinHeight = 0.0f;
+
+	FSprite& Sprite = GetParent()->GetSelectedSprite();
+	const ImVec2 OuterSizeValue = ImVec2(38.0f * (Sprite.NumFrame + 3) + 100.0f, TEXT_BASE_HEIGHT * (Sprite.Layers.size() + 1) * 1.7f);
+
+	bool bHovered;
+
+	const float inner_width_to_use = (Flags & ImGuiTableFlags_ScrollX) ? InnerWidthWithScroll : 0.0f;
+	if (ImGui::BeginTable("Sequencer", 3 + Sprite.NumFrame, Flags, OuterSizeEnabled ? OuterSizeValue : ImVec2(0, 0), inner_width_to_use))
 	{
 		//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 		//ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
 		ImGui::GetCurrentWindow()->Flags |= ImGuiWindowFlags_AlignVertical | ImGuiWindowFlags_AlignHorizontal | ImGuiWindowFlags_NoBackground;
 
-		ImGui::TableSetupColumn("Visible",	ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Visible);
-        ImGui::TableSetupColumn("Lock",		ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Lock);
-        ImGui::TableSetupColumn("Layer",	ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 100.0f, ItemColumnID_LayerName);
+		ImGui::TableSetupColumn("Visible", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Visible);
+		ImGui::TableSetupColumn("Lock", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Lock);
+		ImGui::TableSetupColumn("Layer", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 100.0f, ItemColumnID_LayerName);
 
 		for (uint32_t FrameIndex = 0; FrameIndex < Sprite.NumFrame; ++FrameIndex)
 		{
 			ImGui::TableSetupColumn("Frame##%i", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Visible);
 		}
 
-        ImGui::TableSetupScrollFreeze(freeze_cols, freeze_rows);
+		ImGui::TableSetupScrollFreeze(FreezeColums, FreezeRows);
 		//ImGui::TableHeadersRow();
 
-		ImGui::TableNextRow(ImGuiTableRowFlags_None, row_min_height);
+		ImGui::TableNextRow(ImGuiTableRowFlags_None, RowMinHeight);
 
 		const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 		const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -85,7 +97,7 @@ void SSequencer::Render()
 			std::shared_ptr<FImage> ImageVisible = bVisible ? ImageVisibleEnable : ImageVisibleDisable;
 			{
 				ImGuiWindow* Window = ImGui::GetCurrentWindow();
-				const ImRect bb(Window->DC.CursorPos,Window->DC.CursorPos + ImageVisible->Size);
+				const ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + ImageVisible->Size);
 				const ImGuiID id = Window->GetID("Sequencer##BaseVisible");
 				bHovered = ImGui::ItemHoverable(bb, id);
 			}
@@ -121,7 +133,7 @@ void SSequencer::Render()
 
 			for (uint32_t FrameIndex = 0; FrameIndex < Sprite.NumFrame; ++FrameIndex)
 			{
-				ImGui::TableNextColumn();			
+				ImGui::TableNextColumn();
 				std::string NumFrameText = Utils::Format("%i", FrameIndex + 1);
 				ImGui::TextEx(NumFrameText.c_str(), nullptr, ImGuiTextFlags_AlignHorizontal | ImGuiTextFlags_AlignVertical);
 			}
@@ -129,7 +141,7 @@ void SSequencer::Render()
 
 		for (uint32_t RowIndex = 0; RowIndex < Sprite.Layers.size(); ++RowIndex)
 		{
-			ImGui::TableNextRow(ImGuiTableRowFlags_None, row_min_height);
+			ImGui::TableNextRow(ImGuiTableRowFlags_None, RowMinHeight);
 
 			FSpriteLayer& SpriteLayer = Sprite.Layers[RowIndex];
 
@@ -167,7 +179,7 @@ void SSequencer::Render()
 			for (uint32_t FrameIndex = 0; FrameIndex < Sprite.NumFrame; ++FrameIndex)
 			{
 				ImGui::TableNextColumn();
-				
+
 				std::shared_ptr<FImage> ImageLayer = SpriteLayer.bEmpty ? ImageEmpty : ImageFill;
 				{
 					ImGuiWindow* Window = ImGui::GetCurrentWindow();
@@ -181,5 +193,4 @@ void SSequencer::Render()
 		ImGui::PopStyleVar();
 		ImGui::EndTable();
 	}
-	ImGui::End();
 }

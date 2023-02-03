@@ -1,6 +1,5 @@
 #include "ImageList.h"
-#include "Core\Utils.h"
-#include "Viewer\Windows\FileDialog.h"
+#include "Viewer\Viewer.h"
 
 void SImageList::Initialize()
 {
@@ -17,16 +16,7 @@ void SImageList::Render()
 		return;
 	}
 
-	ImGui::Begin("Image List", &bOpen, ImGuiWindowFlags_MenuBar);
-
-	if (ImGui::BeginMenuBar())
-	{
-		if (ImGui::BeginMenu("Files"))
-		{
-			ShowMenuFiles();
-		}
-		ImGui::EndMenuBar();
-	}
+	ImGui::Begin("Image List", &bOpen);
 
 	ImVec2 FilesSize;
 	{
@@ -64,6 +54,7 @@ void SImageList::Render()
 	ImGui::NextColumn();
 	ImGui::Separator();
 
+	std::vector<std::filesystem::directory_entry>& Files = GetParent()->Files;
 	for (int32_t i = 0; i < Files.size(); ++i)
 	{
 		if (ImGui::Selectable(Files[i].path().filename().string().c_str(), i == FileSelectIndex, ImGuiSelectableFlags_AllowDoubleClick, ImVec2(ImGui::GetWindowContentRegionWidth(), 0)))
@@ -82,28 +73,4 @@ void SImageList::Render()
 	ImGui::End();
 
 	SWindow::Render();
-}
-
-void SImageList::ShowMenuFiles()
-{
-	if (ImGui::MenuItem("Open", NULL) && !FileDialogHandle.IsValid())
-	{
-		
-		const std::string OldPath = Files.empty() ? "" : Files.back().path().parent_path().string();
-		FileDialogHandle = Utils::OpenWindowFileDialog("Select File", EDialogMode::Select, [this](std::filesystem::path FilePath) -> void
-		{
-			std::filesystem::directory_entry File(FilePath);
-			if(File.exists())
-			{
-				Files.push_back(File);
-				OnSelectedImage.Broadcast(Files.back());
-			}
-			else
-			{
-				ImGui::LogText("Error");
-			}
-			Utils::CloseWindowFileDialog(FileDialogHandle);
-		}, OldPath, "*.*, *.png, *.scr");
-	}
-	ImGui::EndMenu();
 }

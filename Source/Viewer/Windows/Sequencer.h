@@ -10,6 +10,9 @@ public:
 	virtual void Render() override;
 
 private:
+	void RenderControlButtons();
+	void RenderSequencer();
+
 	bool bVisible = true;
 	bool bLock = false;
 

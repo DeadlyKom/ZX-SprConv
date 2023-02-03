@@ -22,10 +22,21 @@ struct FViewFlags
 	bool bGrid = false;
 	bool bPixelGrid = true;
 	int GridSize[2] = { 16, 16 };
+
+	//
+	bool bDontAskMeNextTime_Quit = false;
 };
+
+struct FRecentFiles
+{
+	std::string VisibleName;
+};
+
+class SImageList;
 
 class SViewer : public SWindow
 {
+	friend SImageList;
 public:
 	SViewer();
 
@@ -45,15 +56,28 @@ public:
 
 private:
 	void HandlerInput();
-	FViewFlags ViewFlags;
-	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;
-
-	EToolType LastSelectedTool;
-	std::vector<FSprite> Sprites;
+	void ShowMenuFile();
+	void ShowMenuSprite();
+	void ShowMenuLayer();
+	void ShowMenuFrame();
+	void ShowMenuView();
+	void ShowWindows();
 
 	template <typename T>
 	T* WindowCast(EWindowsType Type)
 	{
 		return static_cast<T*>(Windows[Type].get());
 	}
+
+	FViewFlags ViewFlags;
+	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;
+
+	EToolType LastSelectedTool;
+	std::vector<FSprite> Sprites;
+
+	std::vector<FRecentFiles> RecentFiles;
+
+	// open
+	DelegateHandle FileDialogHandle;
+	std::vector<std::filesystem::directory_entry> Files;
 };
