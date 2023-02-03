@@ -196,15 +196,18 @@
   <ItemGroup>
     <Image Include="..\Resource\Icons\eraser.png" />
     <Image Include="..\Resource\Icons\hand.png" />
+    <Image Include="..\Resource\Icons\Indexed mode.png" />
     <Image Include="..\Resource\Icons\layer_empty.png" />
     <Image Include="..\Resource\Icons\layer_fill.png" />
     <Image Include="..\Resource\Icons\lock.png" />
     <Image Include="..\Resource\Icons\marquee.png" />
     <Image Include="..\Resource\Icons\move.png" />
     <Image Include="..\Resource\Icons\pan.png" />
+    <Image Include="..\Resource\Icons\RGBA mode.png" />
     <Image Include="..\Resource\Icons\unlock.png" />
     <Image Include="..\Resource\Icons\visible disable.png" />
     <Image Include="..\Resource\Icons\visible enable.png" />
+    <Image Include="..\Resource\Icons\zx mode.png" />
     <Image Include="Icone.ico" />
     <Image Include="IconeWindow.ico" />
   </ItemGroup>

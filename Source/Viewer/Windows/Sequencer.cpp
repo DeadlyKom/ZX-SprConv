@@ -48,7 +48,7 @@ void SSequencer::RenderControlButtons()
 
 void SSequencer::RenderSequencer()
 {
-	static ImGuiTableFlags Flags =
+	const ImGuiTableFlags Flags =
 		ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
 		| ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersInnerH
 		| ImGuiTableFlags_Borders
@@ -63,6 +63,55 @@ void SSequencer::RenderSequencer()
 
 	FSprite& Sprite = GetParent()->GetSelectedSprite();
 	const ImVec2 OuterSizeValue = ImVec2(38.0f * (Sprite.NumFrame + 3) + 100.0f, TEXT_BASE_HEIGHT * (Sprite.Layers.size() + 1) * 1.7f);
+
+	auto ButtonExLambda = [](const char* StringID, ImTextureID TextureID, const ImVec2& Size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& BackgroundColor, const ImVec4& TintColor) -> bool
+	{
+		ImGuiWindow* Window = ImGui::GetCurrentWindow();
+		if (Window->SkipItems)
+		{
+			return false;
+		}
+
+		const ImGuiID ID = Window->GetID(StringID);
+		ImGuiStyle& Style = ImGui::GetStyle();
+		const ImVec2 Padding = Style.FramePadding;
+		const ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + Size + Padding * 2.0f);
+		ImGui::ItemSize(bb);
+		if (!ImGui::ItemAdd(bb, ID))
+		{
+			return false;
+		}
+
+		bool bHovered, bHeld;
+		bool pressed = ImGui::ButtonBehavior(bb, ID, &bHovered, &bHeld);
+
+		// align
+		ImVec2 Align(0.0f, 0.0f);
+		if (Window->Flags & ImGuiWindowFlags_AlignHorizontal)
+		{
+			Align.x = (Window->WorkRect.GetSize().x - Size.x) * 0.5f;
+		}
+		if (Window->Flags & ImGuiWindowFlags_AlignVertical)
+		{
+			ImVec2 Rect(Window->DC.CursorMaxPos - Window->DC.CursorPosPrevLine);
+			Align.y = (Rect.y - Size.y) * 0.5f;
+		}
+
+		// Render
+		const ImU32 col = ImGui::GetColorU32((bHeld && bHovered) ? ImGuiCol_ButtonActive : bHovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+		ImGui::RenderNavHighlight(bb, ID);
+		if (!(Window->Flags & ImGuiWindowFlags_NoBackground))
+		{
+			ImGui::RenderFrame(bb.Min + Align, bb.Max + Align, col, true, ImClamp((float)ImMin(Padding.x, Padding.y), 0.0f, Style.FrameRounding));
+		}
+		if (BackgroundColor.w > 0.0f)
+		{
+			Window->DrawList->AddRectFilled(bb.Min + Padding + Align, bb.Max - Padding + Align, ImGui::GetColorU32(BackgroundColor));
+		}
+		Window->DrawList->AddImage(TextureID, bb.Min + Padding + Align, bb.Max - Padding + Align, uv0, uv1, ImGui::GetColorU32(TintColor));
+
+		return pressed;
+	};
 
 	bool bHovered;
 
@@ -101,7 +150,7 @@ void SSequencer::RenderSequencer()
 				const ImGuiID id = Window->GetID("Sequencer##BaseVisible");
 				bHovered = ImGui::ItemHoverable(bb, id);
 			}
-			if (ImGui::ImageButton("Sequencer##BaseVisible", ImageVisible->GetShaderResourceView(), ImageVisible->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
+			if (ButtonExLambda("Sequencer##BaseVisible", ImageVisible->GetShaderResourceView(), ImageVisible->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
 			{
 				bVisible = !bVisible;
 				for (uint32_t RowIndex = 0; RowIndex < Sprite.Layers.size(); ++RowIndex)
@@ -119,7 +168,7 @@ void SSequencer::RenderSequencer()
 				const ImGuiID id = Window->GetID("Sequencer##BaseLock");
 				bHovered = ImGui::ItemHoverable(bb, id);
 			}
-			if (ImGui::ImageButton("Sequencer##BaseLock", ImageLocking->GetShaderResourceView(), ImageLocking->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
+			if (ButtonExLambda("Sequencer##BaseLock", ImageLocking->GetShaderResourceView(), ImageLocking->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
 			{
 				bLock = !bLock;
 				for (uint32_t RowIndex = 0; RowIndex < Sprite.Layers.size(); ++RowIndex)
@@ -154,7 +203,7 @@ void SSequencer::RenderSequencer()
 				const ImGuiID id = Window->GetID(LayerVisibleName.c_str());
 				bHovered = ImGui::ItemHoverable(bb, id);
 			}
-			if (ImGui::ImageButton(LayerVisibleName.c_str(), ImageVisible->GetShaderResourceView(), ImageVisible->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
+			if (ButtonExLambda(LayerVisibleName.c_str(), ImageVisible->GetShaderResourceView(), ImageVisible->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
 			{
 				SpriteLayer.bVisible = !SpriteLayer.bVisible;
 			}
@@ -168,7 +217,7 @@ void SSequencer::RenderSequencer()
 				const ImGuiID id = Window->GetID(LayerLockName.c_str());
 				bHovered = ImGui::ItemHoverable(bb, id);
 			}
-			if (ImGui::ImageButton(LayerLockName.c_str(), ImageLocking->GetShaderResourceView(), ImageLocking->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
+			if (ButtonExLambda(LayerLockName.c_str(), ImageLocking->GetShaderResourceView(), ImageLocking->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bHovered ? SelectedColor : TintColor))
 			{
 				SpriteLayer.bLock = !SpriteLayer.bLock;
 			}

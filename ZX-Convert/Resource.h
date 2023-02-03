@@ -18,12 +18,16 @@
 #define IDB_LAYER_EMPTY                 119
 #define IDB_LAYER_FILL                  120
 #define IDB_SEQUENCER_FILL              121
+#define IDB_COLOR_MODE_INDEXED          121
+#define IDB_COLOR_MODE_RGBA             123
+#define IDB_PNG1                        125
+#define IDB_COLOR_MODE_ZX               125
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        123
+#define _APS_NEXT_RESOURCE_VALUE        126
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101

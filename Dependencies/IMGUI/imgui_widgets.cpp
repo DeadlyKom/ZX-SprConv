@@ -1088,30 +1088,18 @@ bool ImGui::ImageButtonEx(ImGuiID id, ImTextureID texture_id, const ImVec2& size
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
-    // align
-    ImVec2 Align(0.0f, 0.0f);
-    if (window->Flags & ImGuiWindowFlags_AlignHorizontal)
-    {
-        Align.x = (window->WorkRect.GetSize().x - size.x) * 0.5f;
-    }
-    if (window->Flags & ImGuiWindowFlags_AlignVertical)
-    {
-        ImVec2 Rect(window->DC.CursorMaxPos - window->DC.CursorPosPrevLine);
-        Align.y = (Rect.y - size.y) * 0.5f;
-    }
-
     // Render
     const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     RenderNavHighlight(bb, id);
     if (!(window->Flags & ImGuiWindowFlags_NoBackground))
     {
-        RenderFrame(bb.Min + Align, bb.Max + Align, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+        RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
     }
     if (bg_col.w > 0.0f)
     {
-        window->DrawList->AddRectFilled(bb.Min + padding + Align, bb.Max - padding + Align, GetColorU32(bg_col));
+        window->DrawList->AddRectFilled(bb.Min + padding, bb.Max - padding, GetColorU32(bg_col));
     }
-    window->DrawList->AddImage(texture_id, bb.Min + padding + Align, bb.Max - padding + Align, uv0, uv1, GetColorU32(tint_col));
+    window->DrawList->AddImage(texture_id, bb.Min + padding, bb.Max - padding, uv0, uv1, GetColorU32(tint_col));
 
     return pressed;
 }

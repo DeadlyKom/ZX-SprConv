@@ -94,6 +94,12 @@ IDB_LAYER_EMPTY         PNG                     "C:\\Work\\Learning\\Tools\\ZX-S
 
 IDB_LAYER_FILL          PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\layer_fill.png"
 
+IDB_COLOR_MODE_RGBA     PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\RGBA mode.png"
+
+IDB_COLOR_MODE_INDEXED  PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\Indexed mode.png"
+
+IDB_COLOR_MODE_ZX       PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\zx mode.png"
+
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////
 

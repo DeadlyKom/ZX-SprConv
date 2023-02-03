@@ -3,6 +3,14 @@
 #include <CoreMinimal.h>
 #include "Image.h"
 
+enum class EColorMode
+{
+	Unknow,
+	ZX,
+	Indexed,
+	RGB
+};
+
 struct FSpriteBlock
 {
 	FSpriteBlock()
@@ -41,12 +49,17 @@ struct FSprite
 		: NumFrame(0)
 		, Size(0.0f, 0.0f)
 		, Pivot(0.0f, 0.0f)
+		, ColorMode(EColorMode::Unknow)
 		, Name("")
 	{}
 
 	uint32_t NumFrame;
+
 	ImVec2 Size;
 	ImVec2 Pivot;
+
+	EColorMode ColorMode;
+
 	std::string Name;
 	std::vector<FSpriteLayer> Layers;
 };

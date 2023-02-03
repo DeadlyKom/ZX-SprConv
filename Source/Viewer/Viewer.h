@@ -54,14 +54,20 @@ public:
 	bool IsHandTool();
 	bool IsMarqueeTool();
 
+	static int TextEditNumberCallback(ImGuiInputTextCallbackData* Data);
+
 private:
 	void HandlerInput();
+
 	void ShowMenuFile();
 	void ShowMenuSprite();
 	void ShowMenuLayer();
 	void ShowMenuFrame();
 	void ShowMenuView();
 	void ShowWindows();
+
+	bool WindowQuitModal();
+	bool WindowCreateSpriteModal();
 
 	template <typename T>
 	T* WindowCast(EWindowsType Type)
@@ -80,4 +86,12 @@ private:
 	// open
 	DelegateHandle FileDialogHandle;
 	std::vector<std::filesystem::directory_entry> Files;
+
+	//
+	std::shared_ptr<FImage> ImageRGBA;
+	std::shared_ptr<FImage> ImageIndexed;
+	std::shared_ptr<FImage> ImageZX;
+	char WidthBuf[32] = "";
+	char HeightBuf[32] = "";
+
 };

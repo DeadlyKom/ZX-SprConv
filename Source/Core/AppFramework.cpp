@@ -427,7 +427,7 @@ int32_t FAppFramework::Run()
 			Idle();
 		}
 
-		bRun = Viewer->IsOpen();
+		bRun = bRun ? Viewer->IsOpen() : false;
 	}
 
 	return (int32_t)msg.wParam;

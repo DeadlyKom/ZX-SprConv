@@ -185,6 +185,9 @@
     <Image Include="..\Resource\Icons\layer_fill.png">
       <Filter>Source\Resource</Filter>
     </Image>
+    <Image Include="..\Resource\Icons\RGBA mode.png" />
+    <Image Include="..\Resource\Icons\Indexed mode.png" />
+    <Image Include="..\Resource\Icons\zx mode.png" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Source\Shader\Grid.hlsl">

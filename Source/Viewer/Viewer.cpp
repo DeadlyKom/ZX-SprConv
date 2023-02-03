@@ -11,10 +11,13 @@
 #include "Windows/SetSprite.h"
 
 #include "Viewer\Windows\FileDialog.h"
+
 namespace
 {
 	const char* MenuFileName = "File";
 	const char* MenuQuitName = "Quit";
+
+	const char* CreateSpriteName = "Create Sprite";
 }
 
 SViewer::SViewer()
@@ -67,6 +70,10 @@ void SViewer::Initialize()
 	//NewSprite.Layers.push_back(NewLayer2);
 	
 	Sprites.push_back(NewSprite);
+
+	ImageRGBA = Utils::LoadImageFromResource(IDB_COLOR_MODE_RGBA, TEXT("PNG"));
+	ImageIndexed = Utils::LoadImageFromResource(IDB_COLOR_MODE_INDEXED, TEXT("PNG"));
+	ImageZX = Utils::LoadImageFromResource(IDB_COLOR_MODE_ZX, TEXT("PNG"));
 }
 
 void SViewer::Render()
@@ -117,6 +124,20 @@ bool SViewer::IsHandTool()
 bool SViewer::IsMarqueeTool()
 {
 	return WindowCast<STools>(EWindowsType::Tools)->GetSelected() == EToolType::Marquee;
+}
+
+int SViewer::TextEditNumberCallback(ImGuiInputTextCallbackData* Data)
+{
+	switch (Data->EventFlag)
+	{
+	case ImGuiInputTextFlags_CallbackCharFilter:
+		if (Data->EventChar < '0' || Data->EventChar > '9')
+		{
+			return 1;
+		}
+		break;
+	}
+	return 0;
 }
 
 void SViewer::HandlerInput()
@@ -174,10 +195,21 @@ void SViewer::HandlerInput()
 void SViewer::ShowMenuFile()
 {
 	const ImGuiID QuitID = ImGui::GetCurrentWindow()->GetID(MenuQuitName);
+	const ImGuiID CreateSpriteID = ImGui::GetCurrentWindow()->GetID(CreateSpriteName);
 
 	if (ImGui::BeginMenu(MenuFileName))
 	{
-		if (ImGui::MenuItem("New")) {}
+		if (ImGui::BeginMenu("New"))
+		{
+			if (ImGui::MenuItem("Sprite", "Ctrl+N"))
+			{
+				ImGui::OpenPopup(CreateSpriteID);
+			}
+			if (ImGui::MenuItem("Sprite Preset", "Ctrl+Shift+N")) {}
+
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::MenuItem("Open", "Ctrl+O"))
 		{
 			const std::string OldPath = Files.empty() ? "" : Files.back().path().parent_path().string();
@@ -237,32 +269,8 @@ void SViewer::ShowMenuFile()
 	}
 
 	{
-		// Always center this window when appearing
-		const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-		if (ImGui::BeginPopupModal(MenuQuitName, NULL, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			ImGui::Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
-			ImGui::Separator();
-
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-			ImGui::Checkbox("Don't ask me next time", &ViewFlags.bDontAskMeNextTime_Quit);
-			ImGui::PopStyleVar();
-
-			if (ImGui::Button("OK", ImVec2(120, 0)))
-			{
-				ImGui::CloseCurrentPopup();
-				Close();
-			}
-			ImGui::SetItemDefaultFocus();
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(120, 0)))
-			{
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
+		if (WindowQuitModal()) {}
+		else if (WindowCreateSpriteModal()) {}
 	}
 }
 
@@ -270,15 +278,7 @@ void SViewer::ShowMenuSprite()
 {
 	if (ImGui::BeginMenu("Sprite"))
 	{
-		if (ImGui::MenuItem("New")) {}
 		if (ImGui::MenuItem("Properties...", "Ctrl+P")) {}
-		if (ImGui::BeginMenu("Color Mode"))
-		{
-			if (ImGui::MenuItem("RGB Color", NULL, true)) {}
-			if (ImGui::MenuItem("Indexed", NULL, false)) {}
-
-			ImGui::EndMenu();
-		}
 		ImGui::Separator();
 
 		if (ImGui::MenuItem("Sprite Size...")) {}
@@ -356,4 +356,147 @@ void SViewer::ShowWindows()
 	{
 		Window.second->Render();
 	}
+}
+
+bool SViewer::WindowQuitModal()
+{
+	// Always center this window when appearing
+	const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	const bool bVisible = ImGui::BeginPopupModal(MenuQuitName, NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	if (bVisible)
+	{
+		ImGui::Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
+		ImGui::Separator();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		ImGui::Checkbox("Don't ask me next time", &ViewFlags.bDontAskMeNextTime_Quit);
+		ImGui::PopStyleVar();
+
+		if (ImGui::Button("OK", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+			Close();
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+	return bVisible;
+}
+
+bool SViewer::WindowCreateSpriteModal()
+{
+	// Always center this window when appearing
+	const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	auto ButtonLambda = [](const char* StringID, ImTextureID TextureID, const ImVec2& ImageSize, const ImVec2& Size, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor, const ImVec4& TextColor) -> bool
+	{
+		ImGuiWindow* Window = ImGui::GetCurrentWindow();
+		if (Window->SkipItems)
+		{
+			return false;
+		}
+
+		const ImGuiID ID = Window->GetID(StringID);
+		const ImGuiStyle& Style = ImGui::GetStyle();
+		const ImVec2 LabelSize = ImGui::CalcTextSize(StringID, NULL, true);
+		const ImVec2 NewSize = ImGui::CalcItemSize(Size, ImMax(ImageSize.x, LabelSize.x) + Style.FramePadding.x * 2.0f, ImageSize.y + LabelSize.y + Style.FramePadding.y * 2.0f);
+
+		const ImVec2 Padding = Style.FramePadding;
+		const ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + NewSize + Padding * 2.0f);
+		ImGui::ItemSize(bb);
+		if (!ImGui::ItemAdd(bb, ID))
+		{
+			return false;
+		}
+
+		bool bHovered, bHeld;
+		bool bPressed = ImGui::ButtonBehavior(bb, ID, &bHovered, &bHeld);
+
+		// align
+		ImVec2 Align(0.0f, 0.0f);
+		if (Window->Flags & ImGuiWindowFlags_AlignHorizontal)
+		{
+			Align.x = (Window->WorkRect.GetSize().x - NewSize.x) * 0.5f;
+		}
+		if (Window->Flags & ImGuiWindowFlags_AlignVertical)
+		{
+			ImVec2 Rect(Window->DC.CursorMaxPos - Window->DC.CursorPosPrevLine);
+			Align.y = (Rect.y - NewSize.y) * 0.5f;
+		}
+
+		// Render
+		//ImGui::RenderNavHighlight(bb, ID);
+		//if (!(Window->Flags & ImGuiWindowFlags_NoBackground))
+		//{
+		//	const ImU32 Color = ImGui::GetColorU32((bHeld && bHovered) ? ImGuiCol_ButtonActive : bHovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+		//	ImGui::RenderFrame(bb.Min + Align, bb.Max + Align, Color, true, ImClamp((float)ImMin(Padding.x, Padding.y), 0.0f, Style.FrameRounding));
+		//}
+		//if (BackgroundColor.w > 0.0f)
+		//{
+		//	Window->DrawList->AddRectFilled(bb.Min + Padding + Align, bb.Max - Padding + Align, ImGui::GetColorU32(BackgroundColor));
+		//}
+
+		//ImGui::PushStyleColor(ImGuiCol_Text, TextColor);
+		ImGui::RenderTextClipped(bb.Min + Style.FramePadding, bb.Max - Style.FramePadding, StringID, NULL, &LabelSize, Style.ButtonTextAlign, &bb);
+		//ImGui::PopStyleColor();
+
+		Window->DrawList->AddImage(TextureID, bb.Min + Padding + Align, bb.Max - Padding + Align, ImVec2(0.0, 0.0f), ImVec2(1.0, 1.0f), bHovered ? ImGui::GetColorU32(TintColor) : ImGui::GetColorU32(SelectedColor));
+
+		return bPressed;
+	};
+
+	const bool bVisible = ImGui::BeginPopupModal(CreateSpriteName, NULL, ImGuiWindowFlags_AlwaysAutoResize);
+	if (bVisible)
+	{
+		const float TextWidth = ImGui::CalcTextSize("A").x;
+		const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
+		ImGui::Text("Size :");
+		ImGui::Separator();
+
+		const ImGuiInputTextFlags InputNumberTextFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CallbackCharFilter;
+		ImGui::InputTextEx("Width ", NULL, WidthBuf, IM_ARRAYSIZE(WidthBuf), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)this);
+		ImGui::InputTextEx("Input ", NULL, HeightBuf, IM_ARRAYSIZE(HeightBuf), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)this);
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
+
+		ImGui::Text("Color Mode :");
+		ImGui::Separator();
+
+		const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+		const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
+		const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		const ImVec4 TextColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+		ButtonLambda("RGBA", ImageRGBA->GetShaderResourceView(), ImageRGBA->Size, ImVec2(64.0, 64.0f), BackgroundColor, TintColor, SelectedColor, TextColor);
+		ImGui::SameLine();
+		ButtonLambda("INDEXED", ImageIndexed->GetShaderResourceView(), ImageIndexed->Size, ImVec2(64.0, 64.0f), BackgroundColor, TintColor, SelectedColor, TextColor);
+		ImGui::SameLine();
+		ButtonLambda("ZX", ImageZX->GetShaderResourceView(), ImageZX->Size, ImVec2(64.0, 64.0f), BackgroundColor, TintColor, SelectedColor, TextColor);
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
+
+		ImVec2 Pos = ImGui::GetCursorScreenPos();
+		if (ImGui::ButtonEx("OK", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+	return bVisible;
 }
