@@ -13,5 +13,9 @@ public:
 	FSelectedImageDelegate OnSelectedImage;
 
 private:
+	void HandleKeyboardInputs();
+
+	void DeleteFile(int32_t& RemoveIndex);
+
 	int32_t FileSelectIndex;
 };

@@ -4,6 +4,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define IMGUI_DEFINE_MATH_OPERATORS
+#pragma warning(disable : 4996)				//_CRT_SECURE_NO_WARNINGS
 
 #include <map>
 #include <vector>

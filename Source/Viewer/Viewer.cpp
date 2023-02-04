@@ -1,4 +1,4 @@
-#include "Viewer.h"
+﻿#include "Viewer.h"
 #include "Core\Window.h"
 #include "Core\Utils.h"
 
@@ -22,6 +22,9 @@ namespace
 
 SViewer::SViewer()
 	: LastSelectedTool(EToolType::None)
+	, bCreateSpriteFirstOpen(false)
+	, CurrentSprite(-1)
+	, LayersCounter(0)
 {}
 
 std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
@@ -51,29 +54,44 @@ void SViewer::NativeInitialize(FNativeDataInitialize Data)
 
 void SViewer::Initialize()
 {
-	FSprite NewSprite;
-	NewSprite.NumFrame = 1;
-	NewSprite.Size = ImVec2(64.0f, 64.0f);
-	NewSprite.Pivot = ImVec2(32.0f, 32.0f);
-	NewSprite.Name = "Demo";
+	//FSprite NewSprite;
+	//NewSprite.NumFrame = 1;
+	//NewSprite.Size = ImVec2(64.0f, 64.0f);
+	//NewSprite.Pivot = ImVec2(32.0f, 32.0f);
+	//NewSprite.Name = "Demo";
 
-	FSpriteLayer NewLayer1;
-	NewLayer1.bVisible = true;
-	NewLayer1.bLock = false;
-	NewLayer1.Name = "Layer 1";
-	NewSprite.Layers.push_back(NewLayer1);
+	//FSpriteLayer NewLayer1;
+	//NewLayer1.bVisible = true;
+	//NewLayer1.bLock = false;
+	//NewLayer1.Name = "Layer 1";
+	//NewSprite.Layers.push_back(NewLayer1);
 
-	//FSpriteLayer NewLayer2;
-	//NewLayer2.bVisible = true;
-	//NewLayer2.bLock = false;
-	//NewLayer2.Name = "Layer 2";
-	//NewSprite.Layers.push_back(NewLayer2);
-	
-	Sprites.push_back(NewSprite);
+	////FSpriteLayer NewLayer2;
+	////NewLayer2.bVisible = true;
+	////NewLayer2.bLock = false;
+	////NewLayer2.Name = "Layer 2";
+	////NewSprite.Layers.push_back(NewLayer2);
+	//
+	//Sprites.push_back(NewSprite);
 
 	ImageRGBA = Utils::LoadImageFromResource(IDB_COLOR_MODE_RGBA, TEXT("PNG"));
 	ImageIndexed = Utils::LoadImageFromResource(IDB_COLOR_MODE_INDEXED, TEXT("PNG"));
 	ImageZX = Utils::LoadImageFromResource(IDB_COLOR_MODE_ZX, TEXT("PNG"));
+
+	if (true)
+	{
+		OpenFile_Callback("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Tiles\\Pack_1.2.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Tank\\1.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Tank\\Up.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Tank\\Down.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Solder_dead\\Solder.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 1.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 2.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 3.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 4.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Raven my.png");
+	}
 }
 
 void SViewer::Render()
@@ -111,9 +129,10 @@ void SViewer::Destroy()
 	}
 }
 
-FSprite& SViewer::GetSelectedSprite()
+FSprite* SViewer::GetSelectedSprite()
 {
-	return Sprites[0];
+	const int32_t Index = CurrentSprite >= 0 ? (Sprites.size() > CurrentSprite ? CurrentSprite : -1) : -1;
+	return Index >= 0 ? &Sprites[Index] : nullptr;
 }
 
 bool SViewer::IsHandTool()
@@ -136,8 +155,48 @@ int SViewer::TextEditNumberCallback(ImGuiInputTextCallbackData* Data)
 			return 1;
 		}
 		break;
+	case ImGuiInputTextFlags_CallbackEdit:
+		float Value = 0;
+		if (strlen(Data->Buf) > 1)
+		{
+			Value = float(std::stoi(Data->Buf));
+		}
+		*(float*)Data->UserData = Value;
+		break;
 	}
 	return 0;
+}
+
+void SViewer::OpenFile_Callback(std::filesystem::path FilePath)
+{
+	std::filesystem::directory_entry File(FilePath);
+	if (File.exists())
+	{
+		// поиск одинаковых файлов
+		bool bPresent = false;
+		for (std::vector<std::filesystem::directory_entry>::iterator FileIt = Files.begin(); FileIt != Files.end(); ++FileIt)
+		{
+			if (FileIt->path() == File.path())
+			{
+				bPresent = true;
+				break;
+			}
+		}
+
+		if (!bPresent)
+		{
+			Files.push_back(File);
+			SImageList* ImageList = WindowCast<SImageList>(EWindowsType::ImageList);
+			if (ImageList != nullptr)
+			{
+				ImageList->OnSelectedImage.Broadcast(Files.back());
+			}
+		}
+	}
+	else
+	{
+		ImGui::LogText("Error");
+	}
 }
 
 void SViewer::HandlerInput()
@@ -213,18 +272,10 @@ void SViewer::ShowMenuFile()
 		if (ImGui::MenuItem("Open", "Ctrl+O"))
 		{
 			const std::string OldPath = Files.empty() ? "" : Files.back().path().parent_path().string();
-			FileDialogHandle = Utils::OpenWindowFileDialog("Select File", EDialogMode::Select, [this](std::filesystem::path FilePath) -> void
+			FileDialogHandle = Utils::OpenWindowFileDialog("Select File", EDialogMode::Select,
+			[this](std::filesystem::path FilePath) -> void
 			{
-				std::filesystem::directory_entry File(FilePath);
-				if(File.exists())
-				{
-					Files.push_back(File);
-					WindowCast<SImageList>(EWindowsType::ImageList)->OnSelectedImage.Broadcast(Files.back());
-				}
-				else
-				{
-					ImGui::LogText("Error");
-				}
+				OpenFile_Callback(FilePath);
 				Utils::CloseWindowFileDialog(FileDialogHandle);
 			}, OldPath, "*.*, *.png, *.scr");
 		}
@@ -396,7 +447,7 @@ bool SViewer::WindowCreateSpriteModal()
 	const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
 	ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-	auto ButtonLambda = [](const char* StringID, ImTextureID TextureID, const ImVec2& ImageSize, const ImVec2& Size, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor, const ImVec4& TextColor) -> bool
+	auto ButtonLambda = [](const char* StringID, ImTextureID TextureID, const ImVec2& ImageSize, const ImVec2& Size, bool bSelectedCondition, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor, const ImVec4& TextColor) -> bool
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
 		if (Window->SkipItems)
@@ -420,18 +471,6 @@ bool SViewer::WindowCreateSpriteModal()
 		bool bHovered, bHeld;
 		bool bPressed = ImGui::ButtonBehavior(bb, ID, &bHovered, &bHeld);
 
-		// align
-		ImVec2 Align(0.0f, 0.0f);
-		if (Window->Flags & ImGuiWindowFlags_AlignHorizontal)
-		{
-			Align.x = (Window->WorkRect.GetSize().x - NewSize.x) * 0.5f;
-		}
-		if (Window->Flags & ImGuiWindowFlags_AlignVertical)
-		{
-			ImVec2 Rect(Window->DC.CursorMaxPos - Window->DC.CursorPosPrevLine);
-			Align.y = (Rect.y - NewSize.y) * 0.5f;
-		}
-
 		// Render
 		//ImGui::RenderNavHighlight(bb, ID);
 		//if (!(Window->Flags & ImGuiWindowFlags_NoBackground))
@@ -444,59 +483,147 @@ bool SViewer::WindowCreateSpriteModal()
 		//	Window->DrawList->AddRectFilled(bb.Min + Padding + Align, bb.Max - Padding + Align, ImGui::GetColorU32(BackgroundColor));
 		//}
 
-		//ImGui::PushStyleColor(ImGuiCol_Text, TextColor);
-		ImGui::RenderTextClipped(bb.Min + Style.FramePadding, bb.Max - Style.FramePadding, StringID, NULL, &LabelSize, Style.ButtonTextAlign, &bb);
-		//ImGui::PopStyleColor();
-
-		Window->DrawList->AddImage(TextureID, bb.Min + Padding + Align, bb.Max - Padding + Align, ImVec2(0.0, 0.0f), ImVec2(1.0, 1.0f), bHovered ? ImGui::GetColorU32(TintColor) : ImGui::GetColorU32(SelectedColor));
-
+		if (bSelectedCondition)
+		{
+			ImGui::RenderTextClipped(bb.Min + Style.FramePadding, bb.Max - Style.FramePadding, StringID, NULL, &LabelSize, Style.ButtonTextAlign, &bb);
+		}
+		Window->DrawList->AddImage(TextureID, bb.Min + Padding , bb.Max - Padding, ImVec2(0.0, 0.0f), ImVec2(1.0, 1.0f), (bSelectedCondition | !bHovered) ? ImGui::GetColorU32(TintColor) : ImGui::GetColorU32(SelectedColor));
+		//;
 		return bPressed;
 	};
 
 	const bool bVisible = ImGui::BeginPopupModal(CreateSpriteName, NULL, ImGuiWindowFlags_AlwaysAutoResize);
 	if (bVisible)
 	{
+		if (!bCreateSpriteFirstOpen)
+		{
+			bCreateSpriteFirstOpen = true;
+
+			CreateSpriteSize = ImVec2(32, 32);
+			CreateSpritePivot = CreateSpriteSize * 0.5f;
+
+			CreateSpriteNameBuffer[0] = '\n';
+			sprintf(CreateSpriteWidthBuffer, "%i\n", int(CreateSpriteSize.x));
+			sprintf(CreateSpriteHeightBuffer, "%i\n", int(CreateSpriteSize.y));
+		}
+
 		const float TextWidth = ImGui::CalcTextSize("A").x;
 		const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
+		ImGui::InputTextEx("Name ", NULL, CreateSpriteNameBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 20.0f, TextHeight), ImGuiInputTextFlags_None, &TextEditNumberCallback, (void*)this);
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
 		ImGui::Text("Size :");
 		ImGui::Separator();
 
-		const ImGuiInputTextFlags InputNumberTextFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CallbackCharFilter;
-		ImGui::InputTextEx("Width ", NULL, WidthBuf, IM_ARRAYSIZE(WidthBuf), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)this);
-		ImGui::InputTextEx("Input ", NULL, HeightBuf, IM_ARRAYSIZE(HeightBuf), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)this);
+		const ImGuiInputTextFlags InputNumberTextFlags = ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackEdit;
+		ImGui::InputTextEx("Width ", NULL, CreateSpriteWidthBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.x);
+		ImGui::InputTextEx("Input ", NULL, CreateSpriteHeightBuffer, IM_ARRAYSIZE(CreateSpriteHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.y);
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
-
-		ImGui::Text("Color Mode :");
+		ImGui::Text("Pivot :");
 		ImGui::Separator();
 
-		const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-		const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
-		const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-		const ImVec4 TextColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+		CreateSpritePivot = ImClamp(CreateSpritePivot, ImVec2(0.0f, 0.0f), ImMax(CreateSpriteSize - ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f)));
+		ImGui::SliderFloat("X ", &CreateSpritePivot.x, 0, ImClamp(CreateSpriteSize.x, 0.0f, CreateSpriteSize.x - 1.0f), "%.0f");
+		ImGui::SliderFloat("Y ", &CreateSpritePivot.y, 0, ImClamp(CreateSpriteSize.y, 0.0f, CreateSpriteSize.y - 1.0f), "%.0f");
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
 
-		ButtonLambda("RGBA", ImageRGBA->GetShaderResourceView(), ImageRGBA->Size, ImVec2(64.0, 64.0f), BackgroundColor, TintColor, SelectedColor, TextColor);
+		std::string CreateSpriteColorModeName = FSprite::ColotModeToString(CreateSpriteColorMode);
+		ImGui::Text(Utils::Format("Color Mode : %s", CreateSpriteColorModeName.c_str()).c_str());
+		ImGui::Separator();
+
+		const ImVec4 BackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
+		const ImVec4 TintColor(1.0f, 1.0f, 1.0f, 0.5f);
+		const ImVec4 SelectedColor(1.0f, 1.0f, 1.0f, 1.0f);
+		const ImVec4 TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+		const ImVec2 ButtonSize(64.0, 64.0f);
+
+		if (ButtonLambda("RGBA", ImageRGBA->GetShaderResourceView(), ImageRGBA->Size, ButtonSize, CreateSpriteColorMode == EColorMode::RGB, BackgroundColor, TintColor, SelectedColor, TextColor))
+		{
+			if (CreateSpriteColorMode == EColorMode::RGB)
+			{
+				CreateSpriteColorMode = EColorMode::Unknow;
+			}
+			else
+			{
+				CreateSpriteColorMode = EColorMode::RGB;
+			}
+		}
 		ImGui::SameLine();
-		ButtonLambda("INDEXED", ImageIndexed->GetShaderResourceView(), ImageIndexed->Size, ImVec2(64.0, 64.0f), BackgroundColor, TintColor, SelectedColor, TextColor);
+		if (ButtonLambda("INDEXED", ImageIndexed->GetShaderResourceView(), ImageIndexed->Size, ButtonSize, CreateSpriteColorMode == EColorMode::Indexed, BackgroundColor, TintColor, SelectedColor, TextColor))
+		{
+			if (CreateSpriteColorMode == EColorMode::Indexed)
+			{
+				CreateSpriteColorMode = EColorMode::Unknow;
+			}
+			else
+			{
+				CreateSpriteColorMode = EColorMode::Indexed;
+			}
+		}
 		ImGui::SameLine();
-		ButtonLambda("ZX", ImageZX->GetShaderResourceView(), ImageZX->Size, ImVec2(64.0, 64.0f), BackgroundColor, TintColor, SelectedColor, TextColor);
+		if (ButtonLambda("ZX", ImageZX->GetShaderResourceView(), ImageZX->Size, ButtonSize, CreateSpriteColorMode == EColorMode::ZX, BackgroundColor, TintColor, SelectedColor, TextColor))
+		{
+			if (CreateSpriteColorMode == EColorMode::ZX)
+			{
+				CreateSpriteColorMode = EColorMode::Unknow;
+			}
+			else
+			{
+				CreateSpriteColorMode = EColorMode::ZX;
+			}
+		}
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
 
-		ImVec2 Pos = ImGui::GetCursorScreenPos();
 		if (ImGui::ButtonEx("OK", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
 		{
-			ImGui::CloseCurrentPopup();
+			FSprite NewSprite;
+			NewSprite.NumFrame = 1;
+			NewSprite.Size = CreateSpriteSize;
+			NewSprite.Pivot = CreateSpritePivot;
+			NewSprite.ColorMode = CreateSpriteColorMode;
+			NewSprite.Name = CreateSpriteNameBuffer;
+
+			if (AddSprite(NewSprite))
+			{
+				ImGui::CloseCurrentPopup();
+				bCreateSpriteFirstOpen = false;
+			}
 		}
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
 		{
 			ImGui::CloseCurrentPopup();
+			bCreateSpriteFirstOpen = false;
 		}
 		ImGui::EndPopup();
 	}
 	return bVisible;
+}
+
+bool SViewer::AddSprite(FSprite& NewSprite)
+{
+	if (!NewSprite.IsValid())
+	{
+		return false;
+	}
+
+	FSpriteLayer NewLayer;
+	NewLayer.bVisible = true;
+	NewLayer.bLock = false;
+	NewLayer.Name = Utils::Format("Layer %i", ++LayersCounter);
+	NewSprite.Layers.push_back(NewLayer);
+
+	Sprites.push_back(NewSprite);
+
+	if (CurrentSprite < 0)
+	{
+		CurrentSprite++;
+	}
+
+	return true;
 }

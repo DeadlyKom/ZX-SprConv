@@ -137,10 +137,10 @@ void SSprite::Initialize()
 		ImageList->OnSelectedImage.AddSP(std::dynamic_pointer_cast<SSprite>(shared_from_this()), &SSprite::OnSelectedFileImage);
 	}
 
-	// ToDo debug
-	{
-		Image = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7.png");
-	}
+	//// ToDo debug
+	//{
+	//	Image = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7.png");
+	//}
 }
 
 void SSprite::Render()

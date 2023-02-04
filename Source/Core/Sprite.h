@@ -47,11 +47,13 @@ struct FSprite
 {
 	FSprite()
 		: NumFrame(0)
-		, Size(0.0f, 0.0f)
+		, Size(-1.0f, -1.0f)
 		, Pivot(0.0f, 0.0f)
 		, ColorMode(EColorMode::Unknow)
 		, Name("")
 	{}
+
+	inline bool IsValid() const { return Size.x > 0.0 && Size.y > 0.0f; }
 
 	uint32_t NumFrame;
 
@@ -59,6 +61,18 @@ struct FSprite
 	ImVec2 Pivot;
 
 	EColorMode ColorMode;
+
+	static std::string ColotModeToString(EColorMode Mode)
+	{
+		switch (Mode)
+		{
+		case EColorMode::ZX:		return "ZX";		break;
+		case EColorMode::Indexed:	return "Indexed";	break;
+		case EColorMode::RGB:		return "RGBA";		break;
+		case EColorMode::Unknow:
+		default:					return "";			break;
+		}
+	}
 
 	std::string Name;
 	std::vector<FSpriteLayer> Layers;

@@ -15,7 +15,7 @@ public:
 	static FImageBase& Get();
 	virtual ~FImageBase();
 
-	std::shared_ptr<FImage> Load(std::string Filename);
+	std::shared_ptr<FImage> Load(const std::string& Filename);
 	std::shared_ptr<FImage> FromMemory(std::vector<char> Memory);
 	std::shared_ptr<FImage> CreateTexture(void* ImageData, const ImVec2& Size, UINT CPUAccessFlags = 0, D3D11_USAGE Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT);
 
@@ -34,6 +34,8 @@ struct FImage
 	{}
 
 	virtual ~FImage();
+
+	static bool GetImageInfo(const std::string& Filename, uint32_t& OutWidth, uint32_t& OutHeight);
 
 	void CreateTexture(void* ImageData, const ImVec2& Size, UINT CPUAccessFlags = 0, D3D11_USAGE Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT);
 	void Update(void* ImageData, const ImVec2& _Size);

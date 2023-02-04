@@ -18,7 +18,7 @@ FImageBase& FImageBase::Get()
 FImageBase::~FImageBase()
 {}
 
-std::shared_ptr<FImage> FImageBase::Load(std::string Filename)
+std::shared_ptr<FImage> FImageBase::Load(const std::string& Filename)
 {
 	std::shared_ptr<FImage> Image(new FImage());
 
@@ -130,6 +130,12 @@ std::shared_ptr<FImage> FImageBase::CreateTexture(void* ImageData, const ImVec2&
 FImage::~FImage()
 {
 	Release();
+}
+
+bool FImage::GetImageInfo(const std::string& Filename, uint32_t& OutWidth, uint32_t& OutHeight)
+{
+	int Comp;
+	return !!stbi_info(Filename.c_str(), (int*)&OutWidth, (int*)&OutHeight, &Comp);
 }
 
 void FImage::CreateTexture(void* ImageData, const ImVec2& InSize, UINT InCPUAccessFlags /*= 0*/, D3D11_USAGE InUsage /*= D3D11_USAGE::D3D11_USAGE_DEFAULT*/)
