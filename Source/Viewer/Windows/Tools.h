@@ -1,6 +1,7 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include "Viewer\ViewChild.h"
 
 enum class EToolType
 {
@@ -14,7 +15,7 @@ enum class EToolType
 
 class SViewer;
 
-class STools : public SWindow
+class STools : public SViewChild
 {
 	friend SViewer;
 

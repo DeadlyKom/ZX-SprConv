@@ -11,11 +11,11 @@ enum class EWindowsType
 {
 	ImageList = 0,
 	Tools,
-	Sprite,
+	SpriteEditor,
 	Palette,
-	BuildSprite,
+	SpriteConstructor,
 	Sequencer,
-	SetSprite,
+	Property,
 };
 
 struct FViewFlags
@@ -105,6 +105,7 @@ private:
 	std::shared_ptr<FImage> ImageZX;
 
 	// sprite
+	int32_t SpriteCounter;
 	int32_t CurrentSprite;
 	std::vector<FSprite> Sprites;
 

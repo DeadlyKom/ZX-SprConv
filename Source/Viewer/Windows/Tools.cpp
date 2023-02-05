@@ -22,7 +22,10 @@ void STools::Render()
 		return;
 	}
 
-	ImGui::Begin("Tools", &bOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(50.0f, 65.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 1.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
+	ImGui::Begin("Tools", &bOpen, ImGuiWindowFlags_NoScrollbar);
 
 	const float DefaultWidth = ImGui::GetContentRegionAvail().x;
 	auto ButtonLambda = [DefaultWidth](const char* ID, std::shared_ptr<FImage> Image, bool bSelectedCondition, float& AvailWidth) -> bool
@@ -74,8 +77,8 @@ void STools::Render()
 	{
 		Selected = EToolType::Move;
 	}
-
 	ImGui::End();
+	ImGui::PopStyleVar(3);
 }
 
 EToolType STools::SetSelect(EToolType NewSelecte)

@@ -1,4 +1,4 @@
-#include "Sprite.h"
+#include "SpriteEditor.h"
 #include "Core\Utils.h"
 #include "Core\Image.h"
 #include "Viewer\Viewer.h"
@@ -15,10 +15,10 @@ namespace
 	void DrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 	{
 		std::shared_ptr<SViewer> Viewer = FAppFramework::Get().GetViewer();
-		std::shared_ptr<SSprite> Sprite = Viewer ? std::dynamic_pointer_cast<SSprite>(Viewer->GetWindow(EWindowsType::Sprite)) : nullptr;
-		if (Sprite)
+		std::shared_ptr<SSpriteEditor> SpriteEditor = Viewer ? std::dynamic_pointer_cast<SSpriteEditor>(Viewer->GetWindow(EWindowsType::SpriteEditor)) : nullptr;
+		if (SpriteEditor)
 		{
-			Sprite->OnDrawCallback(ParentList, CMD);
+			SpriteEditor->OnDrawCallback(ParentList, CMD);
 		}
 	}
 }
@@ -42,7 +42,7 @@ namespace Shader
 	void* LINE_ID = (void*)0x10FFFFFF;
 }
 
-SSprite::SSprite()
+SSpriteEditor::SSpriteEditor()
 	: Device(nullptr)
 	, DeviceContext(nullptr)
 	, PCB_Grid(nullptr)
@@ -51,7 +51,7 @@ SSprite::SSprite()
 	, PCB_MarchingAnts(nullptr)
 {}
 
-void SSprite::NativeInitialize(FNativeDataInitialize Data)
+void SSpriteEditor::NativeInitialize(FNativeDataInitialize Data)
 {
 	SWindow::NativeInitialize(Data);
 
@@ -126,7 +126,7 @@ void SSprite::NativeInitialize(FNativeDataInitialize Data)
 	}
 }
 
-void SSprite::Initialize()
+void SSpriteEditor::Initialize()
 {
 	bIncludeInWindows = true;
 	Name = "Sprite Editor";
@@ -134,7 +134,7 @@ void SSprite::Initialize()
 	std::shared_ptr<SImageList> ImageList = GetWindow<SImageList>(EWindowsType::ImageList);
 	if (ImageList)
 	{
-		ImageList->OnSelectedImage.AddSP(std::dynamic_pointer_cast<SSprite>(shared_from_this()), &SSprite::OnSelectedFileImage);
+		ImageList->OnSelectedImage.AddSP(std::dynamic_pointer_cast<SSpriteEditor>(shared_from_this()), &SSpriteEditor::OnSelectedFileImage);
 	}
 
 	//// ToDo debug
@@ -143,7 +143,7 @@ void SSprite::Initialize()
 	//}
 }
 
-void SSprite::Render()
+void SSpriteEditor::Render()
 {
 	if (!IsOpen())
 	{
@@ -157,7 +157,7 @@ void SSprite::Render()
 	}
 
 	ImVec2 Size(0.0f, 0.0f);
-	ImGui::Begin("Sprite Editor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::Begin("SpriteEditor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
 
 	//if (true)
 	//{
@@ -334,12 +334,12 @@ void SSprite::Render()
 	ImGui::End();
 }
 
-void SSprite::Tick(float DeltaTime)
+void SSpriteEditor::Tick(float DeltaTime)
 {
 	TimeCounter += DeltaTime;
 }
 
-void SSprite::Destroy()
+void SSpriteEditor::Destroy()
 {
 	if (Device)
 	{
@@ -373,7 +373,7 @@ void SSprite::Destroy()
 	}
 }
 
-void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
+void SSpriteEditor::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 {
 	if (Image == nullptr || DeviceContext == nullptr)
 	{
@@ -456,7 +456,7 @@ void SSprite::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 	}
 }
 
-void SSprite::UpdateShader()
+void SSpriteEditor::UpdateShader()
 {
 	if (Scale.y > MinimumGridSize)
 	{
@@ -473,7 +473,7 @@ void SSprite::UpdateShader()
 	bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
 }
 
-void SSprite::SetScale(ImVec2 NewScale)
+void SSpriteEditor::SetScale(ImVec2 NewScale)
 {
 	NewScale = ImClamp(NewScale, ScaleMin, ScaleMax);
 	ViewSizeUV *= Scale / NewScale;
@@ -484,18 +484,18 @@ void SSprite::SetScale(ImVec2 NewScale)
 	GridWidth = ImVec2(1.0f / Scale.x, 1.0f / Scale.y);
 }
 
-void SSprite::SetScale(float scaleY)
+void SSpriteEditor::SetScale(float scaleY)
 {
 	SetScale(ImVec2(scaleY * PixelAspectRatio, scaleY));
 }
 
-void SSprite::SetImagePosition(ImVec2 NewPosition)
+void SSpriteEditor::SetImagePosition(ImVec2 NewPosition)
 {
 	ImagePosition = NewPosition;
 	RoundImagePosition();
 }
 
-void SSprite::RoundImagePosition()
+void SSpriteEditor::RoundImagePosition()
 {
 	if (Image == nullptr)
 	{
@@ -523,7 +523,7 @@ void SSprite::RoundImagePosition()
 	ImagePosition = (TopLeftSubTexel + ViewSize * 0.5f) / (Scale * Image->Size);
 }
 
-void SSprite::ChangeScale()
+void SSpriteEditor::ChangeScale()
 {
 	if (Scale == OldScale)
 	{
@@ -532,7 +532,7 @@ void SSprite::ChangeScale()
 	OldScale = Scale;
 }
 
-Transform2D SSprite::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
+Transform2D SSpriteEditor::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
 {
 	ImVec2 uvToPixel = screenViewSize / uvViewSize;
 
@@ -543,13 +543,13 @@ Transform2D SSprite::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSi
 	return transform;
 }
 
-ImVec2 SSprite::ConverPositionToPixel(const ImVec2& Position)
+ImVec2 SSpriteEditor::ConverPositionToPixel(const ImVec2& Position)
 {
 	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
 	return ImFloor((Position - ViewTopLeftPixel + uv0 / ImageSizeInv * Scale) / Scale);
 }
 
-void SSprite::InputMarquee()
+void SSpriteEditor::InputMarquee()
 {
 	if (!ImGui::IsWindowFocused())
 	{
@@ -586,7 +586,7 @@ void SSprite::InputMarquee()
 	}
 }
 
-void SSprite::DrawMarquee(const ImRect& Window)
+void SSpriteEditor::DrawMarquee(const ImRect& Window)
 {
 	ImVec2 Start = StartMarqueePosition;
 	ImVec2 End = EndMarqueePosition;
@@ -612,7 +612,7 @@ void SSprite::DrawMarquee(const ImRect& Window)
 	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + Start, TopLeftPixel + End, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
 }
 
-void SSprite::OnSelectedFileImage(const std::filesystem::directory_entry& Path)
+void SSpriteEditor::OnSelectedFileImage(const std::filesystem::directory_entry& Path)
 {
 	if (Image != nullptr)
 	{

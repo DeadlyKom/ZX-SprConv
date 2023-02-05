@@ -1,8 +1,9 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include "Viewer\ViewChild.h"
 
-class SSetSprite : public SWindow
+class SProperty : public SViewChild
 {
 public:
 	virtual void Initialize() override;

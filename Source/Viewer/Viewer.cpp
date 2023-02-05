@@ -2,13 +2,13 @@
 #include "Core\Window.h"
 #include "Core\Utils.h"
 
-#include "Windows/Sprite.h"
+#include "Windows/SpriteEditor.h"
 #include "Windows/Tools.h"
 #include "Windows/ImageList.h"
 #include "Windows/Palette.h"
-#include "Windows/BuildSprite.h"
+#include "Windows/SpriteConstructor.h"
 #include "Windows/Sequencer.h"
-#include "Windows/SetSprite.h"
+#include "Windows/Property.h"
 
 #include "Viewer\Windows\FileDialog.h"
 
@@ -24,6 +24,7 @@ SViewer::SViewer()
 	: LastSelectedTool(EToolType::None)
 	, bCreateSpriteFirstOpen(false)
 	, CurrentSprite(-1)
+	, SpriteCounter(0)
 	, LayersCounter(0)
 {}
 
@@ -37,13 +38,13 @@ void SViewer::NativeInitialize(FNativeDataInitialize Data)
 {
 	Initialize();
 
-	Windows = { { EWindowsType::ImageList,		std::make_shared<SImageList>()	},
-				{ EWindowsType::Tools,			std::make_shared<STools>()		},
-				{ EWindowsType::Sprite,			std::make_shared<SSprite>()		},
-				{ EWindowsType::Palette,		std::make_shared<SPalette>()	},
-				{ EWindowsType::BuildSprite,	std::make_shared<SBuildSprite>()},
-				{ EWindowsType::Sequencer,		std::make_shared<SSequencer>()	},
-				{ EWindowsType::SetSprite,		std::make_shared<SSetSprite>()	},
+	Windows = { { EWindowsType::ImageList,			std::make_shared<SImageList>()			},
+				{ EWindowsType::Tools,				std::make_shared<STools>()				},
+				{ EWindowsType::SpriteEditor,		std::make_shared<SSpriteEditor>()		},
+				{ EWindowsType::Palette,			std::make_shared<SPalette>()			},
+				{ EWindowsType::SpriteConstructor,	std::make_shared<SSpriteConstructor>()	},
+				{ EWindowsType::Sequencer,			std::make_shared<SSequencer>()			},
+				{ EWindowsType::Property,			std::make_shared<SProperty>()			},
 			  };
 	for (std::pair<EWindowsType, std::shared_ptr<SWindow>> Window : Windows)
 	{
@@ -254,11 +255,9 @@ void SViewer::HandlerInput()
 void SViewer::ShowMenuFile()
 {
 	const ImGuiID QuitID = ImGui::GetCurrentWindow()->GetID(MenuQuitName);
-	const ImGuiID CreateSpriteID = ImGui::GetCurrentWindow()->GetID(CreateSpriteName);
-
 	if (ImGui::BeginMenu(MenuFileName))
 	{
-		if (ImGui::BeginMenu("New"))
+		/*if (ImGui::BeginMenu("New"))
 		{
 			if (ImGui::MenuItem("Sprite", "Ctrl+N"))
 			{
@@ -267,7 +266,7 @@ void SViewer::ShowMenuFile()
 			if (ImGui::MenuItem("Sprite Preset", "Ctrl+Shift+N")) {}
 
 			ImGui::EndMenu();
-		}
+		}*/
 
 		if (ImGui::MenuItem("Open", "Ctrl+O"))
 		{
@@ -327,8 +326,13 @@ void SViewer::ShowMenuFile()
 
 void SViewer::ShowMenuSprite()
 {
+	const ImGuiID CreateSpriteID = ImGui::GetCurrentWindow()->GetID(CreateSpriteName);
 	if (ImGui::BeginMenu("Sprite"))
 	{
+		if (ImGui::MenuItem("New", "Ctrl+N"))
+		{
+			ImGui::OpenPopup(CreateSpriteID);
+		}
 		if (ImGui::MenuItem("Properties...", "Ctrl+P")) {}
 		ImGui::Separator();
 
@@ -502,7 +506,7 @@ bool SViewer::WindowCreateSpriteModal()
 			CreateSpriteSize = ImVec2(32, 32);
 			CreateSpritePivot = CreateSpriteSize * 0.5f;
 
-			CreateSpriteNameBuffer[0] = '\n';
+			sprintf(CreateSpriteNameBuffer, Utils::Format("Sprite %i", ++SpriteCounter).c_str());
 			sprintf(CreateSpriteWidthBuffer, "%i\n", int(CreateSpriteSize.x));
 			sprintf(CreateSpriteHeightBuffer, "%i\n", int(CreateSpriteSize.y));
 		}

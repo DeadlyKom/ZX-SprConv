@@ -3,10 +3,10 @@
 #include <CoreMinimal.h>
 #include "Viewer\ViewChild.h"
 
-class SSprite : public SViewChild
+class SSpriteEditor : public SViewChild
 {
 public:
-	SSprite();
+	SSpriteEditor();
 	virtual void NativeInitialize(FNativeDataInitialize Data) override;
 	virtual void Initialize() override;
 	virtual void Render() override;

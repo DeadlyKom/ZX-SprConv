@@ -31,7 +31,7 @@
     <ClCompile Include="..\Source\Viewer\Viewer.cpp">
       <Filter>Source\Viewer</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\Viewer\Windows\Sprite.cpp">
+    <ClCompile Include="..\Source\Viewer\Windows\SpriteEditor.cpp">
       <Filter>Source\Viewer\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp">
@@ -70,10 +70,10 @@
     <ClCompile Include="..\Source\Viewer\ViewChild.cpp">
       <Filter>Source\Viewer</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\Viewer\Windows\SetSprite.cpp">
+    <ClCompile Include="..\Source\Viewer\Windows\Property.cpp">
       <Filter>Source\Viewer\Windows</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\Viewer\Windows\BuildSprite.cpp">
+    <ClCompile Include="..\Source\Viewer\Windows\SpriteConstructor.cpp">
       <Filter>Source\Viewer\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\Viewer\Windows\Tools.cpp">
@@ -90,7 +90,7 @@
     <ClInclude Include="..\Source\Core\Window.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Viewer\Windows\Sprite.h">
+    <ClInclude Include="..\Source\Viewer\Windows\SpriteEditor.h">
       <Filter>Source\Viewer\Windows</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Core\Utils.h">
@@ -129,10 +129,10 @@
     <ClInclude Include="..\Source\Viewer\ViewChild.h">
       <Filter>Source\Viewer</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Viewer\Windows\SetSprite.h">
+    <ClInclude Include="..\Source\Viewer\Windows\Property.h">
       <Filter>Source\Viewer\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Viewer\Windows\BuildSprite.h">
+    <ClInclude Include="..\Source\Viewer\Windows\SpriteConstructor.h">
       <Filter>Source\Viewer\Windows</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Viewer\Windows\Tools.h">
@@ -190,12 +190,10 @@
     <Image Include="..\Resource\Icons\zx mode.png" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\Source\Shader\Grid.hlsl">
-      <Filter>Source\Shader</Filter>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\Source\Shader\LineMarchingAnts.hlsl">
+      <Filter>Source\Shader</Filter>
+    </None>
+    <None Include="..\Source\Shader\Grid.hlsl">
       <Filter>Source\Shader</Filter>
     </None>
   </ItemGroup>

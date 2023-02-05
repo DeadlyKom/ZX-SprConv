@@ -86,6 +86,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\Bin\Release-windows-x86_64\GUI\</OutDir>
+    <IntDir>..\Bin\Intermediate\Release-windows-x86_64\GUI\</IntDir>
+    <TargetName>ZX-Converter</TargetName>
+    <IncludePath>..\Source\;..\Source\Core;..\Dependencies\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\Bin\Release-windows-x86_64\IMGUI;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -138,12 +143,18 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\Dependencies\IMGUI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>d3d11.lib;d3dcompiler.lib;dxgi.lib;IMGUI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -157,13 +168,13 @@
     <ClCompile Include="..\Source\Fonts\ZX-Spectrum.cpp" />
     <ClCompile Include="..\Source\Viewer\ViewChild.cpp" />
     <ClCompile Include="..\Source\Viewer\Viewer.cpp" />
-    <ClCompile Include="..\Source\Viewer\Windows\BuildSprite.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\SpriteConstructor.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\FileDialog.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\ImageList.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Palette.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Sequencer.cpp" />
-    <ClCompile Include="..\Source\Viewer\Windows\SetSprite.cpp" />
-    <ClCompile Include="..\Source\Viewer\Windows\Sprite.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\Property.cpp" />
+    <ClCompile Include="..\Source\Viewer\Windows\SpriteEditor.cpp" />
     <ClCompile Include="..\Source\Viewer\Windows\Tools.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -180,13 +191,13 @@
     <ClInclude Include="..\Source\Fonts\Fonts.h" />
     <ClInclude Include="..\Source\Viewer\ViewChild.h" />
     <ClInclude Include="..\Source\Viewer\Viewer.h" />
-    <ClInclude Include="..\Source\Viewer\Windows\BuildSprite.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\SpriteConstructor.h" />
     <ClInclude Include="..\Source\Viewer\Windows\FileDialog.h" />
     <ClInclude Include="..\Source\Viewer\Windows\ImageList.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Palette.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Sequencer.h" />
-    <ClInclude Include="..\Source\Viewer\Windows\SetSprite.h" />
-    <ClInclude Include="..\Source\Viewer\Windows\Sprite.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\Property.h" />
+    <ClInclude Include="..\Source\Viewer\Windows\SpriteEditor.h" />
     <ClInclude Include="..\Source\Viewer\Windows\Tools.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
@@ -212,14 +223,14 @@
     <Image Include="IconeWindow.ico" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\Source\Shader\Grid.hlsl">
+    <None Include="..\Source\Shader\Grid.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <FileType>Document</FileType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
-    </FxCompile>
+    </None>
     <None Include="..\Source\Shader\LineMarchingAnts.hlsl">
       <FileType>Document</FileType>
     </None>
