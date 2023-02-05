@@ -9,6 +9,10 @@ namespace Utils
 	ImFont* LoadFont(int32_t Size, int32_t Index = INDEX_NONE);
 	std::shared_ptr<FImage> LoadImage(std::string Filename);
 	std::shared_ptr<FImage> LoadImageFromResource(WORD ID, std::wstring Folder);
+	
+	uint8_t* LoadImageToMemory(const std::string& Filename, ImVec2& OutSize); 	// call	FreeImageToMemory
+	bool ResizeRegion(uint8_t* ImageData, const ImVec2& OriginalSize, const ImVec2& RequiredSize, uint8_t*& OutputImageData, const ImVec2& uv0, const ImVec2& uv1);
+	void FreeImageToMemory(uint8_t* Data);
 
 	DelegateHandle OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path Path = "", std::string FilterTypes = "*.*");
 	void CloseWindowFileDialog(DelegateHandle& Handle);

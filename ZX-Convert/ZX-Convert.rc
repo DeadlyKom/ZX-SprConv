@@ -100,6 +100,8 @@ IDB_COLOR_MODE_INDEXED  PNG                     "C:\\Work\\Learning\\Tools\\ZX-S
 
 IDB_COLOR_MODE_ZX       PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\zx mode.png"
 
+IDB_TEMPLATE_GRID       PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\template grid.png"
+
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////
 

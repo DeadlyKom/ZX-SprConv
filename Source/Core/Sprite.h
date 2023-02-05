@@ -13,67 +13,69 @@ enum class EColorMode
 
 struct FSpriteBlock
 {
-	FSpriteBlock()
-		: Offset(0.0f, 0.0f)
-		, Marquee(0.0f, 0.0f, 0.0f, 0.0f)
-		, ImageSprite(nullptr)
-		, Filename("")
-	{}
+	FSpriteBlock();
+
+	void Initialize();
+	void Release();
+	inline bool IsValid() const { return ImageSprite != nullptr && ImageSprite->Size.x > 0.0 && ImageSprite->Size.y > 0.0f; }
 	
 	ImVec2 Offset;
 	ImRect Marquee;
 
-	std::shared_ptr<FImage> ImageSprite;
 	std::string Filename;
+	std::shared_ptr<FImage> ImageSprite;
+};
+
+struct FSpriteFrame
+{
+	std::vector<FSpriteBlock> Blocks;
 };
 
 struct FSpriteLayer
 {
-	FSpriteLayer()
-		: bVisible(false)
-		, bLock(false)
-		, bEmpty(true)
-		, Name("")
-	{}
+	FSpriteLayer();
+	void Release();
+
+	// frame
+	inline bool IsValidFrame(uint32_t FrameNum) const { return SpriteFrame.size() > FrameNum; }
+	FSpriteFrame& AddFrame();
+
+	// block
+	FSpriteFrame* GetSpritesBlocks(uint32_t FrameNum);
+	void AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum);
 
 	bool bVisible;
 	bool bLock;
 	bool bEmpty;
 	std::string Name;
-	std::vector<std::vector<FSpriteBlock>> ArrayBlocks;
+	std::vector<FSpriteFrame> SpriteFrame;
 };
 
 struct FSprite
 {
-	FSprite()
-		: NumFrame(0)
-		, Size(-1.0f, -1.0f)
-		, Pivot(0.0f, 0.0f)
-		, ColorMode(EColorMode::Unknow)
-		, Name("")
-	{}
+	FSprite();
 
-	inline bool IsValid() const { return Size.x > 0.0 && Size.y > 0.0f; }
+	void Initialize();
+	void Release();
+
+	// frame
+	void AddFrame();
+	FSpriteFrame* GetFrame(uint32_t LayerNum, uint32_t FrameNum);
+
+	// layer
+	FSpriteLayer& AddLayer();
+	inline bool IsValidLayer(uint32_t LayerNum) const { return Layers.size() > LayerNum; }
+
+	void Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t FrameNum = 0);
+	inline bool IsValid() const { return Size.x > 0.0 && Size.y > 0.0f && ImageSprite != nullptr; }
+	static std::string ColotModeToString(EColorMode Mode);
 
 	uint32_t NumFrame;
-
 	ImVec2 Size;
 	ImVec2 Pivot;
-
 	EColorMode ColorMode;
-
-	static std::string ColotModeToString(EColorMode Mode)
-	{
-		switch (Mode)
-		{
-		case EColorMode::ZX:		return "ZX";		break;
-		case EColorMode::Indexed:	return "Indexed";	break;
-		case EColorMode::RGB:		return "RGBA";		break;
-		case EColorMode::Unknow:
-		default:					return "";			break;
-		}
-	}
 
 	std::string Name;
 	std::vector<FSpriteLayer> Layers;
+	std::shared_ptr<FImage> ImageSprite;
 };

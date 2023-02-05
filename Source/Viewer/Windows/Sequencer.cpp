@@ -69,7 +69,7 @@ void SSequencer::RenderSequencer()
 
 	const ImVec2 OuterSizeValue = ImVec2(38.0f * (Sprite->NumFrame + 3) + 100.0f, TextHeight * (Sprite->Layers.size() + 1) * 1.7f);
 
-	auto ButtonExLambda = [](const char* StringID, const FImage& Image, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor) -> bool
+	auto ButtonLambda = [](const char* StringID, const FImage& Image, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor) -> bool
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
 		if (Window->SkipItems)
@@ -141,7 +141,7 @@ void SSequencer::RenderSequencer()
 		{
 			ImGui::TableSetColumnIndex(0);
 			std::shared_ptr<FImage> ImageVisible = bVisible ? ImageVisibleEnable : ImageVisibleDisable;
-			if (ButtonExLambda("Sequencer##BaseVisible", *ImageVisible, BackgroundColor, TintColor, SelectedColor))
+			if (ButtonLambda("Sequencer##BaseVisible", *ImageVisible, BackgroundColor, TintColor, SelectedColor))
 			{
 				bVisible = !bVisible;
 				for (uint32_t RowIndex = 0; RowIndex < Sprite->Layers.size(); ++RowIndex)
@@ -153,7 +153,7 @@ void SSequencer::RenderSequencer()
 
 			ImGui::TableSetColumnIndex(1);
 			std::shared_ptr<FImage> ImageLocking = bLock ? ImageLock : ImageUnlock;
-			if (ButtonExLambda("Sequencer##BaseLock", *ImageLocking, BackgroundColor, TintColor, SelectedColor))
+			if (ButtonLambda("Sequencer##BaseLock", *ImageLocking, BackgroundColor, TintColor, SelectedColor))
 			{
 				bLock = !bLock;
 				for (uint32_t RowIndex = 0; RowIndex < Sprite->Layers.size(); ++RowIndex)
@@ -182,7 +182,7 @@ void SSequencer::RenderSequencer()
 			ImGui::TableSetColumnIndex(0);
 			const std::string LayerVisibleName = Utils::Format("Sequencer##Visible%i", RowIndex);
 			std::shared_ptr<FImage> ImageVisible = SpriteLayer.bVisible ? ImageVisibleEnable : ImageVisibleDisable;
-			if (ButtonExLambda(LayerVisibleName.c_str(), *ImageVisible, BackgroundColor, TintColor, SelectedColor))
+			if (ButtonLambda(LayerVisibleName.c_str(), *ImageVisible, BackgroundColor, TintColor, SelectedColor))
 			{
 				SpriteLayer.bVisible = !SpriteLayer.bVisible;
 			}
@@ -190,12 +190,13 @@ void SSequencer::RenderSequencer()
 			ImGui::TableSetColumnIndex(1);
 			const std::string LayerLockName = Utils::Format("Sequencer##Lock%i", RowIndex);
 			std::shared_ptr<FImage> ImageLocking = SpriteLayer.bLock ? ImageLock : ImageUnlock;
-			if (ButtonExLambda(LayerLockName.c_str(), *ImageLocking, BackgroundColor, TintColor, SelectedColor))
+			if (ButtonLambda(LayerLockName.c_str(), *ImageLocking, BackgroundColor, TintColor, SelectedColor))
 			{
 				SpriteLayer.bLock = !SpriteLayer.bLock;
 			}
 
 			ImGui::TableSetColumnIndex(2);
+			ImGui::AlignTextToFramePadding();
 			ImGui::TextUnformatted(SpriteLayer.Name.c_str());
 
 			for (uint32_t FrameIndex = 0; FrameIndex < Sprite->NumFrame; ++FrameIndex)
@@ -204,7 +205,7 @@ void SSequencer::RenderSequencer()
 
 				std::shared_ptr<FImage> ImageFrame = SpriteLayer.bEmpty ? ImageEmpty : ImageFill;
 				const std::string LayerFrameName = Utils::Format("Sequencer##Frame%i", FrameIndex);
-				ButtonExLambda(LayerFrameName.c_str(), *ImageFrame, BackgroundColor, TintColor, SelectedColor);
+				ButtonLambda(LayerFrameName.c_str(), *ImageFrame, BackgroundColor, TintColor, SelectedColor);
 			}
 		}
 		ImGui::PopStyleVar();

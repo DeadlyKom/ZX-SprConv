@@ -1,9 +1,11 @@
 #include "SpriteEditor.h"
 #include "Core\Utils.h"
 #include "Core\Image.h"
-#include "Viewer\Viewer.h"
-#include "Viewer\Windows\ImageList.h"
 #include "Core\AppFramework.h"
+
+#include "Viewer\Viewer.h"
+#include "Viewer\Windows\Tools.h"
+#include "Viewer\Windows\ImageList.h"
 
 #define ATTRIBUTE_GRID          1 << 0
 #define GRID					1 << 1
@@ -21,6 +23,8 @@ namespace
 			SpriteEditor->OnDrawCallback(ParentList, CMD);
 		}
 	}
+
+	const char* PopupMenuName = "PopupMenuSprite";
 }
 
 namespace Shader
@@ -49,6 +53,7 @@ SSpriteEditor::SSpriteEditor()
 	, PS_Grid(nullptr)
 	, PS_LineMarchingAnts(nullptr)
 	, PCB_MarchingAnts(nullptr)
+	, bDragging(false)
 {}
 
 void SSpriteEditor::NativeInitialize(FNativeDataInitialize Data)
@@ -136,11 +141,6 @@ void SSpriteEditor::Initialize()
 	{
 		ImageList->OnSelectedImage.AddSP(std::dynamic_pointer_cast<SSpriteEditor>(shared_from_this()), &SSpriteEditor::OnSelectedFileImage);
 	}
-
-	//// ToDo debug
-	//{
-	//	Image = Utils::LoadImage("C:\\Work\\Sprites\\Menu\\Change Mission\\interact - 7.png");
-	//}
 }
 
 void SSpriteEditor::Render()
@@ -156,8 +156,18 @@ void SSpriteEditor::Render()
 		return;
 	}
 
-	ImVec2 Size(0.0f, 0.0f);
 	ImGui::Begin("SpriteEditor", &bOpen, ImGuiWindowFlags_HorizontalScrollbar);
+
+	HandleMouseInputs();
+	HandleKeyboardInputs();
+	HandleMarqueeInput();
+	ImGui::PushAllowKeyboardFocus(true);
+	RenderEditorSprite();
+	RenderPopupMenu();
+	ImGui::PopAllowKeyboardFocus();
+
+	ImGui::End();
+
 
 	//if (true)
 	//{
@@ -167,171 +177,27 @@ void SSpriteEditor::Render()
 	//	ImGui::DragInt2("Grid", GetParent()->GetViewFlags().GridSize, 0.3f, 1, 256);
 	//}
 
-	// calculate panel size
-	const float BorderWidth = 1.0f;
-	ImVec2 ContentRegionAvail = ImGui::GetContentRegionAvail();
-	ImVec2 AvailablePanelSize = ContentRegionAvail - ImVec2(BorderWidth, BorderWidth) * 2.0f;
-
-	RoundImagePosition();
-
-	TextureSizePixels = Scale * Image->Size;					// size whole texture would appear on screen
-	ImVec2 viewSizeUV = AvailablePanelSize / TextureSizePixels;		// cropped size in terms of UV
-	uv0 = ImagePosition - viewSizeUV * 0.5f;
-	uv1 = ImagePosition + viewSizeUV * 0.5f;
-
-	ImVec2 DrawImageOffset{ BorderWidth, BorderWidth };
-	ImVec2 viewSize = AvailablePanelSize;
-
-	{
-		/* don't crop the texture to UV [0,1] range.  What you see outside this
-		 * range will depend on API and texture properties */
-		if (TextureSizePixels.x < AvailablePanelSize.x)
-		{
-			// not big enough to horizontally fill view
-			viewSize.x = ImFloor(TextureSizePixels.x);
-			DrawImageOffset.x += ImFloor((AvailablePanelSize.x - TextureSizePixels.x) * 0.5f);
-			uv0.x = 0.0f;
-			uv1.x = 1.0f;
-			viewSizeUV.x = 1.0f;
-			ImagePosition.x = 0.5f;
-		}
-		if (TextureSizePixels.y < AvailablePanelSize.y)
-		{
-			// not big enough to vertically fill view
-			viewSize.y = ImFloor(TextureSizePixels.y);
-			DrawImageOffset.y += ImFloor((AvailablePanelSize.y - TextureSizePixels.y) * 0.5f);
-			uv0.y = 0.0f;
-			uv1.y = 1.0f;
-			viewSizeUV.y = 1.0f;
-			ImagePosition.y = 0.5f;
-		}
-	}
-
-	ViewSize = viewSize;
-	ViewSizeUV = viewSizeUV;
-
-	{
-		ChangeScale();
-
-		// see comment above
-		ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f;
-
-		// keep track of size of area that we draw for borders later
-		PanelTopLeftPixel = ImGui::GetCursorScreenPos();
-		ImGui::SetCursorPos(ImGui::GetCursorPos() + DrawImageOffset);
-		ViewTopLeftPixel = ImGui::GetCursorScreenPos();
-
-		UpdateShader();
-
-		ImGuiWindow* Window = ImGui::GetCurrentWindow();
-		ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + viewSize);
-
-		// callback for using our own image shader 
-		ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Image->GetShaderResourceView());
-		ImGui::GetWindowDrawList()->AddImage(Image->GetShaderResourceView(), bb.Min, bb.Max, uv0, uv1);
-
-		std::shared_ptr<SViewer> Viewer = GetParent();
-		if (Viewer && Viewer->IsMarqueeTool())
-		{
-			InputMarquee();
-		}
-		if (bMarqueeVisible)
-		{
-			DrawMarquee(bb);
-		}
-
-		// reset callback for using our own image shader 
-		ImGui::GetWindowDrawList()->AddCallback(ImDrawCallback_ResetRenderState, nullptr);
-
-		const ImGuiIO& IO = ImGui::GetIO();
-
-		TexelsToPixels = GetTexelsToPixels(ViewTopLeftPixel, viewSize, uv0, viewSizeUV, Image->Size);
-		PixelsToTexels = TexelsToPixels.Inverse();
-
-		ImVec2 MousePosition = ImGui::GetMousePos(); 
-		ImVec2 MousePositionTexel = PixelsToTexels * MousePosition;
-		ImVec2 MouseUV = MousePositionTexel / Image->Size;
-		MousePositionTexel.x = Math::Modulus(MousePositionTexel.x, Image->Size.x);
-		MousePositionTexel.y = Math::Modulus(MousePositionTexel.y, Image->Size.y);
-
-		const bool Hovered = ImGui::IsWindowHovered();
-
-		// dragging
-		//std::shared_ptr<SViewer> Viewer = GetParent();
-		if (Viewer)
-		{
-			bDragging = Viewer->IsHandTool();
-			if (bDragging)
-			{
-				ImVec2 uvDelta = IO.MouseDelta * viewSizeUV / viewSize;
-				ImagePosition -= uvDelta;
-				RoundImagePosition();
-			}
-		}
-
-		if (Hovered && IO.MouseWheel != 0.0f)
-		{
-			float LocalScale = Scale.y;
-			float PrevScale = LocalScale;
-
-			bool keepTexelSizeRegular = LocalScale > MinimumGridSize;
-			if (IO.MouseWheel > 0.0f)
-			{
-				LocalScale *= ZoomRate;
-				if (keepTexelSizeRegular)
-				{
-					// it looks nicer when all the grid cells are the same size
-					// so keep scale integer when zoomed in
-					LocalScale = ImCeil(LocalScale);
-				}
-			}
-			else
-			{
-				LocalScale /= ZoomRate;
-				if (keepTexelSizeRegular)
-				{
-					// see comment above. We're doing a floor this time to make
-					// sure the scale always changes when scrolling
-					LocalScale = Math::ImFloorSigned(LocalScale);
-				}
-			}
-			/* to make it easy to get back to 1:1 size we ensure that we stop
-			 * here without going straight past it*/
-			if ((PrevScale < 1.0f && LocalScale > 1.0f) || (PrevScale > 1.0f && LocalScale < 1.0f))
-			{
-				LocalScale = 1.0f;
-			}
-			SetScale(ImVec2(PixelAspectRatio * LocalScale, LocalScale));
-			SetImagePosition(ImagePosition + (MouseUV - ImagePosition) * (1.0f - PrevScale / LocalScale));
-		}
-	}
-
-	if (false)
-	{
-		ImGui::Begin("Debug");
-
-		ImGui::Text("PixelAspectRatio : %f", PixelAspectRatio);
-		ImGui::Text("MinimumGridSize : %f", MinimumGridSize);
-		ImGui::Text("ZoomRate : %f", ZoomRate);
-		ImGui::Text("bDragging : %i", bDragging);
-
-		ImGui::Text("ContentRegionAvail : (%f, %f)", ContentRegionAvail.x, ContentRegionAvail.y);
-		ImGui::Text("ImagePosition : (%f, %f)", ImagePosition.x, ImagePosition.y);
-		ImGui::Text("Scale : (%f, %f)", Scale.x, Scale.y);
-		ImGui::Text("PanelTopLeftPixel : (%f, %f)", PanelTopLeftPixel.x, PanelTopLeftPixel.y);
-		ImGui::Text("PanelSize : (%f, %f)", PanelSize.x, PanelSize.y);
-		ImGui::Text("ViewTopLeftPixel : (%f, %f)", ViewTopLeftPixel.x, ViewTopLeftPixel.y);
-		ImGui::Text("ViewSize : (%f, %f)", ViewSize.x, ViewSize.y);
-		ImGui::Text("ViewSizeUV : (%f, %f)", ViewSizeUV.x, ViewSizeUV.y);
-		ImGui::Text("UV0 : (%f, %f)", uv0.x, uv0.y);
-		ImGui::Text("UV1 : (%f, %f)", uv1.x, uv1.y);
-		ImGui::Text("StartMarqueePosition : (%f, %f)", StartMarqueePosition.x, StartMarqueePosition.y);
-		ImGui::Text("EndMarqueePosition : (%f, %f)", EndMarqueePosition.x, EndMarqueePosition.y);
-
-		ImGui::End();
-	}
-
-	ImGui::End();
+	//if (false)
+	//{
+	//	ImGui::Begin("Debug");
+	//	ImGui::Text("PixelAspectRatio : %f", PixelAspectRatio);
+	//	ImGui::Text("MinimumGridSize : %f", MinimumGridSize);
+	//	ImGui::Text("ZoomRate : %f", ZoomRate);
+	//	ImGui::Text("bDragging : %i", bDragging);
+	//	ImGui::Text("ContentRegionAvail : (%f, %f)", ContentRegionAvail.x, ContentRegionAvail.y);
+	//	ImGui::Text("ImagePosition : (%f, %f)", ImagePosition.x, ImagePosition.y);
+	//	ImGui::Text("Scale : (%f, %f)", Scale.x, Scale.y);
+	//	ImGui::Text("PanelTopLeftPixel : (%f, %f)", PanelTopLeftPixel.x, PanelTopLeftPixel.y);
+	//	ImGui::Text("PanelSize : (%f, %f)", PanelSize.x, PanelSize.y);
+	//	ImGui::Text("ViewTopLeftPixel : (%f, %f)", ViewTopLeftPixel.x, ViewTopLeftPixel.y);
+	//	ImGui::Text("ViewSize : (%f, %f)", ViewSize.x, ViewSize.y);
+	//	ImGui::Text("ViewSizeUV : (%f, %f)", ViewSizeUV.x, ViewSizeUV.y);
+	//	ImGui::Text("UV0 : (%f, %f)", uv0.x, uv0.y);
+	//	ImGui::Text("UV1 : (%f, %f)", uv1.x, uv1.y);
+	//	ImGui::Text("StartMarqueePosition : (%f, %f)", StartMarqueePosition.x, StartMarqueePosition.y);
+	//	ImGui::Text("EndMarqueePosition : (%f, %f)", EndMarqueePosition.x, EndMarqueePosition.y);	
+	//	ImGui::End();
+	//}
 }
 
 void SSpriteEditor::Tick(float DeltaTime)
@@ -495,6 +361,147 @@ void SSpriteEditor::SetImagePosition(ImVec2 NewPosition)
 	RoundImagePosition();
 }
 
+Transform2D SSpriteEditor::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
+{
+	ImVec2 uvToPixel = screenViewSize / uvViewSize;
+
+	Transform2D transform;
+	transform.Scale = uvToPixel / textureSize;
+	transform.Translate.x = screenTopLeft.x - uvTopLeft.x * uvToPixel.x;
+	transform.Translate.y = screenTopLeft.y - uvTopLeft.y * uvToPixel.y;
+	return transform;
+}
+
+ImVec2 SSpriteEditor::ConverPositionToPixel(const ImVec2& Position)
+{
+	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
+	return ImFloor((Position - ViewTopLeftPixel + uv0 / ImageSizeInv * Scale) / Scale);
+}
+
+void SSpriteEditor::DrawMarquee(const ImRect& Window)
+{
+	ImVec2 Start = StartMarqueePosition;
+	ImVec2 End = EndMarqueePosition;
+	
+	// clamp
+	{
+		const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
+		ImVec2 A = ImFloor(uv0 / ImageSizeInv);
+		Start = (Start - A) * Scale;
+		End = (End - A) * Scale;
+
+		Start = ImMax(Start, ImVec2(0.0f, 0.0f));
+		Start = ImMin(Start, Image->Size * Scale);
+		End = ImMax(End, ImVec2(0.0f, 0.0f));
+		End = ImMin(End, Image->Size * Scale);
+	}
+
+	ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
+	ImVec2 TopLeftPixel = ViewTopLeftPixel - (TopLeftSubTexel - ImFloor(TopLeftSubTexel / Scale) * Scale);
+
+	ImGui::GetWindowDrawList()->_FringeScale = 0.1f;
+	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Shader::LINE_ID);
+	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + Start, TopLeftPixel + End, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
+}
+
+void SSpriteEditor::RenderEditorSprite()
+{
+	UpdateShader();
+
+	ImGuiWindow* Window = ImGui::GetCurrentWindow();
+
+	// see comment above
+	Window->ScrollMax.y = 1.0f;
+
+	// keep track of size of area that we draw for borders later
+	PanelTopLeftPixel = ImGui::GetCursorScreenPos();
+	ImGui::SetCursorPos(ImGui::GetCursorPos() + CalculatePanelSize());
+	ViewTopLeftPixel = ImGui::GetCursorScreenPos();
+	ImRect BB(Window->DC.CursorPos, Window->DC.CursorPos + ViewSize);
+
+	// callback for using our own image shader 
+	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Image->GetShaderResourceView());
+	ImGui::GetWindowDrawList()->AddImage(Image->GetShaderResourceView(), BB.Min, BB.Max, uv0, uv1);
+
+	//std::shared_ptr<SViewer> Viewer = GetParent();
+	//if (Viewer && Viewer->IsMarqueeTool())
+	//{
+	//	InputMarquee();
+	//}
+	if (bMarqueeVisible)
+	{
+		DrawMarquee(BB);
+	}
+
+	// reset callback for using our own image shader 
+	ImGui::GetWindowDrawList()->AddCallback(ImDrawCallback_ResetRenderState, nullptr);
+}
+
+void SSpriteEditor::RenderPopupMenu()
+{
+	if (ImGui::BeginPopup(PopupMenuName))
+	{
+		const ImVec2 MousePosition = ConverPositionToPixel(ImGui::GetMousePos());
+		ImRect M(StartMarqueePosition, EndMarqueePosition);
+		bool bMouseInMarquee = M.Contains(MousePosition);
+		if (bMouseInMarquee && ImGui::MenuItem("Add to sprite"))
+		{
+		}
+
+		if (false && ImGui::MenuItem("test A..."))
+		{
+		}
+
+		if (true && ImGui::MenuItem("test B..."))
+		{
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
+ImVec2 SSpriteEditor::CalculatePanelSize()
+{
+	// calculate panel size
+	const float BorderWidth = 1.0f;
+	ImVec2 ContentRegionAvail = ImGui::GetContentRegionAvail();
+	ImVec2 AvailablePanelSize = ContentRegionAvail - ImVec2(BorderWidth, BorderWidth) * 2.0f;
+
+	RoundImagePosition();
+
+	TextureSizePixels = Image->Size * Scale;
+	ViewSizeUV = AvailablePanelSize / TextureSizePixels;
+	uv0 = ImagePosition - ViewSizeUV * 0.5f;
+	uv1 = ImagePosition + ViewSizeUV * 0.5f;
+
+	ImVec2 DrawImageOffset(BorderWidth, BorderWidth);
+	ViewSize = AvailablePanelSize;
+
+	// don't crop the texture to UV [0,1] range.  What you see outside this range will depend on API and texture properties
+	if (TextureSizePixels.x < AvailablePanelSize.x)
+	{
+		// not big enough to horizontally fill view
+		ViewSize.x = ImFloor(TextureSizePixels.x);
+		DrawImageOffset.x += ImFloor((AvailablePanelSize.x - TextureSizePixels.x) * 0.5f);
+		uv0.x = 0.0f;
+		uv1.x = 1.0f;
+		ViewSizeUV.x = 1.0f;
+		ImagePosition.x = 0.5f;
+	}
+	if (TextureSizePixels.y < AvailablePanelSize.y)
+	{
+		// not big enough to vertically fill view
+		ViewSize.y = ImFloor(TextureSizePixels.y);
+		DrawImageOffset.y += ImFloor((AvailablePanelSize.y - TextureSizePixels.y) * 0.5f);
+		uv0.y = 0.0f;
+		uv1.y = 1.0f;
+		ViewSizeUV.y = 1.0f;
+		ImagePosition.y = 0.5f;
+	}
+
+	return DrawImageOffset;
+}
+
 void SSpriteEditor::RoundImagePosition()
 {
 	if (Image == nullptr)
@@ -523,45 +530,127 @@ void SSpriteEditor::RoundImagePosition()
 	ImagePosition = (TopLeftSubTexel + ViewSize * 0.5f) / (Scale * Image->Size);
 }
 
-void SSpriteEditor::ChangeScale()
+void SSpriteEditor::HandleKeyboardInputs()
 {
-	if (Scale == OldScale)
+	ImGuiIO& IO = ImGui::GetIO();
+	const bool bHovered = ImGui::IsWindowHovered();
+
+	const bool Shift = IO.KeyShift;
+	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
+	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
+
+	if (!ImGui::IsWindowFocused())
 	{
 		return;
 	}
-	OldScale = Scale;
 }
 
-Transform2D SSpriteEditor::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
+void SSpriteEditor::HandleMouseInputs()
 {
-	ImVec2 uvToPixel = screenViewSize / uvViewSize;
+	// change scale
+	if (Scale != OldScale)
+	{
+		OldScale = Scale;
+	}
 
-	Transform2D transform;
-	transform.Scale = uvToPixel / textureSize;
-	transform.Translate.x = screenTopLeft.x - uvTopLeft.x * uvToPixel.x;
-	transform.Translate.y = screenTopLeft.y - uvTopLeft.y * uvToPixel.y;
-	return transform;
+	// scale
+	TexelsToPixels = GetTexelsToPixels(ViewTopLeftPixel, ViewSize, uv0, ViewSizeUV, Image->Size);
+	PixelsToTexels = TexelsToPixels.Inverse();
+
+	const ImVec2 MousePosition = ImGui::GetMousePos();
+	ImVec2 MousePositionTexel = PixelsToTexels * MousePosition;
+	const ImVec2 MouseUV = MousePositionTexel / Image->Size;
+	//MousePositionTexel.x = Math::Modulus(MousePositionTexel.x, Image->Size.x);
+	//MousePositionTexel.y = Math::Modulus(MousePositionTexel.y, Image->Size.y);
+
+	ImGuiIO& IO = ImGui::GetIO();
+	const bool bHovered = ImGui::IsWindowHovered();
+	const bool Shift = IO.KeyShift;
+	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
+	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
+
+	std::shared_ptr<SViewer> Viewer = GetParent();
+	if (bHovered && !Ctrl && !Shift && !Alt && IO.MouseWheel != 0.0f)
+	{
+		float LocalScale = Scale.y;
+		float PrevScale = LocalScale;
+
+		bool keepTexelSizeRegular = LocalScale > MinimumGridSize;
+		if (IO.MouseWheel > 0.0f)
+		{
+			LocalScale *= ZoomRate;
+			if (keepTexelSizeRegular)
+			{
+				// it looks nicer when all the grid cells are the same size
+				// so keep scale integer when zoomed in
+				LocalScale = ImCeil(LocalScale);
+			}
+		}
+		else
+		{
+			LocalScale /= ZoomRate;
+			if (keepTexelSizeRegular)
+			{
+				// see comment above. We're doing a floor this time to make
+				// sure the scale always changes when scrolling
+				LocalScale = Math::ImFloorSigned(LocalScale);
+			}
+		}
+		/* to make it easy to get back to 1:1 size we ensure that we stop
+		 * here without going straight past it*/
+		if ((PrevScale < 1.0f && LocalScale > 1.0f) || (PrevScale > 1.0f && LocalScale < 1.0f))
+		{
+			LocalScale = 1.0f;
+		}
+		SetScale(ImVec2(PixelAspectRatio * LocalScale, LocalScale));
+		SetImagePosition(ImagePosition + (MouseUV - ImagePosition) * (1.0f - PrevScale / LocalScale));
+	}
+	else if (!bDragging && IO.MouseDown[ImGuiMouseButton_Middle])
+	{
+		if (Viewer)
+		{
+			bDragging = Viewer->TrySetTool(EToolType::Hand);
+		}
+	}
+	else if (IO.MouseReleased[ImGuiMouseButton_Middle])
+	{
+		bDragging = false;
+
+		if (Viewer)
+		{
+			Viewer->ResetTool();
+		}
+	}
+	else if (Image != nullptr && IO.MouseReleased[ImGuiMouseButton_Right])
+	{
+		ImGui::OpenPopup(PopupMenuName);
+	}
+
+	// dragging
+	if (bDragging)
+	{
+		ImVec2 uvDelta = IO.MouseDelta * ViewSizeUV / ViewSize;
+		ImagePosition -= uvDelta;
+		RoundImagePosition();
+	}
 }
 
-ImVec2 SSpriteEditor::ConverPositionToPixel(const ImVec2& Position)
+void SSpriteEditor::HandleMarqueeInput()
 {
-	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
-	return ImFloor((Position - ViewTopLeftPixel + uv0 / ImageSizeInv * Scale) / Scale);
-}
-
-void SSpriteEditor::InputMarquee()
-{
-	if (!ImGui::IsWindowFocused())
+	std::shared_ptr<SViewer> Viewer = GetParent();
+	if (Viewer == nullptr || !Viewer->IsMarqueeTool())
 	{
 		return;
 	}
 
 	const ImGuiIO& IO = ImGui::GetIO();
+	const bool bHovered = ImGui::IsWindowHovered();
+
 	const bool Shift = IO.KeyShift;
 	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
 	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
 
-	if (!bMarqueeActive && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
+	if (bHovered && !Ctrl && !Shift && !Alt && !bMarqueeActive && ImGui::IsKeyDown(ImGuiKey_MouseLeft))
 	{
 		StartMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos());
 		StartMarqueePosition = ImMax(StartMarqueePosition, ImVec2(0.0f, 0.0f));
@@ -571,45 +660,16 @@ void SSpriteEditor::InputMarquee()
 		bMarqueeVisible = true;
 		bMarqueeActive = true;
 	}
-	else if (ImGui::IsKeyReleased(ImGuiKey_MouseLeft))
-	{
-	}
-	else if (ImGui::IsKeyDown(ImGuiKey_MouseLeft))
+	else if (bHovered && !Ctrl && !Shift && !Alt && bMarqueeActive && ImGui::IsKeyDown(ImGuiKey_MouseLeft))
 	{
 		EndMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos() + Scale);
 		EndMarqueePosition = ImMax(EndMarqueePosition, ImVec2(0.0f, 0.0f));
 		EndMarqueePosition = ImMin(EndMarqueePosition, Image->Size * Scale);
 	}
-	else
+	else if (bHovered && ImGui::IsKeyReleased(ImGuiKey_MouseLeft))
 	{
 		bMarqueeActive = false;
 	}
-}
-
-void SSpriteEditor::DrawMarquee(const ImRect& Window)
-{
-	ImVec2 Start = StartMarqueePosition;
-	ImVec2 End = EndMarqueePosition;
-	
-	// clamp
-	{
-		const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
-		ImVec2 A = ImFloor(uv0 / ImageSizeInv);
-		Start = (Start - A) * Scale;
-		End = (End - A) * Scale;
-
-		Start = ImMax(Start, ImVec2(0.0f, 0.0f));
-		Start = ImMin(Start, Image->Size * Scale);
-		End = ImMax(End, ImVec2(0.0f, 0.0f));
-		End = ImMin(End, Image->Size * Scale);
-	}
-
-	ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
-	ImVec2 TopLeftPixel = ViewTopLeftPixel - (TopLeftSubTexel - ImFloor(TopLeftSubTexel / Scale) * Scale);
-
-	ImGui::GetWindowDrawList()->_FringeScale = 0.1f;
-	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Shader::LINE_ID);
-	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + Start, TopLeftPixel + End, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
 }
 
 void SSpriteEditor::OnSelectedFileImage(const std::filesystem::directory_entry& Path)

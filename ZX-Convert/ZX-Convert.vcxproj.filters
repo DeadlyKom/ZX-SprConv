@@ -79,6 +79,9 @@
     <ClCompile Include="..\Source\Viewer\Windows\Tools.cpp">
       <Filter>Source\Viewer\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Core\Sprite.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h">
@@ -185,9 +188,18 @@
     <Image Include="..\Resource\Icons\layer_fill.png">
       <Filter>Source\Resource</Filter>
     </Image>
-    <Image Include="..\Resource\Icons\RGBA mode.png" />
-    <Image Include="..\Resource\Icons\Indexed mode.png" />
-    <Image Include="..\Resource\Icons\zx mode.png" />
+    <Image Include="..\Resource\Icons\template grid.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\zx mode.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\Indexed mode.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\RGBA mode.png">
+      <Filter>Source\Resource</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Source\Shader\LineMarchingAnts.hlsl">

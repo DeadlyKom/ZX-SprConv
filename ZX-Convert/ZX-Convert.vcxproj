@@ -161,6 +161,7 @@
     <ClCompile Include="..\Source\Core\AppFramework.cpp" />
     <ClCompile Include="..\Source\Core\Delegate.cpp" />
     <ClCompile Include="..\Source\Core\Image.cpp" />
+    <ClCompile Include="..\Source\Core\Sprite.cpp" />
     <ClCompile Include="..\Source\Core\Utils.cpp" />
     <ClCompile Include="..\Source\Fonts\Fonts.cpp" />
     <ClCompile Include="..\Source\Fonts\MonoLisa.cpp" />
@@ -215,6 +216,7 @@
     <Image Include="..\Resource\Icons\move.png" />
     <Image Include="..\Resource\Icons\pan.png" />
     <Image Include="..\Resource\Icons\RGBA mode.png" />
+    <Image Include="..\Resource\Icons\template grid.png" />
     <Image Include="..\Resource\Icons\unlock.png" />
     <Image Include="..\Resource\Icons\visible disable.png" />
     <Image Include="..\Resource\Icons\visible enable.png" />

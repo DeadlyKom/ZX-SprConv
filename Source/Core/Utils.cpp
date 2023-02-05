@@ -18,6 +18,21 @@ std::shared_ptr<FImage> Utils::LoadImage(std::string Filename)
 	return FImageBase::Get().Load(Filename);
 }
 
+uint8_t* Utils::LoadImageToMemory(const std::string& Filename, ImVec2& OutSize)
+{
+	return FImageBase::Get().LoadToMemory(Filename, OutSize);
+}
+
+bool Utils::ResizeRegion(uint8_t* ImageData, const ImVec2& OriginalSize, const ImVec2& RequiredSize, uint8_t*& OutputImageData, const ImVec2& uv0, const ImVec2& uv1)
+{
+	return FImageBase::Get().ResizeRegion(ImageData, OriginalSize, RequiredSize, OutputImageData, uv0, uv1);
+}
+
+void Utils::FreeImageToMemory(uint8_t* Data)
+{
+	FImageBase::Get().FreeToMemory(Data);
+}
+
 std::shared_ptr<FImage> Utils::LoadImageFromResource(WORD ID, std::wstring Folder)
 {
 	return FImageBase::Get().FromMemory(FAppFramework::Get().FromResource(ID, Folder));

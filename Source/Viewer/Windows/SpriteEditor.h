@@ -21,12 +21,23 @@ private:
 	void SetScale(float scaleY);
 	void SetScale(ImVec2 NewScale);
 	void SetImagePosition(ImVec2 NewPosition);
-	void RoundImagePosition();
-	void ChangeScale();
 	Transform2D GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize);
 	ImVec2 ConverPositionToPixel(const ImVec2& Position);
 	void InputMarquee();
 	void DrawMarquee(const ImRect& Window);
+
+	// render
+	void RenderEditorSprite();
+	void RenderPopupMenu();
+
+	// internal
+	ImVec2 CalculatePanelSize();
+	void RoundImagePosition();
+
+	// input
+	void HandleKeyboardInputs();
+	void HandleMouseInputs();
+	void HandleMarqueeInput();
 
 	// event
 	void OnSelectedFileImage(const std::filesystem::directory_entry& Path);
@@ -56,7 +67,7 @@ private:
 	float ZoomRate = 2.0f;									// how fast mouse wheel affects zoom
 
 	// view state
-	bool bDragging = false;									// is user currently dragging to pan view
+	bool bDragging;											// is user currently dragging to pan view
 	
 	ImVec2 ImagePosition = { 0.5f, 0.5f };					// the UV value at the center of the current view
 	ImVec2 Scale = { 4.0f, 4.0f };							// 1 pixel is 1 texel

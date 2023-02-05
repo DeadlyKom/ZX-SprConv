@@ -18,10 +18,10 @@
 #define IDB_LAYER_EMPTY                 119
 #define IDB_LAYER_FILL                  120
 #define IDB_SEQUENCER_FILL              121
-#define IDB_COLOR_MODE_INDEXED          121
+#define IDB_COLOR_MODE_INDEXED          122
 #define IDB_COLOR_MODE_RGBA             123
-#define IDB_PNG1                        125
-#define IDB_COLOR_MODE_ZX               125
+#define IDB_COLOR_MODE_ZX               124
+#define IDB_TEMPLATE_GRID               125
 
 // Next default values for new objects
 // 

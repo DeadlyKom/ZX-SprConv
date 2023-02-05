@@ -2,13 +2,13 @@
 #include "Core\Window.h"
 #include "Core\Utils.h"
 
-#include "Windows/SpriteEditor.h"
-#include "Windows/Tools.h"
-#include "Windows/ImageList.h"
-#include "Windows/Palette.h"
-#include "Windows/SpriteConstructor.h"
-#include "Windows/Sequencer.h"
-#include "Windows/Property.h"
+#include "Windows\SpriteEditor.h"
+#include "Windows\Tools.h"
+#include "Windows\ImageList.h"
+#include "Windows\Palette.h"
+#include "Windows\SpriteConstructor.h"
+#include "Windows\Sequencer.h"
+#include "Windows\Property.h"
 
 #include "Viewer\Windows\FileDialog.h"
 
@@ -21,7 +21,8 @@ namespace
 }
 
 SViewer::SViewer()
-	: LastSelectedTool(EToolType::None)
+	: bToolChangeLock(false)
+	, LastSelectedTool(EToolType::None)
 	, bCreateSpriteFirstOpen(false)
 	, CurrentSprite(-1)
 	, SpriteCounter(0)
@@ -97,7 +98,7 @@ void SViewer::Initialize()
 
 void SViewer::Render()
 {
-	HandlerInput();
+	//HandlerInput();
 
 	ImGui::DockSpaceOverViewport();
 
@@ -134,6 +135,29 @@ FSprite* SViewer::GetSelectedSprite()
 {
 	const int32_t Index = CurrentSprite >= 0 ? (Sprites.size() > CurrentSprite ? CurrentSprite : -1) : -1;
 	return Index >= 0 ? &Sprites[Index] : nullptr;
+}
+
+std::vector<FSprite>& SViewer::GetSprites()
+{
+	return Sprites;
+}
+
+bool SViewer::TrySetTool(EToolType NewToolType)
+{
+	if (!bToolChangeLock)
+	{
+		LastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(NewToolType);
+		bToolChangeLock = true;
+		return true;
+	}
+
+	return false;
+}
+
+void SViewer::ResetTool()
+{
+	bToolChangeLock = false;
+	WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
 }
 
 bool SViewer::IsHandTool()
@@ -200,57 +224,45 @@ void SViewer::OpenFile_Callback(std::filesystem::path FilePath)
 	}
 }
 
-void SViewer::HandlerInput()
-{
-	const ImGuiIO& IO = ImGui::GetIO();
-	const bool Shift = IO.KeyShift;
-	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
-	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
-	
-	//if (!ImGui::IsWindowFocused())
-	//{
-	//	return;
-	//}
-
-	if (ImGui::IsKeyPressed(ImGuiMod_Ctrl))
-	{
-		EToolType TmpLastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Move);
-		if (TmpLastSelectedTool != EToolType::Move)
-		{
-			LastSelectedTool = TmpLastSelectedTool;
-		}
-	}
-	else if(ImGui::IsKeyReleased(ImGuiMod_Ctrl))
-	{
-		WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
-	}
-	else if (IO.MouseDown[ImGuiMouseButton_Middle])
-	{
-		EToolType TmpLastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Hand);
-		if (TmpLastSelectedTool != EToolType::Hand)
-		{
-			LastSelectedTool = TmpLastSelectedTool;
-		}
-	}
-	else if (IO.MouseReleased[ImGuiMouseButton_Middle])
-	{
-		WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
-	}
-
-	// hot keys
-	if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_M)])
-	{
-		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Marquee);
-	}
-	else if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_B)])
-	{
-		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Pan);
-	}
-	else if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_E)])
-	{
-		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Eraser);
-	}
-}
+//void SViewer::HandlerInput()
+//{
+//	const ImGuiIO& IO = ImGui::GetIO();
+//	const bool Shift = IO.KeyShift;
+//	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
+//	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
+//	
+//	//if (!ImGui::IsWindowFocused())
+//	//{
+//	//	return;
+//	//}
+//
+//	if (ImGui::IsKeyPressed(ImGuiMod_Ctrl))
+//	{
+//		EToolType TmpLastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Move);
+//		if (TmpLastSelectedTool != EToolType::Move)
+//		{
+//			LastSelectedTool = TmpLastSelectedTool;
+//		}
+//	}
+//	else if(ImGui::IsKeyReleased(ImGuiMod_Ctrl))
+//	{
+//		WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
+//	}
+//
+//	// hot keys
+//	if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_M)])
+//	{
+//		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Marquee);
+//	}
+//	else if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_B)])
+//	{
+//		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Pan);
+//	}
+//	else if (IO.KeysDown[ImGui::GetKeyIndex(ImGuiKey_E)])
+//	{
+//		WindowCast<STools>(EWindowsType::Tools)->SetSelect(EToolType::Eraser);
+//	}
+//}
 
 void SViewer::ShowMenuFile()
 {
@@ -590,6 +602,7 @@ bool SViewer::WindowCreateSpriteModal()
 			NewSprite.Pivot = CreateSpritePivot;
 			NewSprite.ColorMode = CreateSpriteColorMode;
 			NewSprite.Name = CreateSpriteNameBuffer;
+			NewSprite.Initialize();
 
 			if (AddSprite(NewSprite))
 			{
@@ -616,11 +629,18 @@ bool SViewer::AddSprite(FSprite& NewSprite)
 		return false;
 	}
 
-	FSpriteLayer NewLayer;
+	FSpriteLayer& NewLayer = NewSprite.AddLayer();
 	NewLayer.bVisible = true;
 	NewLayer.bLock = false;
 	NewLayer.Name = Utils::Format("Layer %i", ++LayersCounter);
-	NewSprite.Layers.push_back(NewLayer);
+
+	NewSprite.AddFrame();
+
+	FSpriteBlock NewSpriteBlock;
+	NewSpriteBlock.Marquee = ImRect(12.0, 22.0, 26.0f, 26.0f);
+	NewSpriteBlock.Filename = Files[0].path().string();
+	NewSpriteBlock.Initialize();
+	NewLayer.AddSpriteBlock(NewSpriteBlock, 0);
 
 	Sprites.push_back(NewSprite);
 

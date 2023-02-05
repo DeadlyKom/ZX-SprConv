@@ -35,10 +35,17 @@ struct FRecentFiles
 };
 
 class SImageList;
+class SSequencer;
+class SSpriteEditor;
+class SSpriteConstructor;
 
 class SViewer : public SWindow
 {
 	friend SImageList;
+	friend SSequencer;
+	friend SSpriteEditor;
+	friend SSpriteConstructor;
+
 public:
 	SViewer();
 
@@ -50,16 +57,24 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroy() override;
 
-	FViewFlags& GetViewFlags() { return ViewFlags; }
-	FSprite* GetSelectedSprite();
-
 	bool IsHandTool();
 	bool IsMarqueeTool();
 
 private:
-	void OpenFile_Callback(std::filesystem::path FilePath);
-	void HandlerInput();
+	// friend functions
+	FViewFlags& GetViewFlags() { return ViewFlags; }
+	FSprite* GetSelectedSprite();
+	std::vector<FSprite>& GetSprites();
 
+	// tool functions
+	bool TrySetTool(EToolType NewToolType);
+	void ResetTool();
+
+	// input functions
+	//void HandlerInput();
+	void OpenFile_Callback(std::filesystem::path FilePath);
+
+	// show functions
 	void ShowMenuFile();
 	void ShowMenuSprite();
 	void ShowMenuLayer();
@@ -67,24 +82,32 @@ private:
 	void ShowMenuView();
 	void ShowWindows();
 
+	// window functions
 	bool WindowQuitModal();
 	bool WindowCreateSpriteModal();
 
+	// create functions
 	bool AddSprite(FSprite& NewSprite);
 
+	// static functions
 	static int TextEditNumberCallback(ImGuiInputTextCallbackData* Data);
 
+	// template functions
 	template <typename T>
 	T* WindowCast(EWindowsType Type)
 	{
 		return static_cast<T*>(Windows[Type].get());
 	}
 
+	// internal
 	FViewFlags ViewFlags;
 	std::map<EWindowsType, std::shared_ptr<SWindow>> Windows;
 
+	// tool
+	bool bToolChangeLock;
 	EToolType LastSelectedTool;
 
+	// recent files
 	std::vector<FRecentFiles> RecentFiles;
 
 	// open
