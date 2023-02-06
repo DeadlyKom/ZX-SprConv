@@ -14,7 +14,7 @@ namespace Utils
 	bool ResizeRegion(uint8_t* ImageData, const ImVec2& OriginalSize, const ImVec2& RequiredSize, uint8_t*& OutputImageData, const ImVec2& uv0, const ImVec2& uv1);
 	void FreeImageToMemory(uint8_t* Data);
 
-	DelegateHandle OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path Path = "", std::string FilterTypes = "*.*");
+	DelegateHandle OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path FilePath = "", std::string FilterTypes = "*.*");
 	void CloseWindowFileDialog(DelegateHandle& Handle);
 
 	template <typename... Args>

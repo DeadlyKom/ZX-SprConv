@@ -22,6 +22,9 @@
     <Filter Include="Source\Resource">
       <UniqueIdentifier>{e194e0be-181e-4863-9a3f-b69c6147aa84}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Resource\Image">
+      <UniqueIdentifier>{692a7478-2356-4e81-9b19-ba23aaeddf70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -149,56 +152,71 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\Resource\Icons\eraser.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
     <Image Include="Icone.ico">
       <Filter>Source\Resource</Filter>
     </Image>
     <Image Include="IconeWindow.ico">
       <Filter>Source\Resource</Filter>
     </Image>
-    <Image Include="..\Resource\Icons\marquee.png">
-      <Filter>Source\Resource</Filter>
+    <Image Include="..\Resource\Icons\eraser.png">
+      <Filter>Source\Resource\Image</Filter>
     </Image>
-    <Image Include="..\Resource\Icons\pan.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\visible disable.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\visible enable.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\unlock.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\move.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\lock.png">
-      <Filter>Source\Resource</Filter>
+    <Image Include="..\Resource\Icons\first frame.png">
+      <Filter>Source\Resource\Image</Filter>
     </Image>
     <Image Include="..\Resource\Icons\hand.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\layer_empty.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\layer_fill.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\template grid.png">
-      <Filter>Source\Resource</Filter>
-    </Image>
-    <Image Include="..\Resource\Icons\zx mode.png">
-      <Filter>Source\Resource</Filter>
+      <Filter>Source\Resource\Image</Filter>
     </Image>
     <Image Include="..\Resource\Icons\Indexed mode.png">
-      <Filter>Source\Resource</Filter>
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\last frame.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\layer_empty.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\layer_fill.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\lock.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\marquee.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\move.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\next frame.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\pan.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\play.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\previoes frame.png">
+      <Filter>Source\Resource\Image</Filter>
     </Image>
     <Image Include="..\Resource\Icons\RGBA mode.png">
-      <Filter>Source\Resource</Filter>
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\template grid.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\unlock.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\visible disable.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\visible enable.png">
+      <Filter>Source\Resource\Image</Filter>
+    </Image>
+    <Image Include="..\Resource\Icons\zx mode.png">
+      <Filter>Source\Resource\Image</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

@@ -3,10 +3,26 @@
 #include "Core\Utils.h"
 #include "Core\Image.h"
 
+namespace
+{
+	enum MyItemColumnID
+	{
+		ItemColumnID_Visible,
+		ItemColumnID_Lock,
+		ItemColumnID_LayerName,
+	};
+}
+
 void SSequencer::Initialize()
 {
 	bIncludeInWindows = true;
 	Name = "Sequencer";
+
+	ImageFirstButton = Utils::LoadImageFromResource(IDB_SEQUENCER_FIRST_BUTTON, TEXT("PNG"));
+	ImagePreviousButton = Utils::LoadImageFromResource(IDB_SEQUENCER_PREVIOUS_BUTTON, TEXT("PNG"));
+	ImagePlayButton = Utils::LoadImageFromResource(IDB_SEQUENCER_PLAY_BUTTON, TEXT("PNG"));
+	ImageNextButton = Utils::LoadImageFromResource(IDB_SEQUENCER_NEXT_BUTTON, TEXT("PNG"));
+	ImageLastButton = Utils::LoadImageFromResource(IDB_SEQUENCER_LAST_BUTTON, TEXT("PNG"));
 
 	ImageVisibleEnable = Utils::LoadImageFromResource(IDB_SEQUENCER_VISIBLE_ENABLE, TEXT("PNG"));
 	ImageVisibleDisable = Utils::LoadImageFromResource(IDB_SEQUENCER_VISIBLE_DISABLE, TEXT("PNG"));
@@ -17,13 +33,6 @@ void SSequencer::Initialize()
 	ImageEmpty = Utils::LoadImageFromResource(IDB_LAYER_EMPTY, TEXT("PNG"));
 	ImageFill = Utils::LoadImageFromResource(IDB_LAYER_FILL, TEXT("PNG"));
 }
-
-enum MyItemColumnID
-{
-	ItemColumnID_Visible,
-	ItemColumnID_Lock,
-	ItemColumnID_LayerName,
-};
 
 void SSequencer::Render()
 {
@@ -36,6 +45,8 @@ void SSequencer::Render()
 	ImGui::Begin("Sequencer", &bOpen);
 
 	RenderControlButtons();
+	const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
+	ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
 	RenderSequencer();
 
 	ImGui::End();
@@ -43,7 +54,59 @@ void SSequencer::Render()
 
 void SSequencer::RenderControlButtons()
 {
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 1.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1.0f, 1.0f));
 
+	const float DefaultWidth = ImGui::GetContentRegionAvail().x;
+	auto ButtonLambda = [DefaultWidth](const char* ID, std::shared_ptr<FImage> Image, bool bSelectedCondition, float& AvailWidth, bool bLast = false) -> bool
+	{
+		if (!Image->IsValid())
+		{
+			return false;
+		}
+
+		const ImVec2 Padding = ImGui::GetStyle().FramePadding;
+		const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+		const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
+		const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		const float Width = Image->Size.x + Padding.x * 2.0f;
+
+		const bool bResult = ImGui::ImageButton(ID, Image->GetShaderResourceView(), Image->Size, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, bSelectedCondition ? SelectedColor : TintColor);
+		AvailWidth -= Width;
+		if (!bLast && AvailWidth > Width)
+		{
+			ImGui::SameLine();
+		}
+		else if (AvailWidth < Width)
+		{
+			AvailWidth = DefaultWidth;
+		}
+
+		return bResult;
+	};
+
+	float AvailWidth = DefaultWidth;
+	if (ButtonLambda("Sequencer##First", ImageFirstButton, Selected == ESequencerControl::First, AvailWidth))
+	{
+		Selected = ESequencerControl::First;
+	}
+	if (ButtonLambda("Sequencer##Previous", ImagePreviousButton, Selected == ESequencerControl::Previous, AvailWidth))
+	{
+		Selected = ESequencerControl::Previous;
+	}
+	if (ButtonLambda("Sequencer##Play", ImagePlayButton, Selected == ESequencerControl::Play, AvailWidth))
+	{
+		Selected = ESequencerControl::Play;
+	}
+	if (ButtonLambda("Sequencer##Next", ImageNextButton, Selected == ESequencerControl::Next, AvailWidth))
+	{
+		Selected = ESequencerControl::Next;
+	}
+	if (ButtonLambda("Sequencer##Last", ImageLastButton, Selected == ESequencerControl::Last, AvailWidth, true))
+	{
+		Selected = ESequencerControl::Last;
+	}
+	ImGui::PopStyleVar(2);
 }
 
 void SSequencer::RenderSequencer()

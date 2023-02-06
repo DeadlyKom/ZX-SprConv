@@ -129,15 +129,34 @@ void SViewer::Destroy()
 	}
 }
 
+void SViewer::SetSelectedSprite(uint32_t Index)
+{
+	if (Sprites.size() > Index)
+	{
+		CurrentSprite = Index;
+	}
+}
+
 FSprite* SViewer::GetSelectedSprite()
 {
-	const int32_t Index = CurrentSprite >= 0 ? (Sprites.size() > CurrentSprite ? CurrentSprite : -1) : -1;
-	return Index >= 0 ? &Sprites[Index] : nullptr;
+	const int32_t Index = CurrentSprite >= 0 ? (Sprites.size() > CurrentSprite ? CurrentSprite : INDEX_NONE) : INDEX_NONE;
+	return Index > INDEX_NONE ? &Sprites[Index] : nullptr;
+}
+
+FSpriteLayer* SViewer::GetSelectedLayer(const FSprite& Sprite)
+{
+	const int32_t Index = Sprite.SelectedLayer >= 0 ? (Sprite.Layers.size() > Sprite.SelectedLayer ? Sprite.SelectedLayer : INDEX_NONE) : INDEX_NONE;
+	return Index > INDEX_NONE ? const_cast<FSpriteLayer*>(&Sprite.Layers[Index]) : nullptr;
 }
 
 std::vector<FSprite>& SViewer::GetSprites()
 {
 	return Sprites;
+}
+
+void SViewer::AddFilePath(const std::filesystem::directory_entry& FilePath)
+{
+	// ToDo добавить путь если файл отсутствует в общем списке
 }
 
 bool SViewer::TrySetTool(EToolType NewToolType)
@@ -435,18 +454,18 @@ bool SViewer::WindowQuitModal()
 		ImGui::Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
 		ImGui::Separator();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 		ImGui::Checkbox("Don't ask me next time", &ViewFlags.bDontAskMeNextTime_Quit);
 		ImGui::PopStyleVar();
 
-		if (ImGui::Button("OK", ImVec2(120, 0)))
+		if (ImGui::Button("OK", ImVec2(120.0f, 0.0f)))
 		{
 			ImGui::CloseCurrentPopup();
 			Close();
 		}
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		if (ImGui::Button("Cancel", ImVec2(120.0f, 0.0f)))
 		{
 			ImGui::CloseCurrentPopup();
 		}
@@ -633,19 +652,34 @@ bool SViewer::AddSprite(FSprite& NewSprite)
 	NewLayer.Name = Utils::Format("Layer %i", ++LayersCounter);
 
 	NewSprite.AddFrame();
-
-	FSpriteBlock NewSpriteBlock;
-	NewSpriteBlock.Marquee = ImRect(12.0, 22.0, 26.0f, 26.0f);
-	NewSpriteBlock.Filename = Files[0].path().string();
-	NewSpriteBlock.Initialize();
-	NewLayer.AddSpriteBlock(NewSpriteBlock, 0);
-
 	Sprites.push_back(NewSprite);
 
 	if (CurrentSprite < 0)
 	{
 		CurrentSprite++;
 	}
-
 	return true;
+}
+
+bool SViewer::AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect)
+{
+	AddFilePath(FilePath);
+
+	FSprite* Sprite = GetSelectedSprite();
+	if (Sprite == nullptr)
+	{
+		return false;
+	}
+
+	FSpriteLayer* Layer = GetSelectedLayer(*Sprite);
+	if (Layer == nullptr)
+	{
+		return false;
+	}
+
+	FSpriteBlock NewSpriteBlock;
+	NewSpriteBlock.Marquee = MarqueeRect;
+	NewSpriteBlock.Filename = FilePath.path().string();
+	NewSpriteBlock.Initialize();
+	return Layer->AddSpriteBlock(NewSpriteBlock, Sprite->SelectedFrame);
 }

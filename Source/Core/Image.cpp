@@ -260,7 +260,7 @@ void FImage::Resize(const void* InImageData, ImVec2 OriginalSize, ImVec2 Require
 void FImage::ResizeRegion(const uint8_t* ImageData, const ImVec2& OriginalSize, const ImVec2& RequiredSize, const ImVec2& uv0, const ImVec2& uv1)
 {
 	uint8_t* ResizeImageData = new uint8_t[uint32_t(RequiredSize.x * RequiredSize.y * 4)];
-	if (FImageBase::ResizeRegion(ImageData, OriginalSize, RequiredSize, ResizeImageData, uv0, uv1))
+	if (FImageBase::Get().ResizeRegion(ImageData, OriginalSize, RequiredSize, ResizeImageData, uv0, uv1))
 	{
 		return;
 	}

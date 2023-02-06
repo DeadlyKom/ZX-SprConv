@@ -42,7 +42,7 @@ struct FSpriteLayer
 
 	// block
 	FSpriteFrame* GetSpritesBlocks(uint32_t FrameNum);
-	void AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum);
+	bool AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum);
 
 	bool bVisible;
 	bool bLock;
@@ -66,7 +66,7 @@ struct FSprite
 	FSpriteLayer& AddLayer();
 	inline bool IsValidLayer(uint32_t LayerNum) const { return Layers.size() > LayerNum; }
 
-	void Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t FrameNum = 0);
+	bool Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t FrameNum = 0);
 	inline bool IsValid() const { return Size.x > 0.0 && Size.y > 0.0f && ImageSprite != nullptr; }
 	static std::string ColotModeToString(EColorMode Mode);
 
@@ -80,6 +80,7 @@ struct FSprite
 	std::shared_ptr<FImage> ImageSprite;
 
 	// internal
-	uint32_t SelectedFrame;
+	bool bAnimation;
 	uint32_t SelectedLayer;
+	uint32_t SelectedFrame;
 };

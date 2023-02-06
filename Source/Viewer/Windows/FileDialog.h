@@ -27,7 +27,7 @@ class SFileDialog : public SWindow
 {
 public:
 	static SFileDialog& Get();
-	static DelegateHandle OpenWindow(std::string& FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)>& OnCallback, const std::filesystem::path& Path, const std::string& FilterTypes);
+	static DelegateHandle OpenWindow(std::string& FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)>& OnCallback, const std::filesystem::path& FilePath, const std::string& FilterTypes);
 	static void CloseWindow(DelegateHandle& Handle);
 
 	virtual void Initialize() override;

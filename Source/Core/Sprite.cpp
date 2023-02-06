@@ -18,7 +18,7 @@ namespace
 	bool Button(const char* StringID, FSprite* Sprite, uint32_t FrameNum, const ImVec2& VisibleSize, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor)
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
-		if (Window->SkipItems)
+		if (Window->SkipItems || Sprite == nullptr)
 		{
 			return false;
 		}
@@ -28,23 +28,23 @@ namespace
 		const ImVec2 LabelSize = ImGui::CalcTextSize(StringID, NULL, true);
 
 		const ImVec2 Padding = Style.FramePadding;
-		const ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + VisibleSize + Padding * 2.0f);
-		ImGui::ItemSize(bb);
-		if (!ImGui::ItemAdd(bb, ID))
+		const ImRect Rect(Window->DC.CursorPos, Window->DC.CursorPos + VisibleSize + Padding * 2.0f);
+		ImGui::ItemSize(Rect);
+		if (!ImGui::ItemAdd(Rect, ID))
 		{
 			return false;
 		}
 
 		bool bHovered, bHeld;
-		const bool bPressed = ImGui::ButtonBehavior(bb, ID, &bHovered, &bHeld);
+		const bool bPressed = ImGui::ButtonBehavior(Rect, ID, &bHovered, &bHeld);
 
 		// render
-		const ImVec2 p0 = bb.Min + Padding;
-		const ImVec2 p1 = bb.Max - Padding;
+		const ImVec2 p0 = Rect.Min + Padding;
+		const ImVec2 p1 = Rect.Max - Padding;
 
-		ImGui::RenderNavHighlight(bb, ID);
+		ImGui::RenderNavHighlight(Rect, ID);
 		const ImU32 Color = ImGui::GetColorU32((bHeld && bHovered) ? ImGuiCol_ButtonActive : bHovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
-		ImGui::RenderFrame(bb.Min, bb.Max, Color, true, ImClamp((float)ImMin(Padding.x, Padding.y), 0.0f, Style.FrameRounding));
+		ImGui::RenderFrame(Rect.Min, Rect.Max, Color, true, ImClamp((float)ImMin(Padding.x, Padding.y), 0.0f, Style.FrameRounding));
 		if (BackgroundColor.w > 0.0f)
 		{
 			Window->DrawList->AddRectFilled(p0, p1, ImGui::GetColorU32(BackgroundColor));
@@ -151,14 +151,15 @@ FSpriteFrame* FSpriteLayer::GetSpritesBlocks(uint32_t FrameNum)
 	return SpriteFrame.size() > FrameNum ? &SpriteFrame[FrameNum] : nullptr;
 }
 
-void FSpriteLayer::AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum)
+bool FSpriteLayer::AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum)
 {
 	if (!IsValidFrame(FrameNum))
 	{
-		return;
+		return false;
 	}
 
 	SpriteFrame[FrameNum].Blocks.push_back(NewSpriteBlock);
+	return true;
 }
 
 FSprite::FSprite()
@@ -168,8 +169,9 @@ FSprite::FSprite()
 	, ColorMode(EColorMode::Unknow)
 	, Name("")
 	, ImageSprite(nullptr)
-	, SelectedFrame(0)
+	, bAnimation(false)
 	, SelectedLayer(0)
+	, SelectedFrame(0)
 {}
 
 void FSprite::Initialize()
@@ -218,17 +220,17 @@ FSpriteLayer& FSprite::AddLayer()
 	return Layers.emplace_back();
 }
 
-void FSprite::Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t FrameNum /*= 0*/)
+bool FSprite::Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t FrameNum /*= 0*/)
 {
 	if (!IsValid())
 	{
-		return;
+		return false;
 	}
 	const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 	const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
 	const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	Button(StringID, this, FrameNum, VisibleSize, BackgroundColor, TintColor, SelectedColor);
+	return Button(StringID, this, FrameNum, VisibleSize, BackgroundColor, TintColor, SelectedColor);
 }
 
 std::string FSprite::ColotModeToString(EColorMode Mode)

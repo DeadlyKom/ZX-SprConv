@@ -167,7 +167,10 @@ void SSpriteConstructor::RenderSpriteList()
 		FSprite& Sprite = Sprites[Index];
 		if (Sprite.IsValid())
 		{
-			Sprite.Draw("Test", VisibleSize);
+			if (Sprite.Draw("Test", VisibleSize))
+			{
+				GetParent()->SetSelectedSprite(Index);
+			}
 		}
 		else
 		{

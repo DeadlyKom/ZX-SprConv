@@ -27,7 +27,7 @@ protected:
 	std::vector<std::shared_ptr<FImage>> ImagesInfo;
 };
 
-struct FImage : public FImageBase
+struct FImage
 {
 	FImage();
 	virtual ~FImage();
@@ -63,6 +63,5 @@ private:
 
 	UINT CPUAccessFlags;
 	D3D11_USAGE Usage;
-
 	ID3D11ShaderResourceView* ShaderResourceView;
 };

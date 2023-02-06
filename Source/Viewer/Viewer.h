@@ -63,15 +63,22 @@ public:
 private:
 	// friend functions
 	FViewFlags& GetViewFlags() { return ViewFlags; }
+
+	// sprite functions
+	void SetSelectedSprite(uint32_t Index);
 	FSprite* GetSelectedSprite();
+	FSpriteLayer* GetSelectedLayer(const FSprite& Sprite);
+
 	std::vector<FSprite>& GetSprites();
+
+	// file functions
+	void AddFilePath(const std::filesystem::directory_entry& FilePath);
 
 	// tool functions
 	bool TrySetTool(EToolType NewToolType);
 	void ResetTool();
 
 	// input functions
-	//void HandlerInput();
 	void OpenFile_Callback(std::filesystem::path FilePath);
 
 	// show functions
@@ -88,6 +95,7 @@ private:
 
 	// create functions
 	bool AddSprite(FSprite& NewSprite);
+	bool AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect);
 
 	// static functions
 	static int TextEditNumberCallback(ImGuiInputTextCallbackData* Data);

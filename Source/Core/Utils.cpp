@@ -38,9 +38,9 @@ std::shared_ptr<FImage> Utils::LoadImageFromResource(WORD ID, std::wstring Folde
 	return FImageBase::Get().FromMemory(FAppFramework::Get().FromResource(ID, Folder));
 }
 
-DelegateHandle Utils::OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path Path /*= ""*/, std::string FilterTypes /*= "*.*"*/)
+DelegateHandle Utils::OpenWindowFileDialog(std::string FileDialogName, EDialogMode Mode, std::function<void(std::filesystem::path)> OnCallback, std::filesystem::path FilePath /*= ""*/, std::string FilterTypes /*= "*.*"*/)
 {
-	return SFileDialog::OpenWindow(FileDialogName, Mode, OnCallback, Path, FilterTypes);
+	return SFileDialog::OpenWindow(FileDialogName, Mode, OnCallback, FilePath, FilterTypes);
 }
 
 void Utils::CloseWindowFileDialog(DelegateHandle& Handle)

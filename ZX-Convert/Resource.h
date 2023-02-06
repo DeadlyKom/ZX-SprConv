@@ -22,12 +22,17 @@
 #define IDB_COLOR_MODE_RGBA             123
 #define IDB_COLOR_MODE_ZX               124
 #define IDB_TEMPLATE_GRID               125
+#define IDB_SEQUENCER_FIRST_BUTTON      126
+#define IDB_SEQUENCER_PREVIOUS_BUTTON   128
+#define IDB_SEQUENCER_PLAY_BUTTON       129
+#define IDB_SEQUENCER_NEXT_BUTTON       130
+#define IDB_SEQUENCER_LAST_BUTTON       131
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        126
+#define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101

@@ -102,6 +102,16 @@ IDB_COLOR_MODE_ZX       PNG                     "C:\\Work\\Learning\\Tools\\ZX-S
 
 IDB_TEMPLATE_GRID       PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\template grid.png"
 
+IDB_SEQUENCER_FIRST_BUTTON PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\first frame.png"
+
+IDB_SEQUENCER_PREVIOUS_BUTTON PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\previoes frame.png"
+
+IDB_SEQUENCER_PLAY_BUTTON PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\play.png"
+
+IDB_SEQUENCER_NEXT_BUTTON PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\next frame.png"
+
+IDB_SEQUENCER_LAST_BUTTON PNG                     "C:\\Work\\Learning\\Tools\\ZX-SprConv\\Resource\\Icons\\last frame.png"
+
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////
 

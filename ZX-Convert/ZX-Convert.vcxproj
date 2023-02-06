@@ -207,14 +207,19 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Resource\Icons\eraser.png" />
+    <Image Include="..\Resource\Icons\first frame.png" />
     <Image Include="..\Resource\Icons\hand.png" />
     <Image Include="..\Resource\Icons\Indexed mode.png" />
+    <Image Include="..\Resource\Icons\last frame.png" />
     <Image Include="..\Resource\Icons\layer_empty.png" />
     <Image Include="..\Resource\Icons\layer_fill.png" />
     <Image Include="..\Resource\Icons\lock.png" />
     <Image Include="..\Resource\Icons\marquee.png" />
     <Image Include="..\Resource\Icons\move.png" />
+    <Image Include="..\Resource\Icons\next frame.png" />
     <Image Include="..\Resource\Icons\pan.png" />
+    <Image Include="..\Resource\Icons\play.png" />
+    <Image Include="..\Resource\Icons\previoes frame.png" />
     <Image Include="..\Resource\Icons\RGBA mode.png" />
     <Image Include="..\Resource\Icons\template grid.png" />
     <Image Include="..\Resource\Icons\unlock.png" />

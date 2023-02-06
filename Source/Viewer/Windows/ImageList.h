@@ -5,7 +5,7 @@
 
 class SImageList : public SViewChild
 {
-	DECLARE_MULTICAST_DELEGATE(FSelectedImageDelegate, const std::filesystem::directory_entry& /*Path*/);
+	DECLARE_MULTICAST_DELEGATE(FSelectedImageDelegate, const std::filesystem::directory_entry& /*FilePath*/);
 public:
 	virtual void Initialize() override;
 	virtual void Render() override;

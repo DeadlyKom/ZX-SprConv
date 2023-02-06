@@ -37,7 +37,7 @@ private:
 	void HandleMarqueeInput();
 
 	// event
-	void OnSelectedFileImage(const std::filesystem::directory_entry& Path);
+	void OnSelectedFileImage(const std::filesystem::directory_entry& FilePath);
 
 	// directX
 	ID3D11Device* Device;
@@ -82,6 +82,7 @@ private:
 
 	bool bDragging;
 	std::shared_ptr<FImage> Image;
+	std::filesystem::directory_entry ImageFilePath;
 
 	// popup
 	bool bPopupMenu;

@@ -1,4 +1,4 @@
-#include "SpriteEditor.h"
+п»ї#include "SpriteEditor.h"
 #include "Core\Utils.h"
 #include "Core\Image.h"
 #include "Core\AppFramework.h"
@@ -98,8 +98,7 @@ SSpriteEditor::SSpriteEditor()
 	, bMarqueeVisible(false)
 	, bMouseInsideMarquee(false)
 	, MarqueeRect(0.0f, 0.0f, 0.0f, 0.0f)
-{
-}
+{}
 
 void SSpriteEditor::NativeInitialize(FNativeDataInitialize Data)
 {
@@ -212,7 +211,6 @@ void SSpriteEditor::Render()
 	ImGui::PopAllowKeyboardFocus();
 
 	ImGui::End();
-
 
 	//if (true)
 	//{
@@ -435,9 +433,9 @@ void SSpriteEditor::RenderPopupMenu()
 	if (ImGui::BeginPopup(PopupMenuName))
 	{
 		bPopupMenu = true;
-
-		if (bMouseInsideMarquee && ImGui::MenuItem("Add to "))
+		if (bMouseInsideMarquee && ImGui::MenuItem("Add to"))
 		{
+			GetParent()->AddSpriteBlock(ImageFilePath, MarqueeRect);
 		}
 
 		ImGui::EndPopup();
@@ -643,7 +641,7 @@ void SSpriteEditor::HandleMouseInputs()
 			Viewer->ResetTool();
 		}
 	}
-	else if (Image != nullptr && IO.MouseReleased[ImGuiMouseButton_Right])
+	else if (bHovered && Image != nullptr && IO.MouseReleased[ImGuiMouseButton_Right])
 	{
 		FSprite* Sprite = GetParent()->GetSelectedSprite();
 		if (Sprite != nullptr)
@@ -693,14 +691,14 @@ void SSpriteEditor::HandleMarqueeInput()
 	{
 		bMarqueeActive = false;
 	}
-	// защита от сброса выделения при клике мимо всплывающего меню
+	// Р·Р°С‰РёС‚Р° РѕС‚ СЃР±СЂРѕСЃР° РІС‹РґРµР»РµРЅРёСЏ РїСЂРё РєР»РёРєРµ РјРёРјРѕ РІСЃРїР»С‹РІР°СЋС‰РµРіРѕ РјРµРЅСЋ
 	else if (bPopupMenu && bHovered && !Ctrl && !Shift && !Alt && bMarqueeVisible && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
 	{
 		bPopupMenu = false;
 	}
 }
 
-void SSpriteEditor::OnSelectedFileImage(const std::filesystem::directory_entry& Path)
+void SSpriteEditor::OnSelectedFileImage(const std::filesystem::directory_entry& FilePath)
 {
 	if (Image != nullptr)
 	{
@@ -708,6 +706,7 @@ void SSpriteEditor::OnSelectedFileImage(const std::filesystem::directory_entry& 
 		Image = nullptr;
 	}
 
-	Image = Utils::LoadImage(Path.path().string());
+	ImageFilePath = FilePath;
+	Image = Utils::LoadImage(FilePath.path().string());
 	Scale = OldScale = { 1.0f, 1.0f };
 }
