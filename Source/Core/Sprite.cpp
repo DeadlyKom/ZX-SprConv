@@ -168,6 +168,8 @@ FSprite::FSprite()
 	, ColorMode(EColorMode::Unknow)
 	, Name("")
 	, ImageSprite(nullptr)
+	, SelectedFrame(0)
+	, SelectedLayer(0)
 {}
 
 void FSprite::Initialize()

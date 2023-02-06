@@ -47,14 +47,59 @@ namespace Shader
 }
 
 SSpriteEditor::SSpriteEditor()
+	// directX
 	: Device(nullptr)
 	, DeviceContext(nullptr)
-	, PCB_Grid(nullptr)
 	, PS_Grid(nullptr)
 	, PS_LineMarchingAnts(nullptr)
+	, PCB_Grid(nullptr)
 	, PCB_MarchingAnts(nullptr)
-	, bDragging(false)
-{}
+	
+	// shader variable
+	, TimeCounter(0.0f)
+	, bForceNearestSampling(true)							// if true fragment shader will always sample from texel centers
+	, GridWidth(0.0f, 0.0f)									// width in UV coords of grid line
+	, GridColor(0.025f, 0.025f, 0.15f, 0.0f)
+	, BackgroundColor(0.0f, 1.0f, 0.0f, 0.0f)				// color used for alpha blending
+	
+	// scale
+	, ZoomRate(2.0f)										// how fast mouse wheel affects zoom
+	, Scale(4.0f, 4.0f)										// 1 pixel is 1 texel
+	, OldScale(4.0f, 4.0f)
+	, ScaleMin(1.0f / 32.0f, 1.0f / 32.0f)
+	, ScaleMax(32.0f, 32.0f)
+	, PixelAspectRatio(1.0f)								// values other than 1 not supported yet
+	, MinimumGridSize(4.0f)									// don't draw the grid if lines would be closer than MinimumGridSize pixels
+
+	// view state	
+	, ImagePosition(0.5f, 0.5f)								// the UV value at the center of the current view
+	, PanelTopLeftPixel(0.0f, 0.0)							// top left of view in ImGui pixel coordinates
+	, PanelSize(0.0f, 0.0f)									// size of area allocated to drawing the image in pixels.
+	, ViewTopLeftPixel(0.0f, 0.0f)							// position in ImGui pixel coordinates
+	, ViewSize(0.0f, 0.0f)									// rendered size of current image. This could be smaller than panel size if user has zoomed out.
+	, ViewSizeUV(0.0f, 0.0f)								// visible region of the texture in UV coordinates
+
+	// texture
+	, UV(0.0f, 0.0f, 0.0f, 0.0f)
+	, TextureSizePixels(0.0f, 0.0f)
+
+	// conversion transforms to go back and forth between screen pixels  (what ImGui considers screen pixels) and texels
+	, TexelsToPixels()
+	, PixelsToTexels()
+
+	, bDragging(false)										// is user currently dragging to pan view
+	, Image(nullptr)
+	
+	// popup
+	, bPopupMenu(false)
+
+	// marquee
+	, bMarqueeActive(false)
+	, bMarqueeVisible(false)
+	, bMouseInsideMarquee(false)
+	, MarqueeRect(0.0f, 0.0f, 0.0f, 0.0f)
+{
+}
 
 void SSpriteEditor::NativeInitialize(FNativeDataInitialize Data)
 {
@@ -192,8 +237,8 @@ void SSpriteEditor::Render()
 	//	ImGui::Text("ViewTopLeftPixel : (%f, %f)", ViewTopLeftPixel.x, ViewTopLeftPixel.y);
 	//	ImGui::Text("ViewSize : (%f, %f)", ViewSize.x, ViewSize.y);
 	//	ImGui::Text("ViewSizeUV : (%f, %f)", ViewSizeUV.x, ViewSizeUV.y);
-	//	ImGui::Text("UV0 : (%f, %f)", uv0.x, uv0.y);
-	//	ImGui::Text("UV1 : (%f, %f)", uv1.x, uv1.y);
+	//	ImGui::Text("UV0 : (%f, %f)", UV.Min.x, UV.Min.y);
+	//	ImGui::Text("UV1 : (%f, %f)", UV.Max.x, UV.Max.y);
 	//	ImGui::Text("StartMarqueePosition : (%f, %f)", StartMarqueePosition.x, StartMarqueePosition.y);
 	//	ImGui::Text("EndMarqueePosition : (%f, %f)", EndMarqueePosition.x, EndMarqueePosition.y);	
 	//	ImGui::End();
@@ -322,91 +367,23 @@ void SSpriteEditor::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd
 	}
 }
 
-void SSpriteEditor::UpdateShader()
-{
-	if (Scale.y > MinimumGridSize)
-	{
-		// enable grid in shader
-		GridColor.w = 1.0f;
-		SetScale(Math::Round(Scale.y));
-	}
-	else
-	{
-		// disable grid in shader
-		GridColor.w = 0.0f;
-	}
-
-	bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
-}
-
-void SSpriteEditor::SetScale(ImVec2 NewScale)
-{
-	NewScale = ImClamp(NewScale, ScaleMin, ScaleMax);
-	ViewSizeUV *= Scale / NewScale;
-	Scale = NewScale;
-
-	// only force nearest sampling if zoomed in
-	bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
-	GridWidth = ImVec2(1.0f / Scale.x, 1.0f / Scale.y);
-}
-
-void SSpriteEditor::SetScale(float scaleY)
-{
-	SetScale(ImVec2(scaleY * PixelAspectRatio, scaleY));
-}
-
-void SSpriteEditor::SetImagePosition(ImVec2 NewPosition)
-{
-	ImagePosition = NewPosition;
-	RoundImagePosition();
-}
-
-Transform2D SSpriteEditor::GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize)
-{
-	ImVec2 uvToPixel = screenViewSize / uvViewSize;
-
-	Transform2D transform;
-	transform.Scale = uvToPixel / textureSize;
-	transform.Translate.x = screenTopLeft.x - uvTopLeft.x * uvToPixel.x;
-	transform.Translate.y = screenTopLeft.y - uvTopLeft.y * uvToPixel.y;
-	return transform;
-}
-
-ImVec2 SSpriteEditor::ConverPositionToPixel(const ImVec2& Position)
-{
-	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
-	return ImFloor((Position - ViewTopLeftPixel + uv0 / ImageSizeInv * Scale) / Scale);
-}
-
-void SSpriteEditor::DrawMarquee(const ImRect& Window)
-{
-	ImVec2 Start = StartMarqueePosition;
-	ImVec2 End = EndMarqueePosition;
-	
-	// clamp
-	{
-		const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
-		ImVec2 A = ImFloor(uv0 / ImageSizeInv);
-		Start = (Start - A) * Scale;
-		End = (End - A) * Scale;
-
-		Start = ImMax(Start, ImVec2(0.0f, 0.0f));
-		Start = ImMin(Start, Image->Size * Scale);
-		End = ImMax(End, ImVec2(0.0f, 0.0f));
-		End = ImMin(End, Image->Size * Scale);
-	}
-
-	ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
-	ImVec2 TopLeftPixel = ViewTopLeftPixel - (TopLeftSubTexel - ImFloor(TopLeftSubTexel / Scale) * Scale);
-
-	ImGui::GetWindowDrawList()->_FringeScale = 0.1f;
-	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Shader::LINE_ID);
-	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + Start, TopLeftPixel + End, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
-}
-
 void SSpriteEditor::RenderEditorSprite()
 {
-	UpdateShader();
+	// update shader variable
+	{
+		if (Scale.y > MinimumGridSize)
+		{
+			// enable grid in shader
+			GridColor.w = 1.0f;
+			SetScale(Math::Round(Scale.y));
+		}
+		else
+		{
+			// disable grid in shader
+			GridColor.w = 0.0f;
+		}
+		bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
+	}
 
 	ImGuiWindow* Window = ImGui::GetCurrentWindow();
 
@@ -417,89 +394,54 @@ void SSpriteEditor::RenderEditorSprite()
 	PanelTopLeftPixel = ImGui::GetCursorScreenPos();
 	ImGui::SetCursorPos(ImGui::GetCursorPos() + CalculatePanelSize());
 	ViewTopLeftPixel = ImGui::GetCursorScreenPos();
-	ImRect BB(Window->DC.CursorPos, Window->DC.CursorPos + ViewSize);
+	ImRect Rect(Window->DC.CursorPos, Window->DC.CursorPos + ViewSize);
 
 	// callback for using our own image shader 
 	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Image->GetShaderResourceView());
-	ImGui::GetWindowDrawList()->AddImage(Image->GetShaderResourceView(), BB.Min, BB.Max, uv0, uv1);
+	ImGui::GetWindowDrawList()->AddImage(Image->GetShaderResourceView(), Rect.Min, Rect.Max, UV.Min, UV.Max);
 
-	//std::shared_ptr<SViewer> Viewer = GetParent();
-	//if (Viewer && Viewer->IsMarqueeTool())
-	//{
-	//	InputMarquee();
-	//}
 	if (bMarqueeVisible)
 	{
-		DrawMarquee(BB);
+		DrawMarquee(Rect);
 	}
 
 	// reset callback for using our own image shader 
 	ImGui::GetWindowDrawList()->AddCallback(ImDrawCallback_ResetRenderState, nullptr);
 }
 
+void SSpriteEditor::DrawMarquee(const ImRect& Window)
+{
+	ImRect TmpMarqueeRect = MarqueeRect;
+
+	// clamp
+	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
+	const ImVec2 Floor = ImFloor(UV.Min / ImageSizeInv);
+	TmpMarqueeRect.Min = (TmpMarqueeRect.Min - Floor) * Scale;
+	TmpMarqueeRect.Max = (TmpMarqueeRect.Max - Floor) * Scale;
+
+	TmpMarqueeRect.Min = ImMin(ImMax(TmpMarqueeRect.Min, ImVec2(0.0f, 0.0f)), Image->Size * Scale);
+	TmpMarqueeRect.Max = ImMin(ImMax(TmpMarqueeRect.Max, ImVec2(0.0f, 0.0f)), Image->Size * Scale);
+
+	const ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
+	const ImVec2 TopLeftPixel = ViewTopLeftPixel - (TopLeftSubTexel - ImFloor(TopLeftSubTexel / Scale) * Scale);
+
+	ImGui::GetWindowDrawList()->_FringeScale = 0.1f;
+	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Shader::LINE_ID);
+	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + TmpMarqueeRect.Min, TopLeftPixel + TmpMarqueeRect.Max, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
+}
+
 void SSpriteEditor::RenderPopupMenu()
 {
 	if (ImGui::BeginPopup(PopupMenuName))
 	{
-		const ImVec2 MousePosition = ConverPositionToPixel(ImGui::GetMousePos());
-		ImRect M(StartMarqueePosition, EndMarqueePosition);
-		bool bMouseInMarquee = M.Contains(MousePosition);
-		if (bMouseInMarquee && ImGui::MenuItem("Add to sprite"))
-		{
-		}
+		bPopupMenu = true;
 
-		if (false && ImGui::MenuItem("test A..."))
-		{
-		}
-
-		if (true && ImGui::MenuItem("test B..."))
+		if (bMouseInsideMarquee && ImGui::MenuItem("Add to "))
 		{
 		}
 
 		ImGui::EndPopup();
 	}
-}
-
-ImVec2 SSpriteEditor::CalculatePanelSize()
-{
-	// calculate panel size
-	const float BorderWidth = 1.0f;
-	ImVec2 ContentRegionAvail = ImGui::GetContentRegionAvail();
-	ImVec2 AvailablePanelSize = ContentRegionAvail - ImVec2(BorderWidth, BorderWidth) * 2.0f;
-
-	RoundImagePosition();
-
-	TextureSizePixels = Image->Size * Scale;
-	ViewSizeUV = AvailablePanelSize / TextureSizePixels;
-	uv0 = ImagePosition - ViewSizeUV * 0.5f;
-	uv1 = ImagePosition + ViewSizeUV * 0.5f;
-
-	ImVec2 DrawImageOffset(BorderWidth, BorderWidth);
-	ViewSize = AvailablePanelSize;
-
-	// don't crop the texture to UV [0,1] range.  What you see outside this range will depend on API and texture properties
-	if (TextureSizePixels.x < AvailablePanelSize.x)
-	{
-		// not big enough to horizontally fill view
-		ViewSize.x = ImFloor(TextureSizePixels.x);
-		DrawImageOffset.x += ImFloor((AvailablePanelSize.x - TextureSizePixels.x) * 0.5f);
-		uv0.x = 0.0f;
-		uv1.x = 1.0f;
-		ViewSizeUV.x = 1.0f;
-		ImagePosition.x = 0.5f;
-	}
-	if (TextureSizePixels.y < AvailablePanelSize.y)
-	{
-		// not big enough to vertically fill view
-		ViewSize.y = ImFloor(TextureSizePixels.y);
-		DrawImageOffset.y += ImFloor((AvailablePanelSize.y - TextureSizePixels.y) * 0.5f);
-		uv0.y = 0.0f;
-		uv1.y = 1.0f;
-		ViewSizeUV.y = 1.0f;
-		ImagePosition.y = 0.5f;
-	}
-
-	return DrawImageOffset;
 }
 
 void SSpriteEditor::RoundImagePosition()
@@ -530,6 +472,86 @@ void SSpriteEditor::RoundImagePosition()
 	ImagePosition = (TopLeftSubTexel + ViewSize * 0.5f) / (Scale * Image->Size);
 }
 
+void SSpriteEditor::SetScale(float scaleY)
+{
+	SetScale(ImVec2(scaleY * PixelAspectRatio, scaleY));
+}
+
+void SSpriteEditor::SetScale(ImVec2 NewScale)
+{
+	NewScale = ImClamp(NewScale, ScaleMin, ScaleMax);
+	ViewSizeUV *= Scale / NewScale;
+	Scale = NewScale;
+
+	// only force nearest sampling if zoomed in
+	bForceNearestSampling = (Scale.x > 1.0f || Scale.y > 1.0f);
+	GridWidth = ImVec2(1.0f / Scale.x, 1.0f / Scale.y);
+}
+
+void SSpriteEditor::SetImagePosition(ImVec2 NewPosition)
+{
+	ImagePosition = NewPosition;
+	RoundImagePosition();
+}
+
+ImVec2 SSpriteEditor::CalculatePanelSize()
+{
+	// calculate panel size
+	const float BorderWidth = 1.0f;
+	ImVec2 ContentRegionAvail = ImGui::GetContentRegionAvail();
+	ImVec2 AvailablePanelSize = ContentRegionAvail - ImVec2(BorderWidth, BorderWidth) * 2.0f;
+
+	RoundImagePosition();
+
+	TextureSizePixels = Image->Size * Scale;
+	ViewSizeUV = AvailablePanelSize / TextureSizePixels;
+	UV.Min = ImagePosition - ViewSizeUV * 0.5f;
+	UV.Max = ImagePosition + ViewSizeUV * 0.5f;
+
+	ImVec2 DrawImageOffset(BorderWidth, BorderWidth);
+	ViewSize = AvailablePanelSize;
+
+	// don't crop the texture to UV [0,1] range.  What you see outside this range will depend on API and texture properties
+	if (TextureSizePixels.x < AvailablePanelSize.x)
+	{
+		// not big enough to horizontally fill view
+		ViewSize.x = ImFloor(TextureSizePixels.x);
+		DrawImageOffset.x += ImFloor((AvailablePanelSize.x - TextureSizePixels.x) * 0.5f);
+		UV.Min.x = 0.0f;
+		UV.Max.x = 1.0f;
+		ViewSizeUV.x = 1.0f;
+		ImagePosition.x = 0.5f;
+	}
+	if (TextureSizePixels.y < AvailablePanelSize.y)
+	{
+		// not big enough to vertically fill view
+		ViewSize.y = ImFloor(TextureSizePixels.y);
+		DrawImageOffset.y += ImFloor((AvailablePanelSize.y - TextureSizePixels.y) * 0.5f);
+		UV.Min.y = 0.0f;
+		UV.Max.y = 1.0f;
+		ViewSizeUV.y = 1.0f;
+		ImagePosition.y = 0.5f;
+	}
+
+	return DrawImageOffset;
+}
+
+ImVec2 SSpriteEditor::ConverPositionToPixel(const ImVec2& Position)
+{
+	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
+	return ImFloor((Position - ViewTopLeftPixel + UV.Min / ImageSizeInv * Scale) / Scale);
+}
+
+Transform2D SSpriteEditor::GetTexelsToPixels(const ImVec2& ScreenTopLeft, const ImVec2& ScreenViewSize, const ImVec2& UVTopLeft, const ImVec2& UVViewSize, const ImVec2& TextureSize)
+{
+	const ImVec2 UVToPixel = ScreenViewSize / UVViewSize;
+	Transform2D Transform;
+	Transform.Scale = UVToPixel / TextureSize;
+	Transform.Translate.x = ScreenTopLeft.x - UVTopLeft.x * UVToPixel.x;
+	Transform.Translate.y = ScreenTopLeft.y - UVTopLeft.y * UVToPixel.y;
+	return Transform;
+}
+
 void SSpriteEditor::HandleKeyboardInputs()
 {
 	ImGuiIO& IO = ImGui::GetIO();
@@ -554,7 +576,7 @@ void SSpriteEditor::HandleMouseInputs()
 	}
 
 	// scale
-	TexelsToPixels = GetTexelsToPixels(ViewTopLeftPixel, ViewSize, uv0, ViewSizeUV, Image->Size);
+	TexelsToPixels = GetTexelsToPixels(ViewTopLeftPixel, ViewSize, UV.Min, ViewSizeUV, Image->Size);
 	PixelsToTexels = TexelsToPixels.Inverse();
 
 	const ImVec2 MousePosition = ImGui::GetMousePos();
@@ -623,7 +645,12 @@ void SSpriteEditor::HandleMouseInputs()
 	}
 	else if (Image != nullptr && IO.MouseReleased[ImGuiMouseButton_Right])
 	{
-		ImGui::OpenPopup(PopupMenuName);
+		FSprite* Sprite = GetParent()->GetSelectedSprite();
+		if (Sprite != nullptr)
+		{
+			bMouseInsideMarquee = MarqueeRect.Contains(ConverPositionToPixel(ImGui::GetMousePos()));
+			ImGui::OpenPopup(PopupMenuName);
+		}
 	}
 
 	// dragging
@@ -650,25 +677,26 @@ void SSpriteEditor::HandleMarqueeInput()
 	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
 	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;
 
-	if (bHovered && !Ctrl && !Shift && !Alt && !bMarqueeActive && ImGui::IsKeyDown(ImGuiKey_MouseLeft))
+	if (!bPopupMenu && bHovered && !Ctrl && !Shift && !Alt && !bMarqueeActive && ImGui::IsKeyDown(ImGuiKey_MouseLeft))
 	{
-		StartMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos());
-		StartMarqueePosition = ImMax(StartMarqueePosition, ImVec2(0.0f, 0.0f));
-		StartMarqueePosition = ImMin(StartMarqueePosition, Image->Size * Scale);
+		MarqueeRect.Min = ImMin(ImMax(ConverPositionToPixel(ImGui::GetMousePos()), ImVec2(0.0f, 0.0f)), Image->Size * Scale);
+		MarqueeRect.Max = MarqueeRect.Min;
 
-		EndMarqueePosition = StartMarqueePosition;
 		bMarqueeVisible = true;
 		bMarqueeActive = true;
 	}
-	else if (bHovered && !Ctrl && !Shift && !Alt && bMarqueeActive && ImGui::IsKeyDown(ImGuiKey_MouseLeft))
+	else if (!bPopupMenu && bHovered && !Ctrl && !Shift && !Alt && bMarqueeActive && ImGui::IsKeyDown(ImGuiKey_MouseLeft))
 	{
-		EndMarqueePosition = ConverPositionToPixel(ImGui::GetMousePos() + Scale);
-		EndMarqueePosition = ImMax(EndMarqueePosition, ImVec2(0.0f, 0.0f));
-		EndMarqueePosition = ImMin(EndMarqueePosition, Image->Size * Scale);
+		MarqueeRect.Max = ImMin(ImMax(ConverPositionToPixel(ImGui::GetMousePos() + Scale), ImVec2(0.0f, 0.0f)), Image->Size * Scale);
 	}
 	else if (bHovered && ImGui::IsKeyReleased(ImGuiKey_MouseLeft))
 	{
 		bMarqueeActive = false;
+	}
+	// защита от сброса выделения при клике мимо всплывающего меню
+	else if (bPopupMenu && bHovered && !Ctrl && !Shift && !Alt && bMarqueeVisible && ImGui::IsKeyPressed(ImGuiKey_MouseLeft))
+	{
+		bPopupMenu = false;
 	}
 }
 

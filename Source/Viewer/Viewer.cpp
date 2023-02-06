@@ -98,8 +98,6 @@ void SViewer::Initialize()
 
 void SViewer::Render()
 {
-	//HandlerInput();
-
 	ImGui::DockSpaceOverViewport();
 
 	if (ImGui::BeginMainMenuBar())

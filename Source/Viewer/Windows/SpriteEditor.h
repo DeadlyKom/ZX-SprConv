@@ -17,22 +17,19 @@ public:
 	void OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD);
 
 private:
-	void UpdateShader();
-	void SetScale(float scaleY);
-	void SetScale(ImVec2 NewScale);
-	void SetImagePosition(ImVec2 NewPosition);
-	Transform2D GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize);
-	ImVec2 ConverPositionToPixel(const ImVec2& Position);
-	void InputMarquee();
-	void DrawMarquee(const ImRect& Window);
-
 	// render
 	void RenderEditorSprite();
+	void DrawMarquee(const ImRect& Window);
 	void RenderPopupMenu();
 
 	// internal
-	ImVec2 CalculatePanelSize();
 	void RoundImagePosition();
+	void SetScale(float scaleY);
+	void SetScale(ImVec2 NewScale);
+	void SetImagePosition(ImVec2 NewPosition);
+	ImVec2 CalculatePanelSize();
+	ImVec2 ConverPositionToPixel(const ImVec2& Position);
+	Transform2D GetTexelsToPixels(const ImVec2& ScreenTopLeft, const ImVec2& ScreenViewSize, const ImVec2& UVTopLeft, const ImVec2& UVViewSize, const ImVec2& TextureSize);
 
 	// input
 	void HandleKeyboardInputs();
@@ -42,8 +39,7 @@ private:
 	// event
 	void OnSelectedFileImage(const std::filesystem::directory_entry& Path);
 
-	float TimeCounter = 0.0f;
-
+	// directX
 	ID3D11Device* Device;
 	ID3D11DeviceContext* DeviceContext;
 	ID3D11PixelShader* PS_Grid;
@@ -51,49 +47,48 @@ private:
 	ID3D11Buffer* PCB_Grid;
 	ID3D11Buffer* PCB_MarchingAnts;
 
-	bool bForceNearestSampling = true;						// if true fragment shader will always sample from texel centers
-	float  PremultiplyAlpha = 0.0f;							// if 1 then color will be multiplied by alpha in shader, before blend stage
-	float  DisableFinalAlpha = 0.0f;						// if 1 then fragment shader will always output alpha = 1
-	ImVec2 GridWidth = { 0.0f, 0.0f };						// width in UV coords of grid line
-	ImVec4 GridColor = { 0.025f, 0.025f, 0.15f, 0.0f };
-	ImVec4 BackgroundColor = { 0.0f, 1.0f, 0.0f, 0.0f };	// color used for alpha blending
+	// shader variable
+	float TimeCounter;
+	bool bForceNearestSampling;
+	ImVec2 GridWidth;
+	ImVec4 GridColor;
+	ImVec4 BackgroundColor;
 
-	ImVec2 ScaleMin = { 0.03125f, 0.03125f };
-	ImVec2 ScaleMax = { 32, 32 };
+	// scale
+	float ZoomRate;
+	ImVec2 Scale;
+	ImVec2 OldScale;
+	ImVec2 ScaleMin;
+	ImVec2 ScaleMax;
 
-	float PixelAspectRatio = 1.0f;							// values other than 1 not supported yet
-	float MinimumGridSize = 4.0f;							// don't draw the grid if lines would be closer than MinimumGridSize pixels
+	float PixelAspectRatio;
+	float MinimumGridSize;
 
-	float ZoomRate = 2.0f;									// how fast mouse wheel affects zoom
+	// view state	
+	ImVec2 ImagePosition;
+	ImVec2 PanelTopLeftPixel;
+	ImVec2 PanelSize;
 
-	// view state
-	bool bDragging;											// is user currently dragging to pan view
-	
-	ImVec2 ImagePosition = { 0.5f, 0.5f };					// the UV value at the center of the current view
-	ImVec2 Scale = { 4.0f, 4.0f };							// 1 pixel is 1 texel
-	ImVec2 OldScale = { 1.0f, 1.0f };
-	
-	ImVec2 PanelTopLeftPixel = { 0.0f, 0.0f };				// top left of view in ImGui pixel coordinates
-	ImVec2 PanelSize = { 0.0f, 0.0f };						// size of area allocated to drawing the image in pixels.
+	ImVec2 ViewTopLeftPixel;
+	ImVec2 ViewSize;
+	ImVec2 ViewSizeUV;
 
-	ImVec2 ViewTopLeftPixel = { 0.0f, 0.0f };				// position in ImGui pixel coordinates
-	ImVec2 ViewSize = { 0.0f, 0.0f };						// rendered size of current image. This could be smaller than panel size if user has zoomed out.
-	ImVec2 ViewSizeUV = { 0.0f, 0.0f };						// visible region of the texture in UV coordinates
-
-	//
+	// texture
+	ImRect UV;
 	ImVec2 TextureSizePixels;
-	ImVec2 uv0;
-	ImVec2 uv1;
-
-	//
-	bool bMarqueeActive = false;
-	bool bMarqueeVisible = false;
-	ImVec2 StartMarqueePosition;
-	ImVec2 EndMarqueePosition;
 	
-	/* conversion transforms to go back and forth between screen pixels  (what ImGui considers screen pixels) and texels*/
 	Transform2D TexelsToPixels;
 	Transform2D PixelsToTexels;
 
+	bool bDragging;
 	std::shared_ptr<FImage> Image;
+
+	// popup
+	bool bPopupMenu;
+
+	// marquee
+	bool bMarqueeActive;
+	bool bMarqueeVisible;
+	bool bMouseInsideMarquee;
+	ImRect MarqueeRect;
 };

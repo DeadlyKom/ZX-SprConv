@@ -78,4 +78,8 @@ struct FSprite
 	std::string Name;
 	std::vector<FSpriteLayer> Layers;
 	std::shared_ptr<FImage> ImageSprite;
+
+	// internal
+	uint32_t SelectedFrame;
+	uint32_t SelectedLayer;
 };
