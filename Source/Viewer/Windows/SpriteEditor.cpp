@@ -591,7 +591,7 @@ void SSpriteEditor::HandleMouseInputs()
 	//MousePositionTexel.y = Math::Modulus(MousePositionTexel.y, Image->Size.y);
 
 	ImGuiIO& IO = ImGui::GetIO();
-	const bool bHovered = ImGui::IsWindowHovered();
+	const bool bHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup);
 	const bool Shift = IO.KeyShift;
 	const bool Ctrl = IO.ConfigMacOSXBehaviors ? IO.KeySuper : IO.KeyCtrl;
 	const bool Alt = IO.ConfigMacOSXBehaviors ? IO.KeyCtrl : IO.KeyAlt;

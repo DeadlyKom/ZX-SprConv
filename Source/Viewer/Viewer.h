@@ -143,6 +143,7 @@ private:
 	char GridSettingsHeightBuffer[BUFFER_SIZE_INPUT] = "";
 	char GridSettingsOffsetXBuffer[BUFFER_SIZE_INPUT] = "";
 	char GridSettingsOffsetYBuffer[BUFFER_SIZE_INPUT] = "";
+	bool bTmpGrid;
 	ImVec2 TmpGridSettingSize;
 	ImVec2 TmpGridSettingOffset;
 

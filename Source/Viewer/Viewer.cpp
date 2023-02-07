@@ -239,7 +239,7 @@ void SViewer::OpenFile_Callback(std::filesystem::path FilePath)
 	}
 	else
 	{
-		ImGui::LogText("Error");
+		//ImGui::LogText("Error");
 	}
 }
 
@@ -456,25 +456,25 @@ bool SViewer::WindowQuitModal()
 	const bool bVisible = ImGui::BeginPopupModal(MenuQuitName, NULL, ImGuiWindowFlags_AlwaysAutoResize);
 	if (bVisible)
 	{
-		ImGui::Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
-		ImGui::Separator();
+ImGui::Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
+ImGui::Separator();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
-		ImGui::Checkbox("Don't ask me next time", &ViewFlags.bDontAskMeNextTime_Quit);
-		ImGui::PopStyleVar();
+ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+ImGui::Checkbox("Don't ask me next time", &ViewFlags.bDontAskMeNextTime_Quit);
+ImGui::PopStyleVar();
 
-		if (ImGui::Button("OK", ImVec2(120.0f, 0.0f)))
-		{
-			ImGui::CloseCurrentPopup();
-			Close();
-		}
-		ImGui::SetItemDefaultFocus();
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120.0f, 0.0f)))
-		{
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
+if (ImGui::Button("OK", ImVec2(120.0f, 0.0f)))
+{
+	ImGui::CloseCurrentPopup();
+	Close();
+}
+ImGui::SetItemDefaultFocus();
+ImGui::SameLine();
+if (ImGui::Button("Cancel", ImVec2(120.0f, 0.0f)))
+{
+	ImGui::CloseCurrentPopup();
+}
+ImGui::EndPopup();
 	}
 	return bVisible;
 }
@@ -524,7 +524,7 @@ bool SViewer::WindowCreateSpriteModal()
 		{
 			ImGui::RenderTextClipped(bb.Min + Style.FramePadding, bb.Max - Style.FramePadding, StringID, NULL, &LabelSize, Style.ButtonTextAlign, &bb);
 		}
-		Window->DrawList->AddImage(TextureID, bb.Min + Padding , bb.Max - Padding, ImVec2(0.0, 0.0f), ImVec2(1.0, 1.0f), (bSelectedCondition | !bHovered) ? ImGui::GetColorU32(TintColor) : ImGui::GetColorU32(SelectedColor));
+		Window->DrawList->AddImage(TextureID, bb.Min + Padding, bb.Max - Padding, ImVec2(0.0, 0.0f), ImVec2(1.0, 1.0f), (bSelectedCondition | !bHovered) ? ImGui::GetColorU32(TintColor) : ImGui::GetColorU32(SelectedColor));
 		//;
 		return bPressed;
 	};
@@ -555,16 +555,23 @@ bool SViewer::WindowCreateSpriteModal()
 		ImGui::Separator();
 
 		const ImGuiInputTextFlags InputNumberTextFlags = ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackEdit;
-		ImGui::InputTextEx("Width ", NULL, CreateSpriteWidthBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.x);
-		ImGui::InputTextEx("Height ", NULL, CreateSpriteHeightBuffer, IM_ARRAYSIZE(CreateSpriteHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.y);
+		const float NormalSizeX = CreateSpritePivot.x / ImMax(CreateSpriteSize.x, 1.0f);
+		if(ImGui::InputTextEx("Width ", NULL, CreateSpriteWidthBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.x))
+		{
+			CreateSpritePivot.x = ImClamp((CreateSpriteSize.x * NormalSizeX - 1.0f), 0.0f, ImMax(CreateSpriteSize.x - 1.0f, 0.0f));
+		}
+		const float NormalSizeY = CreateSpritePivot.y / ImMax(CreateSpriteSize.y, 1.0f);
+		if (ImGui::InputTextEx("Height ", NULL, CreateSpriteHeightBuffer, IM_ARRAYSIZE(CreateSpriteHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.y))
+		{
+			CreateSpritePivot.y = ImClamp((CreateSpriteSize.y * NormalSizeX - 1.0f), 0.0f, ImMax(CreateSpriteSize.y - 1.0f, 0.0f));
+		}
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
 		ImGui::Text("Pivot :");
 		ImGui::Separator();
 
-		CreateSpritePivot = ImClamp(CreateSpritePivot, ImVec2(0.0f, 0.0f), ImMax(CreateSpriteSize - ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f)));
-		ImGui::SliderFloat("X ", &CreateSpritePivot.x, 0, ImClamp(CreateSpriteSize.x, 0.0f, CreateSpriteSize.x - 1.0f), "%.0f");
-		ImGui::SliderFloat("Y ", &CreateSpritePivot.y, 0, ImClamp(CreateSpriteSize.y, 0.0f, CreateSpriteSize.y - 1.0f), "%.0f");
+		ImGui::SliderFloat("X ", &CreateSpritePivot.x, 0, ImClamp(CreateSpriteSize.x, 0.0f, ImMax(CreateSpriteSize.x - 1.0f, 0.0f)), "%.0f");
+		ImGui::SliderFloat("Y ", &CreateSpritePivot.y, 0, ImClamp(CreateSpriteSize.y, 0.0f, ImMax(CreateSpriteSize.y - 1.0f, 0.0f)), "%.0f");
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
 
 		std::string CreateSpriteColorModeName = FSprite::ColotModeToString(CreateSpriteColorMode);
@@ -654,8 +661,11 @@ bool SViewer::WindowgGridSettingsModal()
 		if (!bGridSettingsFirstOpen)
 		{
 			bGridSettingsFirstOpen = true;
+			bTmpGrid = ViewFlags.bGrid;
 			TmpGridSettingSize = ViewFlags.GridSettingSize;
 			TmpGridSettingOffset = ViewFlags.GridSettingOffset;
+
+			ViewFlags.bGrid = true;
 
 			sprintf(GridSettingsWidthBuffer, "%i\n", int(TmpGridSettingSize.x));
 			sprintf(GridSettingsHeightBuffer, "%i\n", int(TmpGridSettingSize.y));
@@ -691,6 +701,7 @@ bool SViewer::WindowgGridSettingsModal()
 
 		if (ImGui::ButtonEx("OK", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
 		{
+			ViewFlags.bGrid = bTmpGrid;
 			ImGui::CloseCurrentPopup();
 			bGridSettingsFirstOpen = false;
 		}
@@ -700,12 +711,22 @@ bool SViewer::WindowgGridSettingsModal()
 		{
 			ViewFlags.GridSettingSize = TmpGridSettingSize;
 			ViewFlags.GridSettingOffset = TmpGridSettingOffset;
+			ViewFlags.bGrid = bTmpGrid;
 
 			ImGui::CloseCurrentPopup();
 			bGridSettingsFirstOpen = false;
 		}
 		ImGui::EndPopup();
 	}
+	else if (bGridSettingsFirstOpen)
+	{
+		ViewFlags.GridSettingSize = TmpGridSettingSize;
+		ViewFlags.GridSettingOffset = TmpGridSettingOffset;
+		ViewFlags.bGrid = bTmpGrid;
+
+		bGridSettingsFirstOpen = false;
+	}
+
 	return bVisible;
 
 }

@@ -38,9 +38,12 @@ namespace
 		bool bHovered, bHeld;
 		const bool bPressed = ImGui::ButtonBehavior(Rect, ID, &bHovered, &bHeld);
 
+		const float SpriteMin = ImMin(Sprite->Size.x, Sprite->Size.y);
+		const float SpriteMax = ImMax(Sprite->Size.x, Sprite->Size.y);
+
 		// render
-		const ImVec2 p0 = Rect.Min + Padding;
-		const ImVec2 p1 = Rect.Max - Padding;
+		ImVec2 p0 = Rect.Min + Padding;
+		ImVec2 p1 = Rect.Max - Padding;
 
 		ImGui::RenderNavHighlight(Rect, ID);
 		const ImU32 Color = ImGui::GetColorU32((bHeld && bHovered) ? ImGuiCol_ButtonActive : bHovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
@@ -49,10 +52,13 @@ namespace
 		{
 			Window->DrawList->AddRectFilled(p0, p1, ImGui::GetColorU32(BackgroundColor));
 		}
+		
+		const ImVec2 Scale = VisibleSize / SpriteMax;
+		ImVec2 NewPadding((SpriteMax - Sprite->Size.x) * 0.5f, (SpriteMax - Sprite->Size.y) * 0.5f);
+		p0 += NewPadding * Scale;
+		p1 -= NewPadding * Scale;
 
 		ImGui::PushClipRect(p0, p1, true);
-
-		const ImVec2 Scale = VisibleSize / Sprite->Size;
 
 		// callback for using our own image shader 
 		Window->DrawList->AddCallback(DrawCallback, (void*)ImageEmpty.get());
