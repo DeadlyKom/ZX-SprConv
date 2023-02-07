@@ -1,13 +1,16 @@
-cbuffer pixelBuffer :register(b0)
+cbuffer pixelBuffer : register(b0)
 {
     float4   GridColor;
     float2   GridWidth;
     int      Flags;
     float    TimeCounter;
     float3   BackgroundColor;
-    int      Dummy;
+    int      Dummy_0;
     float2   TextureSize;
     float2   GridSize;
+    float2   GridOffset;
+    float2   Dummy_1;
+    float4   Dummy_2;
 };
 
 struct PS_INPUT

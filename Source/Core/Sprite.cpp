@@ -15,7 +15,7 @@ namespace
 		}
 	}
 
-	bool Button(const char* StringID, FSprite* Sprite, uint32_t FrameNum, const ImVec2& VisibleSize, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor)
+	bool Button(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, FSprite* Sprite, uint32_t FrameNum, const ImVec2& VisibleSize, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor)
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
 		if (Window->SkipItems || Sprite == nullptr)
@@ -51,6 +51,13 @@ namespace
 		}
 
 		ImGui::PushClipRect(p0, p1, true);
+
+		const ImVec2 Scale = VisibleSize / Sprite->Size;
+
+		// callback for using our own image shader 
+		Window->DrawList->AddCallback(DrawCallback, (void*)ImageEmpty.get());
+		Window->DrawList->AddImage(ImageEmpty->GetShaderResourceView(), p0, p0 + ImageEmpty->Size * Scale, ImVec2(0.0f, 0.0f), ImVec2(1.0, 1.0f), ImGui::GetColorU32(TintColor));
+
 		for (FSpriteLayer& Layer : Sprite->Layers)
 		{
 			FSpriteFrame* SpriteFrame = Layer.GetSpritesBlocks(FrameNum);
@@ -66,7 +73,6 @@ namespace
 					continue;
 				}
 
-				const ImVec2 Scale = VisibleSize / Sprite->Size;
 				const ImVec2 StartImage = p0 + Sprite->Pivot * Scale + Block.Offset * Scale;
 				const ImVec2 EndImage = StartImage + Block.ImageSprite->Size * Scale;
 
@@ -220,7 +226,7 @@ FSpriteLayer& FSprite::AddLayer()
 	return Layers.emplace_back();
 }
 
-bool FSprite::Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t FrameNum /*= 0*/)
+bool FSprite::Draw(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, const ImVec2& VisibleSize, uint32_t FrameNum /*= 0*/)
 {
 	if (!IsValid())
 	{
@@ -230,7 +236,7 @@ bool FSprite::Draw(const char* StringID, const ImVec2& VisibleSize, uint32_t Fra
 	const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
 	const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	return Button(StringID, this, FrameNum, VisibleSize, BackgroundColor, TintColor, SelectedColor);
+	return Button(StringID, ImageEmpty, this, FrameNum, VisibleSize, BackgroundColor, TintColor, SelectedColor);
 }
 
 std::string FSprite::ColotModeToString(EColorMode Mode)

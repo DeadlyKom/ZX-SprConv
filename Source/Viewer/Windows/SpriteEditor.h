@@ -51,6 +51,8 @@ private:
 	float TimeCounter;
 	bool bForceNearestSampling;
 	ImVec2 GridWidth;
+	ImVec2 GridSize;
+	ImVec2 GridOffset;
 	ImVec4 GridColor;
 	ImVec4 BackgroundColor;
 

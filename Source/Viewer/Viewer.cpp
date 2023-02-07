@@ -18,12 +18,14 @@ namespace
 	const char* MenuQuitName = "Quit";
 
 	const char* CreateSpriteName = "Create Sprite";
+	const char* GridSettingsName = "Grid Settings";
 }
 
 SViewer::SViewer()
 	: bToolChangeLock(false)
 	, LastSelectedTool(EToolType::None)
 	, bCreateSpriteFirstOpen(false)
+	, bGridSettingsFirstOpen(false)
 	, CurrentSprite(-1)
 	, SpriteCounter(0)
 	, LayersCounter(0)
@@ -350,6 +352,7 @@ void SViewer::ShowMenuFile()
 	{
 		if (WindowQuitModal()) {}
 		else if (WindowCreateSpriteModal()) {}
+		else if (WindowgGridSettingsModal()) {}
 	}
 }
 
@@ -382,6 +385,7 @@ void SViewer::ShowMenuFrame()
 
 void SViewer::ShowMenuView()
 {
+	const ImGuiID GridSettingsID = ImGui::GetCurrentWindow()->GetID(GridSettingsName);
 	if (ImGui::BeginMenu("View"))
 	{
 		if (ImGui::BeginMenu("Show"))
@@ -404,11 +408,13 @@ void SViewer::ShowMenuView()
 		}
 		ImGui::Separator();
 
-		if (ImGui::MenuItem("Grid Settings")) {}
+		if (ImGui::MenuItem("Grid Settings"))
+		{
+			ImGui::OpenPopup(GridSettingsID);
+		}
 
 		ImGui::EndMenu();
 	}
-
 }
 
 void SViewer::ShowWindows()
@@ -445,8 +451,7 @@ void SViewer::ShowWindows()
 bool SViewer::WindowQuitModal()
 {
 	// Always center this window when appearing
-	const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
-	ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 	const bool bVisible = ImGui::BeginPopupModal(MenuQuitName, NULL, ImGuiWindowFlags_AlwaysAutoResize);
 	if (bVisible)
@@ -477,8 +482,7 @@ bool SViewer::WindowQuitModal()
 bool SViewer::WindowCreateSpriteModal()
 {
 	// Always center this window when appearing
-	const ImVec2 Center = ImGui::GetMainViewport()->GetCenter();
-	ImGui::SetNextWindowPos(Center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 	auto ButtonLambda = [](const char* StringID, ImTextureID TextureID, const ImVec2& ImageSize, const ImVec2& Size, bool bSelectedCondition, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor, const ImVec4& TextColor) -> bool
 	{
@@ -552,7 +556,7 @@ bool SViewer::WindowCreateSpriteModal()
 
 		const ImGuiInputTextFlags InputNumberTextFlags = ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackEdit;
 		ImGui::InputTextEx("Width ", NULL, CreateSpriteWidthBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.x);
-		ImGui::InputTextEx("Input ", NULL, CreateSpriteHeightBuffer, IM_ARRAYSIZE(CreateSpriteHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.y);
+		ImGui::InputTextEx("Height ", NULL, CreateSpriteHeightBuffer, IM_ARRAYSIZE(CreateSpriteHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.y);
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
 		ImGui::Text("Pivot :");
@@ -637,6 +641,73 @@ bool SViewer::WindowCreateSpriteModal()
 		ImGui::EndPopup();
 	}
 	return bVisible;
+}
+
+bool SViewer::WindowgGridSettingsModal()
+{
+	// Always center this window when appearing
+	ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+	const bool bVisible = ImGui::BeginPopup(GridSettingsName, ImGuiWindowFlags_AlwaysAutoResize);
+	if (bVisible)
+	{
+		if (!bGridSettingsFirstOpen)
+		{
+			bGridSettingsFirstOpen = true;
+			TmpGridSettingSize = ViewFlags.GridSettingSize;
+			TmpGridSettingOffset = ViewFlags.GridSettingOffset;
+
+			sprintf(GridSettingsWidthBuffer, "%i\n", int(TmpGridSettingSize.x));
+			sprintf(GridSettingsHeightBuffer, "%i\n", int(TmpGridSettingSize.y));
+			sprintf(GridSettingsOffsetXBuffer, "%i\n", int(TmpGridSettingOffset.x));
+			sprintf(GridSettingsOffsetYBuffer, "%i\n", int(TmpGridSettingOffset.y));
+		}
+
+		const float TextWidth = ImGui::CalcTextSize("A").x;
+		const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
+		ImGui::Text("Size :");
+		ImGui::Separator();
+
+		const ImGuiInputTextFlags InputNumberTextFlags = ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackEdit;
+		ImGui::InputTextEx("Width ", NULL, GridSettingsWidthBuffer, IM_ARRAYSIZE(GridSettingsWidthBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&ViewFlags.GridSettingSize.x);
+		ImGui::InputTextEx("Height ", NULL, GridSettingsHeightBuffer, IM_ARRAYSIZE(GridSettingsHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&ViewFlags.GridSettingSize.y);
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
+		ImGui::Text("Offset :");
+		ImGui::Separator();
+
+		//ImGui::InputTextEx("X ", NULL, GridSettingsOffsetXBuffer, IM_ARRAYSIZE(GridSettingsOffsetXBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&ViewFlags.GridSettingOffset.x);
+		//ImGui::InputTextEx("Y ", NULL, GridSettingsOffsetYBuffer, IM_ARRAYSIZE(GridSettingsOffsetYBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&ViewFlags.GridSettingOffset.y);
+		ViewFlags.GridSettingOffset = ImClamp(ViewFlags.GridSettingOffset, ImVec2(0.0f, 0.0f), ImMax(ViewFlags.GridSettingSize - ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f)));
+		ImGui::SliderFloat("X ", &ViewFlags.GridSettingOffset.x, 0, ImClamp(ViewFlags.GridSettingSize.x, 0.0f, ViewFlags.GridSettingSize.x - 1.0f), "%.0f");
+		ImGui::SliderFloat("Y ", &ViewFlags.GridSettingOffset.y, 0, ImClamp(ViewFlags.GridSettingSize.y, 0.0f, ViewFlags.GridSettingSize.y - 1.0f), "%.0f");
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
+
+		ImGui::Separator();
+
+		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
+
+		if (ImGui::ButtonEx("OK", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
+		{
+			ImGui::CloseCurrentPopup();
+			bGridSettingsFirstOpen = false;
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
+		{
+			ViewFlags.GridSettingSize = TmpGridSettingSize;
+			ViewFlags.GridSettingOffset = TmpGridSettingOffset;
+
+			ImGui::CloseCurrentPopup();
+			bGridSettingsFirstOpen = false;
+		}
+		ImGui::EndPopup();
+	}
+	return bVisible;
+
 }
 
 bool SViewer::AddSprite(FSprite& NewSprite)

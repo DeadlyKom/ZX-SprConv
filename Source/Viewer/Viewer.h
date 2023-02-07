@@ -23,7 +23,8 @@ struct FViewFlags
 	bool bAttributeGrid = false;
 	bool bGrid = false;
 	bool bPixelGrid = true;
-	int GridSize[2] = { 16, 16 };
+	ImVec2 GridSettingSize = ImVec2(16.0f, 16.0f);
+	ImVec2 GridSettingOffset = ImVec2(0.0f, 0.0f);
 
 	//
 	bool bDontAskMeNextTime_Quit = false;
@@ -92,6 +93,7 @@ private:
 	// window functions
 	bool WindowQuitModal();
 	bool WindowCreateSpriteModal();
+	bool WindowgGridSettingsModal();
 
 	// create functions
 	bool AddSprite(FSprite& NewSprite);
@@ -134,6 +136,15 @@ private:
 	std::shared_ptr<FImage> ImageRGBA;
 	std::shared_ptr<FImage> ImageIndexed;
 	std::shared_ptr<FImage> ImageZX;
+
+	// grid settings
+	bool bGridSettingsFirstOpen;
+	char GridSettingsWidthBuffer[BUFFER_SIZE_INPUT] = "";
+	char GridSettingsHeightBuffer[BUFFER_SIZE_INPUT] = "";
+	char GridSettingsOffsetXBuffer[BUFFER_SIZE_INPUT] = "";
+	char GridSettingsOffsetYBuffer[BUFFER_SIZE_INPUT] = "";
+	ImVec2 TmpGridSettingSize;
+	ImVec2 TmpGridSettingOffset;
 
 	// sprite
 	int32_t SpriteCounter;

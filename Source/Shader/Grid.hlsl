@@ -3,16 +3,19 @@
 #define PIXEL_GRID              1 << 2
 #define FORCE_NEAREST_SAMPLING  1 << 31
 
-cbuffer pixelBuffer :register(b0)
+cbuffer pixelBuffer : register(b0)
 {
     float4   GridColor;
     float2   GridWidth;
     int      Flags;
     float    TimeCounter;
     float3   BackgroundColor;
-    int      Dummy;
+    int      Dummy_0;
     float2   TextureSize;
     float2   GridSize;
+    float2   GridOffset;
+    float2   Dummy_1;
+    float4   Dummy_2;
 };
 
 struct PS_INPUT
@@ -48,7 +51,7 @@ float4 main(PS_INPUT Input) : SV_TARGET
     float result = fmod(cx + cy, 2.0);
     float gray = Flags & ATTRIBUTE_GRID ? lerp(0.8, 1.0f, sign(result)) : 1.0f;
 
-    float2 TexelA = (Input.uv) * TextureSize / GridSize;
+    float2 TexelA = (Input.uv - GridOffset / TextureSize) * TextureSize / GridSize;
     float2 GridSizeWidth = GridWidth / GridSize;
     float2 TexelEdgeA = step(TexelA - floor(TexelA), GridSizeWidth * 1.8f);
     float IsGridA = max(TexelEdgeA.x, TexelEdgeA.y);

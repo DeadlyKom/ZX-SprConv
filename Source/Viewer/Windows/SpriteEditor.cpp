@@ -38,9 +38,12 @@ namespace Shader
 		int	  Flags;
 		float TimeCounter;
 		float BackgroundColor[3];
-		int   Dummy;
+		int   Dummy_0;
 		float TextureSize[2];
 		float GridSize[2];
+		float GridOffset[2];
+		float Dummy_1[2];
+		float Dummy_2[4];
 	};
 
 	void* LINE_ID = (void*)0x10FFFFFF;
@@ -59,6 +62,8 @@ SSpriteEditor::SSpriteEditor()
 	, TimeCounter(0.0f)
 	, bForceNearestSampling(true)							// if true fragment shader will always sample from texel centers
 	, GridWidth(0.0f, 0.0f)									// width in UV coords of grid line
+	, GridSize(0.0f, 0.0f)
+	, GridOffset(0.0f, 0.0f)
 	, GridColor(0.025f, 0.025f, 0.15f, 0.0f)
 	, BackgroundColor(0.0f, 1.0f, 0.0f, 0.0f)				// color used for alpha blending
 	
@@ -331,8 +336,10 @@ void SSpriteEditor::OnDrawCallback(const ImDrawList* ParentList, const ImDrawCmd
 				}
 				ConstantBuffer->Flags = Flags;
 
-				ConstantBuffer->GridSize[0] = float(ViewFlags.GridSize[0]);
-				ConstantBuffer->GridSize[1] = float(ViewFlags.GridSize[1]);
+				ConstantBuffer->GridSize[0] = ViewFlags.GridSettingSize.x;
+				ConstantBuffer->GridSize[1] = ViewFlags.GridSettingSize.y;
+				ConstantBuffer->GridOffset[0] = ViewFlags.GridSettingOffset.x;
+				ConstantBuffer->GridOffset[1] = ViewFlags.GridSettingOffset.y;
 			}
 			DeviceContext->Unmap(PCB_Grid, 0);
 		}
