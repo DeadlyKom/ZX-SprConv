@@ -182,6 +182,7 @@
   <ItemGroup>
     <ClInclude Include="..\Source\Core\AppFramework.h" />
     <ClInclude Include="..\Source\Core\Delegates.h" />
+    <ClInclude Include="..\Source\Core\Log.h" />
     <ClInclude Include="..\Source\Core\Sprite.h" />
     <ClInclude Include="..\Source\Core\Transform.h" />
     <ClInclude Include="..\Source\Core\Image.h" />

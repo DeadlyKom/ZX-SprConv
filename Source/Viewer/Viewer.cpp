@@ -239,7 +239,7 @@ void SViewer::OpenFile_Callback(std::filesystem::path FilePath)
 	}
 	else
 	{
-		//ImGui::LogText("Error");
+		LOG_ERROR("Can't open file :%s", File.path().string().c_str());
 	}
 }
 

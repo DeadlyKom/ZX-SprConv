@@ -150,6 +150,9 @@
     <ClInclude Include="..\Source\Core\Sprite.h">
       <Filter>Source\Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\Core\Log.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Icone.ico">

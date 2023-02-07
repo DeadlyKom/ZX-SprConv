@@ -115,7 +115,11 @@ int32_t FAppFramework::Launch(const std::vector<std::wstring>& Args, int32_t Wid
 	}
 	
 	Initialize();
-	StartupGUI();
+	if(!StartupGUI())
+	{
+		Shutdown();
+		return 1;
+	}
 
 	// main loop
 	int32_t Return = Run();
@@ -138,6 +142,13 @@ void FAppFramework::Release()
 
 void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 {
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::LogToFile();
+
+	LOG("Framework: Startup");
+
 	for(const  std::wstring& Arg : Args)
 	{
 		const std::map< std::wstring, ECommandLine>::iterator& SearchIt = CommandLineArray.find(Arg);
@@ -160,6 +171,8 @@ void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 
 void FAppFramework::Initialize()
 {
+	LOG("Framework: Initialize");
+
 	Viewer = std::make_shared<SViewer>();
 
 	FNativeDataInitialize Data;
@@ -170,6 +183,8 @@ void FAppFramework::Initialize()
 
 void FAppFramework::Shutdown()
 {
+	LOG("Framework: Shutdown");
+
 	if (Viewer != nullptr)
 	{
 		Viewer->Destroy();
@@ -240,6 +255,8 @@ std::vector<char> FAppFramework::FromResource(WORD ID, std::wstring Folder /*= T
 
 void FAppFramework::Register()
 {
+	LOG("Framework: Register");
+
 	WNDCLASSEX wcex;
 	hInstance = GetModuleHandle(nullptr);
 
@@ -261,6 +278,8 @@ void FAppFramework::Register()
 
 bool FAppFramework::Create(int32_t Width, int32_t Height)
 {
+	LOG("Framework: Create windows");
+
 	const uint32_t WindowWidth = Width > 0 ? Width : ScreenWidth >> 1;
 	const uint32_t WindowHeight = Height > 0 ? Height : ScreenHeight >> 1;
 	const uint32_t WindowPositionX = (ScreenWidth - WindowWidth) >> 1;
@@ -279,12 +298,14 @@ bool FAppFramework::Create(int32_t Width, int32_t Height)
 
 	if (!CreateDeviceD3D())
 	{
+		LOG("Framework: Create windows failed");
 		return false;
 	}
 
 	UpdateWindow(hwndAppFramework);
 	GetClientRect(hwndAppFramework, &RectWindow);
 
+	LOG("Framework: Create windows success");
 	return true;
 }
 
@@ -311,8 +332,9 @@ bool FAppFramework::CreateDeviceD3D()
 	CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	D3D_FEATURE_LEVEL FeatureLevel;
 	const D3D_FEATURE_LEVEL FeatureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-	if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, CreateDeviceFlags, FeatureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &FeatureLevel, &DeviceContext) != S_OK)
+	if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, CreateDeviceFlags, FeatureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &FeatureLevel, &DeviceContext)))
 	{
+		LOG_ERROR("Framework: Create device and swap chain ");
 		return false;
 	}
 
@@ -360,11 +382,9 @@ void FAppFramework::CleanupRenderTarget()
 	}
 }
 
-void FAppFramework::StartupGUI()
+bool FAppFramework::StartupGUI()
 {
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	LOG("Framework: Startup ImGui");
 
 	ImGuiIO& IO = ImGui::GetIO();
 	IO.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
@@ -375,7 +395,8 @@ void FAppFramework::StartupGUI()
 	ImGui::StyleColorsDark();
 
 	ImGuiStyle& Style = ImGui::GetStyle();
-	// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+
+	// when viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
 	if (IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 	{
 		Style.WindowRounding = 0.0f;
@@ -386,17 +407,28 @@ void FAppFramework::StartupGUI()
 	Style.WindowMenuButtonPosition = ImGuiDir_Right;
 
 	// Setup Platform/Renderer backends
-	ImGui_ImplWin32_Init(hwndAppFramework);
-	ImGui_ImplDX11_Init(Device, DeviceContext);
+	if (!ImGui_ImplWin32_Init(hwndAppFramework))
+	{
+		LOG_ERROR("Framework: ImGui_ImplWin32_Init");
+		return false;
+	}
+	if (!ImGui_ImplDX11_Init(Device, DeviceContext))
+	{
+		LOG_ERROR("Framework: ImGui_ImplDX11_Init");
+		return false;
+	}
 
-	FFonts& Fonts = FFonts::Get();
-	Fonts.LoadFont(11, 0);
-	Font = Fonts.GetFont(Fonts.LoadFont(14, 0));
-	SevenSegmentFont = Fonts.GetFont(Fonts.LoadFont(50));
+	//FFonts& Fonts = FFonts::Get();
+	//Fonts.LoadFont(11, 0);
+	//Font = Fonts.GetFont(Fonts.LoadFont(14, 0));
+	//SevenSegmentFont = Fonts.GetFont(Fonts.LoadFont(50));
+
+	return true;
 }
 
 void FAppFramework::ShutdownGUI()
 {
+	ImGui::LogFinish();
 	ImGui_ImplDX11_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -404,6 +436,8 @@ void FAppFramework::ShutdownGUI()
 
 int32_t FAppFramework::Run()
 {
+	LOG("Framework: Run");
+
 	MSG msg;
 	bool bRun = true;
 

@@ -12967,7 +12967,7 @@ void ImGui::LogBegin(ImGuiLogType type, int auto_open_depth)
     g.LogEnabled = true;
     g.LogType = type;
     g.LogNextPrefix = g.LogNextSuffix = NULL;
-    g.LogDepthRef = window->DC.TreeDepth;
+    //g.LogDepthRef = window->DC.TreeDepth;
     g.LogDepthToExpand = ((auto_open_depth >= 0) ? auto_open_depth : g.LogDepthToExpandDefault);
     g.LogLinePosY = FLT_MAX;
     g.LogLineFirstItem = true;

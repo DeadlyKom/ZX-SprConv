@@ -25,9 +25,10 @@ inline bool operator==(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x == r
 inline bool operator!=(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x != rhs.x || lhs.y != rhs.y; }
 #include "imgui_internal.h"
 
+#include "Log.h"
+#include "Math_.h"
 #include "Window.h"
 #include "Delegates.h"
-#include "Math_.h"
 #include "Transform.h"
 
 struct FImage;

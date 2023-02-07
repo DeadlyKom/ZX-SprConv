@@ -66,7 +66,7 @@ void SSpriteConstructor::NativeInitialize(FNativeDataInitialize Data)
 		if (FAILED(D3DCompile(PS.c_str(), PS.size(), NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &PixelShaderBlob, &ErrorBlob)))
 		{
 			std::string Error((const char*)ErrorBlob->GetBufferPointer());
-			IMGUI_DEBUG_LOG("ImGuiTexInspect pixel shader failed. Diagnostic:\n%s\n", Error.c_str());
+			LOG_ERROR("ImGuiTexInspect pixel shader failed. Diagnostic:\n%s", Error.c_str());
 			ErrorBlob->Release();
 			return;
 		}

@@ -43,7 +43,7 @@ private:
 	void CreateRenderTarget();
 	void CleanupRenderTarget();
 
-	void StartupGUI();
+	bool StartupGUI();
 	void ShutdownGUI();
 
 	HINSTANCE hInstance;
