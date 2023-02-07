@@ -33,9 +33,12 @@ namespace Shader
 		int	  Flags;
 		float TimeCounter;
 		float BackgroundColor[3];
-		int   Dummy;
+		int   Dummy_0;
 		float TextureSize[2];
 		float GridSize[2];
+		float GridOffset[2];
+
+		float Dummy[46];
 	};
 }
 
@@ -167,7 +170,8 @@ void SSpriteConstructor::RenderSpriteList()
 		FSprite& Sprite = Sprites[Index];
 		if (Sprite.IsValid())
 		{
-			if (Sprite.Draw("Test", ImageEmpty, VisibleSize))
+			const std::string StringID = Utils::Format("SpriteConstructorButton##%i", Index);
+			if (Sprite.Draw(StringID.c_str(), ImageEmpty, VisibleSize))
 			{
 				GetParent()->SetSelectedSprite(Index);
 			}

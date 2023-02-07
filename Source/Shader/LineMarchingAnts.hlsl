@@ -9,8 +9,8 @@ cbuffer pixelBuffer : register(b0)
     float2   TextureSize;
     float2   GridSize;
     float2   GridOffset;
-    float2   Dummy_1;
-    float4   Dummy_2;
+
+    float Dummy[46];
 };
 
 struct PS_INPUT

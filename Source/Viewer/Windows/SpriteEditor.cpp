@@ -42,8 +42,8 @@ namespace Shader
 		float TextureSize[2];
 		float GridSize[2];
 		float GridOffset[2];
-		float Dummy_1[2];
-		float Dummy_2[4];
+
+		float Dummy[46];
 	};
 
 	void* LINE_ID = (void*)0x10FFFFFF;
