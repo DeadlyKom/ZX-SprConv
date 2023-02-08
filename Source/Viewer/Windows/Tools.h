@@ -24,6 +24,7 @@ public:
 	virtual void Render() override;
 
 private:
+	inline bool IsEqualSelected(EToolType NewSelecte) const { return Selected == NewSelecte; }
 	EToolType GetSelected() const { return Selected; }
 	EToolType SetSelect(EToolType NewSelecte);
 

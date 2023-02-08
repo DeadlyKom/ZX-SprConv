@@ -57,28 +57,54 @@ void STools::Render()
 	};
 
 	float AvailWidth = DefaultWidth;
-	if (ButtonLambda("Tools##Marquee", ImageMarquee, Selected == EToolType::Marquee, AvailWidth))
+	if (ButtonLambda("Tools##Marquee", ImageMarquee, IsEqualSelected(EToolType::Marquee), AvailWidth))
 	{
-		Selected = EToolType::Marquee;
+		SetSelect(EToolType::Marquee);
 	}
-	if (ButtonLambda("Tools##Pan", ImagePan, Selected == EToolType::Pan, AvailWidth))
+	if (ButtonLambda("Tools##Pan", ImagePan, IsEqualSelected(EToolType::Pan), AvailWidth))
 	{
-		Selected = EToolType::Pan;
+		SetSelect(EToolType::Pan);
 	}
-	if (ButtonLambda("Tools##Eraser", ImageEraser, Selected == EToolType::Eraser, AvailWidth))
+	if (ButtonLambda("Tools##Eraser", ImageEraser, IsEqualSelected(EToolType::Eraser), AvailWidth))
 	{
-		Selected = EToolType::Eraser;
+		SetSelect(EToolType::Eraser);
 	}
-	if (ButtonLambda("Tools##Hand", ImageHand, Selected == EToolType::Hand, AvailWidth))
+	if (ButtonLambda("Tools##Hand", ImageHand, IsEqualSelected(EToolType::Hand), AvailWidth))
 	{
-		Selected = EToolType::Hand;
+		SetSelect(EToolType::Hand);
 	}
-	if (ButtonLambda("Tools##Move", ImageMove, Selected == EToolType::Move, AvailWidth))
+	if (ButtonLambda("Tools##Move", ImageMove, IsEqualSelected(EToolType::Move), AvailWidth))
 	{
-		Selected = EToolType::Move;
+		SetSelect(EToolType::Move);
 	}
 	ImGui::End();
 	ImGui::PopStyleVar(3);
+
+	switch (Selected)
+	{
+	case EToolType::None:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+		break;
+	case EToolType::Marquee:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+		break;
+	case EToolType::Pan:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+		break;
+	case EToolType::Eraser:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+		break;
+	case EToolType::Hand:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+		break;
+	case EToolType::Move:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+		break;
+	default:
+		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+		break;
+	}
+
 }
 
 EToolType STools::SetSelect(EToolType NewSelecte)
