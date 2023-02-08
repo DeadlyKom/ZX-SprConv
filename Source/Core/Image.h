@@ -9,7 +9,7 @@ enum ECPU_AccessFlag
 	WRITE = D3D11_CPU_ACCESS_FLAG::D3D11_CPU_ACCESS_WRITE
 };
 
-class FImageBase
+class FImageBase : std::enable_shared_from_this<FImageBase>
 {
 public:
 	static FImageBase& Get();
@@ -27,10 +27,9 @@ protected:
 	std::vector<std::shared_ptr<FImage>> ImagesInfo;
 };
 
-struct FImage
+struct FImage : std::enable_shared_from_this<FImage>
 {
 	FImage();
-	virtual ~FImage();
 
 	static bool GetImageInfo(const std::string& Filename, uint32_t& OutWidth, uint32_t& OutHeight);
 

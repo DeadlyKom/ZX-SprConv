@@ -94,6 +94,9 @@ void SViewer::Initialize()
 		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 2.png");
 		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 3.png");
 		OpenFile_Callback("C:\\Work\\Sprites\\Mothership\\PNG\\Tier 2-3 & A-B Land 4.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Menu\\Main\\Background A.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Menu\\Planet\\1\\Planet.png");
+		OpenFile_Callback("C:\\Work\\Sprites\\Menu\\Planet\\2\\E2-3.png");
 		OpenFile_Callback("C:\\Work\\Sprites\\Raven my.png");
 	}
 }
@@ -139,19 +142,19 @@ void SViewer::SetSelectedSprite(uint32_t Index)
 	}
 }
 
-FSprite* SViewer::GetSelectedSprite()
+std::shared_ptr<FSprite> SViewer::GetSelectedSprite()
 {
 	const int32_t Index = CurrentSprite >= 0 ? (Sprites.size() > CurrentSprite ? CurrentSprite : INDEX_NONE) : INDEX_NONE;
-	return Index > INDEX_NONE ? &Sprites[Index] : nullptr;
+	return Index > INDEX_NONE ? Sprites[Index] : nullptr;
 }
 
-FSpriteLayer* SViewer::GetSelectedLayer(const FSprite& Sprite)
+std::shared_ptr<FSpriteLayer> SViewer::GetSelectedLayer(std::shared_ptr<FSprite> Sprite)
 {
-	const int32_t Index = Sprite.SelectedLayer >= 0 ? (Sprite.Layers.size() > Sprite.SelectedLayer ? Sprite.SelectedLayer : INDEX_NONE) : INDEX_NONE;
-	return Index > INDEX_NONE ? const_cast<FSpriteLayer*>(&Sprite.Layers[Index]) : nullptr;
+	const int32_t Index = !Sprite ||Sprite->SelectedLayer >= 0 ? (Sprite->Layers.size() > Sprite->SelectedLayer ? Sprite->SelectedLayer : INDEX_NONE) : INDEX_NONE;
+	return Index > INDEX_NONE ? Sprite->Layers[Index] : nullptr;
 }
 
-std::vector<FSprite>& SViewer::GetSprites()
+std::vector<std::shared_ptr<FSprite>>& SViewer::GetSprites()
 {
 	return Sprites;
 }
@@ -624,13 +627,13 @@ bool SViewer::WindowCreateSpriteModal()
 
 		if (ImGui::ButtonEx("OK", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
 		{
-			FSprite NewSprite;
-			NewSprite.NumFrame = 1;
-			NewSprite.Size = CreateSpriteSize;
-			NewSprite.Pivot = CreateSpritePivot;
-			NewSprite.ColorMode = CreateSpriteColorMode;
-			NewSprite.Name = CreateSpriteNameBuffer;
-			NewSprite.Initialize();
+			std::shared_ptr<FSprite> NewSprite = std::make_shared<FSprite>();
+			NewSprite->NumFrame = 1;
+			NewSprite->Size = CreateSpriteSize;
+			NewSprite->Pivot = CreateSpritePivot;
+			NewSprite->ColorMode = CreateSpriteColorMode;
+			NewSprite->Name = CreateSpriteNameBuffer;
+			NewSprite->Initialize();
 
 			if (AddSprite(NewSprite))
 			{
@@ -731,19 +734,19 @@ bool SViewer::WindowgGridSettingsModal()
 
 }
 
-bool SViewer::AddSprite(FSprite& NewSprite)
+bool SViewer::AddSprite(std::shared_ptr<FSprite> NewSprite)
 {
-	if (!NewSprite.IsValid())
+	if (!NewSprite)
 	{
 		return false;
 	}
 
-	FSpriteLayer& NewLayer = NewSprite.AddLayer();
-	NewLayer.bVisible = true;
-	NewLayer.bLock = false;
-	NewLayer.Name = Utils::Format("Layer %i", ++LayersCounter);
+	std::shared_ptr<FSpriteLayer> NewLayer = NewSprite->AddLayer();
+	NewLayer->bVisible = true;
+	NewLayer->bLock = false;
+	NewLayer->Name = Utils::Format("Layer %i", ++LayersCounter);
 
-	NewSprite.AddFrame();
+	NewSprite->AddFrame();
 	Sprites.push_back(NewSprite);
 
 	if (CurrentSprite < 0)
@@ -757,21 +760,21 @@ bool SViewer::AddSpriteBlock(const std::filesystem::directory_entry& FilePath, c
 {
 	AddFilePath(FilePath);
 
-	FSprite* Sprite = GetSelectedSprite();
-	if (Sprite == nullptr)
+	std::shared_ptr<FSprite> Sprite = GetSelectedSprite();
+	if (!Sprite)
 	{
 		return false;
 	}
 
-	FSpriteLayer* Layer = GetSelectedLayer(*Sprite);
-	if (Layer == nullptr)
+	std::shared_ptr<FSpriteLayer> Layer = GetSelectedLayer(Sprite);
+	if (!Layer)
 	{
 		return false;
 	}
 
-	FSpriteBlock NewSpriteBlock;
-	NewSpriteBlock.Marquee = MarqueeRect;
-	NewSpriteBlock.Filename = FilePath.path().string();
-	NewSpriteBlock.Initialize();
+	std::shared_ptr<FSpriteBlock> NewSpriteBlock = std::make_shared<FSpriteBlock>();
+	NewSpriteBlock->Marquee = MarqueeRect;
+	NewSpriteBlock->Filename = FilePath.path().string();
+	NewSpriteBlock->Initialize();
 	return Layer->AddSpriteBlock(NewSpriteBlock, Sprite->SelectedFrame);
 }

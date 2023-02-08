@@ -5,6 +5,7 @@
 
 namespace
 {
+	int32_t BlockCounter = 0;
 	void DrawCallback(const ImDrawList* ParentList, const ImDrawCmd* CMD)
 	{
 		std::shared_ptr<SViewer> Viewer = FAppFramework::Get().GetViewer();
@@ -15,10 +16,10 @@ namespace
 		}
 	}
 
-	bool Button(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, FSprite* Sprite, uint32_t FrameNum, const ImVec2& VisibleSize, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor)
+	bool Button(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, std::shared_ptr<FSprite> Sprite, uint32_t FrameNum, const ImVec2& VisibleSize, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor)
 	{
 		ImGuiWindow* Window = ImGui::GetCurrentWindow();
-		if (Window->SkipItems || Sprite == nullptr)
+		if (Window->SkipItems || !Sprite)
 		{
 			return false;
 		}
@@ -64,27 +65,27 @@ namespace
 		Window->DrawList->AddCallback(DrawCallback, (void*)ImageEmpty.get());
 		Window->DrawList->AddImage(ImageEmpty->GetShaderResourceView(), p0, p0 + ImageEmpty->Size * Scale, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImGui::GetColorU32(TintColor));
 
-		for (FSpriteLayer& Layer : Sprite->Layers)
+		for (std::shared_ptr<FSpriteLayer>& Layer : Sprite->Layers)
 		{
-			FSpriteFrame* SpriteFrame = Layer.GetSpritesBlocks(FrameNum);
-			if (SpriteFrame == nullptr)
+			std::shared_ptr<FSpriteFrame> SpriteFrame = Layer->GetSpritesFrame(FrameNum);
+			if (!SpriteFrame)
 			{
 				continue;
 			}
 
-			for (const FSpriteBlock& Block : SpriteFrame->Blocks)
+			for (const std::weak_ptr<FSpriteBlock>& Block : SpriteFrame->Blocks)
 			{
-				if (!Block.IsValid())
+				if (Block.expired() /*|| !Block.lock()->ImageSprite*/)
 				{
 					continue;
 				}
 
-				const ImVec2 StartImage = p0 + Sprite->Pivot * Scale + Block.Offset * Scale;
-				const ImVec2 EndImage = StartImage + Block.ImageSprite->Size * Scale;
+				const ImVec2 StartImage = p0 + Sprite->Pivot * Scale + Block.lock()->Offset * Scale;
+				const ImVec2 EndImage = StartImage + Block.lock()->ImageSprite->Size * Scale;
 
 				// callback for using our own image shader 
-				Window->DrawList->AddCallback(DrawCallback, (void*)Block.ImageSprite.get());
-				Window->DrawList->AddImage(Block.ImageSprite->GetShaderResourceView(), StartImage, EndImage, ImVec2(0.0f, 0.0f), ImVec2(1.0, 1.0f), ImGui::GetColorU32(TintColor));
+				Window->DrawList->AddCallback(DrawCallback, (void*)Block.lock()->ImageSprite.get());
+				Window->DrawList->AddImage(Block.lock()->ImageSprite->GetShaderResourceView(), StartImage, EndImage, ImVec2(0.0f, 0.0f), ImVec2(1.0, 1.0f), ImGui::GetColorU32(TintColor));
 			}
 		}
 		ImGui::PopClipRect();
@@ -101,11 +102,13 @@ FSpriteBlock::FSpriteBlock()
 	, Marquee(0.0f, 0.0f, 0.0f, 0.0f)
 	, Filename("")
 	, ImageSprite(nullptr)
-{}
+{
+	Name = Utils::Format("Bit %i", ++BlockCounter);
+}
 
 void FSpriteBlock::Initialize()
 {
-	if (ImageSprite == nullptr)
+	if (!ImageSprite)
 	{
 		ImageSprite = std::make_shared<FImage>();
 	}
@@ -127,10 +130,10 @@ void FSpriteBlock::Initialize()
 
 void FSpriteBlock::Release()
 {
-	if (ImageSprite != nullptr)
+	if (ImageSprite)
 	{
 		ImageSprite->Release();
-		ImageSprite = nullptr;
+		ImageSprite.reset();
 	}
 }
 
@@ -143,34 +146,34 @@ FSpriteLayer::FSpriteLayer()
 
 void FSpriteLayer::Release()
 {
-	for (FSpriteFrame& Frame : SpriteFrame)
+	for (std::shared_ptr<FSpriteBlock>& Block : Blocks)
 	{
-		for (FSpriteBlock& SpriteBlock : Frame.Blocks)
-		{
-			SpriteBlock.Release();
-		}
+		Block->Release();
 	}
-	SpriteFrame.clear();
+	Blocks.clear();
+	Frames.clear();
 }
 
-FSpriteFrame& FSpriteLayer::AddFrame()
+std::shared_ptr<FSpriteFrame> FSpriteLayer::GetSpritesFrame(uint32_t FrameNum)
 {
-	return SpriteFrame.emplace_back();
+	return IsValidFrame(FrameNum) ? Frames[FrameNum] : nullptr;
 }
 
-FSpriteFrame* FSpriteLayer::GetSpritesBlocks(uint32_t FrameNum)
+std::shared_ptr<FSpriteFrame> FSpriteLayer::AddFrame()
 {
-	return SpriteFrame.size() > FrameNum ? &SpriteFrame[FrameNum] : nullptr;
+	Frames.push_back(std::make_shared<FSpriteFrame>());
+	return Frames.back();
 }
 
-bool FSpriteLayer::AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum)
+bool FSpriteLayer::AddSpriteBlock(std::shared_ptr<FSpriteBlock>& NewSpriteBlock, uint32_t FrameNum)
 {
 	if (!IsValidFrame(FrameNum))
 	{
 		return false;
 	}
 
-	SpriteFrame[FrameNum].Blocks.push_back(NewSpriteBlock);
+	Frames[FrameNum]->Blocks.push_back(NewSpriteBlock);
+	Blocks.push_back(NewSpriteBlock);
 	return true;
 }
 
@@ -188,7 +191,7 @@ FSprite::FSprite()
 
 void FSprite::Initialize()
 {
-	if (ImageSprite == nullptr)
+	if (!ImageSprite)
 	{
 		ImageSprite = std::make_shared<FImage>();
 	}
@@ -207,29 +210,30 @@ void FSprite::Release()
 		ImageSprite = nullptr;
 	}
 
-	for (FSpriteLayer& SpriteLayer : Layers)
+	for (std::shared_ptr<FSpriteLayer>& SpriteLayer : Layers)
 	{
-		SpriteLayer.Release();
+		SpriteLayer->Release();
 	}
 	Layers.clear();
 }
 
 void FSprite::AddFrame()
 {
-	for (FSpriteLayer& Layer : Layers)
+	for (std::shared_ptr<FSpriteLayer>& Layer : Layers)
 	{
-		Layer.AddFrame();
+		Layer->AddFrame();
 	}
 }
 
-FSpriteFrame* FSprite::GetFrame(uint32_t LayerNum, uint32_t FrameNum)
+std::shared_ptr<FSpriteFrame> FSprite::GetFrame(uint32_t LayerNum, uint32_t FrameNum)
 {
-	return IsValidLayer(LayerNum) ? Layers[LayerNum].GetSpritesBlocks(FrameNum) : nullptr;
+	return IsValidLayer(LayerNum) ? Layers[LayerNum]->GetSpritesFrame(FrameNum) : nullptr;
 }
 
-FSpriteLayer& FSprite::AddLayer()
+std::shared_ptr<FSpriteLayer> FSprite::AddLayer()
 {
-	return Layers.emplace_back();
+	Layers.push_back(std::make_shared<FSpriteLayer>());
+	return Layers.back();
 }
 
 bool FSprite::Draw(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, const ImVec2& VisibleSize, uint32_t FrameNum /*= 0*/)
@@ -242,7 +246,7 @@ bool FSprite::Draw(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, co
 	const ImVec4 TintColor = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
 	const ImVec4 SelectedColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	return Button(StringID, ImageEmpty, this, FrameNum, VisibleSize, BackgroundColor, TintColor, SelectedColor);
+	return Button(StringID, ImageEmpty, shared_from_this(), FrameNum, VisibleSize, BackgroundColor, TintColor, SelectedColor);
 }
 
 std::string FSprite::ColotModeToString(EColorMode Mode)

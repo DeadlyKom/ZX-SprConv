@@ -67,10 +67,9 @@ private:
 
 	// sprite functions
 	void SetSelectedSprite(uint32_t Index);
-	FSprite* GetSelectedSprite();
-	FSpriteLayer* GetSelectedLayer(const FSprite& Sprite);
-
-	std::vector<FSprite>& GetSprites();
+	std::shared_ptr<FSprite> GetSelectedSprite();
+	std::shared_ptr<FSpriteLayer> GetSelectedLayer(const std::shared_ptr<FSprite> Sprite);
+	std::vector<std::shared_ptr<FSprite>>& GetSprites();
 
 	// file functions
 	void AddFilePath(const std::filesystem::directory_entry& FilePath);
@@ -96,7 +95,7 @@ private:
 	bool WindowgGridSettingsModal();
 
 	// create functions
-	bool AddSprite(FSprite& NewSprite);
+	bool AddSprite(std::shared_ptr<FSprite> NewSprite);
 	bool AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect);
 
 	// static functions
@@ -150,7 +149,7 @@ private:
 	// sprite
 	int32_t SpriteCounter;
 	int32_t CurrentSprite;
-	std::vector<FSprite> Sprites;
+	std::vector<std::shared_ptr<FSprite>> Sprites;
 
 	// layer
 	int32_t LayersCounter;

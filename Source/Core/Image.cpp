@@ -169,11 +169,6 @@ FImage::FImage()
 
 {}
 
-FImage::~FImage()
-{
-	Release();
-}
-
 bool FImage::GetImageInfo(const std::string& Filename, uint32_t& OutWidth, uint32_t& OutHeight)
 {
 	int Comp;

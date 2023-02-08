@@ -11,7 +11,7 @@ enum class EColorMode
 	RGB
 };
 
-struct FSpriteBlock
+struct FSpriteBlock : std::enable_shared_from_this<FSpriteBlock>
 {
 	FSpriteBlock();
 
@@ -22,36 +22,38 @@ struct FSpriteBlock
 	ImVec2 Offset;
 	ImRect Marquee;
 
+	std::string Name;
 	std::string Filename;
 	std::shared_ptr<FImage> ImageSprite;
 };
 
-struct FSpriteFrame
+struct FSpriteFrame : std::enable_shared_from_this<FSpriteFrame>
 {
-	std::vector<FSpriteBlock> Blocks;
+	std::vector<std::weak_ptr<FSpriteBlock>> Blocks;
 };
 
-struct FSpriteLayer
+struct FSpriteLayer : std::enable_shared_from_this<FSpriteLayer>
 {
 	FSpriteLayer();
 	void Release();
 
 	// frame
-	inline bool IsValidFrame(uint32_t FrameNum) const { return SpriteFrame.size() > FrameNum; }
-	FSpriteFrame& AddFrame();
+	inline bool IsValidFrame(uint32_t FrameNum) const { return Frames.size() > FrameNum; }
+	std::shared_ptr<FSpriteFrame> GetSpritesFrame(uint32_t FrameNum);
+	std::shared_ptr<FSpriteFrame> AddFrame();
 
 	// block
-	FSpriteFrame* GetSpritesBlocks(uint32_t FrameNum);
-	bool AddSpriteBlock(FSpriteBlock& NewSpriteBlock, uint32_t FrameNum);
+	bool AddSpriteBlock(std::shared_ptr<FSpriteBlock>& NewSpriteBlock, uint32_t FrameNum);
 
 	bool bVisible;
 	bool bLock;
 	bool bEmpty;
 	std::string Name;
-	std::vector<FSpriteFrame> SpriteFrame;
+	std::vector<std::shared_ptr<FSpriteBlock>> Blocks;
+	std::vector<std::shared_ptr<FSpriteFrame>> Frames;
 };
 
-struct FSprite
+struct FSprite : std::enable_shared_from_this<FSprite>
 {
 	FSprite();
 
@@ -60,10 +62,10 @@ struct FSprite
 
 	// frame
 	void AddFrame();
-	FSpriteFrame* GetFrame(uint32_t LayerNum, uint32_t FrameNum);
+	std::shared_ptr<FSpriteFrame> GetFrame(uint32_t LayerNum, uint32_t FrameNum);
 
 	// layer
-	FSpriteLayer& AddLayer();
+	std::shared_ptr<FSpriteLayer> AddLayer();
 	inline bool IsValidLayer(uint32_t LayerNum) const { return Layers.size() > LayerNum; }
 
 	bool Draw(const char* StringID, std::shared_ptr<FImage>& ImageEmpty, const ImVec2& VisibleSize, uint32_t FrameNum = 0);
@@ -76,7 +78,7 @@ struct FSprite
 	EColorMode ColorMode;
 
 	std::string Name;
-	std::vector<FSpriteLayer> Layers;
+	std::vector<std::shared_ptr<FSpriteLayer>> Layers;
 	std::shared_ptr<FImage> ImageSprite;
 
 	// internal

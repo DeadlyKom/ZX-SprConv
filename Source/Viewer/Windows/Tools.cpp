@@ -80,31 +80,33 @@ void STools::Render()
 	ImGui::End();
 	ImGui::PopStyleVar(3);
 
-	switch (Selected)
+	if (false)
 	{
-	case EToolType::None:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-		break;
-	case EToolType::Marquee:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-		break;
-	case EToolType::Pan:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-		break;
-	case EToolType::Eraser:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-		break;
-	case EToolType::Hand:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-		break;
-	case EToolType::Move:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-		break;
-	default:
-		ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-		break;
+		switch (Selected)
+		{
+		case EToolType::None:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		case EToolType::Marquee:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		case EToolType::Pan:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		case EToolType::Eraser:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		case EToolType::Hand:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+			break;
+		case EToolType::Move:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		default:
+			ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		}
 	}
-
 }
 
 EToolType STools::SetSelect(EToolType NewSelecte)

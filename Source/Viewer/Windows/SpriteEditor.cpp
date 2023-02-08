@@ -24,7 +24,7 @@ namespace
 		}
 	}
 
-	const char* PopupMenuName = "PopupMenuSprite";
+	const char* PopupMenuName = "Popup Menu Sprite";
 }
 
 namespace Shader
@@ -650,8 +650,8 @@ void SSpriteEditor::HandleMouseInputs()
 	}
 	else if (bHovered && Image != nullptr && IO.MouseReleased[ImGuiMouseButton_Right])
 	{
-		FSprite* Sprite = GetParent()->GetSelectedSprite();
-		if (Sprite != nullptr)
+		std::shared_ptr<FSprite> Sprite = GetParent()->GetSelectedSprite();
+		if (Sprite)
 		{
 			bMouseInsideMarquee = MarqueeRect.Contains(ConverPositionToPixel(ImGui::GetMousePos()));
 			ImGui::OpenPopup(PopupMenuName);

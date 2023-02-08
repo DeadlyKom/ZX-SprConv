@@ -162,23 +162,23 @@ void SSpriteConstructor::RenderSpriteList()
 	const ImGuiStyle& Style = ImGui::GetStyle();
 	const float WindowVisible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 
-	std::vector<FSprite>& Sprites = GetParent()->GetSprites();
+	std::vector<std::shared_ptr<FSprite>>& Sprites = GetParent()->GetSprites();
 	const uint32_t SpriteNum = uint32_t(Sprites.size());
 	for (uint32_t Index = 0; Index < SpriteNum; ++Index)
 	{
 		ImGui::PushID(Index);
-		FSprite& Sprite = Sprites[Index];
-		if (Sprite.IsValid())
+		std::shared_ptr<FSprite>& Sprite = Sprites[Index];
+		const std::string StringID = Utils::Format("SpriteConstructorButton##%i", Index);
+		if (Sprite)
 		{
-			const std::string StringID = Utils::Format("SpriteConstructorButton##%i", Index);
-			if (Sprite.Draw(StringID.c_str(), ImageEmpty, VisibleSize))
+			if (Sprite->Draw(StringID.c_str(), ImageEmpty, VisibleSize))
 			{
 				GetParent()->SetSelectedSprite(Index);
 			}
 		}
 		else
 		{
-			ImGui::ImageButton(Sprite.Name.c_str(), ImageEmpty->GetShaderResourceView(), VisibleSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, TintColor);
+			ImGui::ImageButton(StringID.c_str(), ImageEmpty->GetShaderResourceView(), VisibleSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), BackgroundColor, TintColor);
 		}
 
 		const float LastButton_x2 = ImGui::GetItemRectMax().x;
