@@ -1,24 +1,32 @@
+#include "AppFramework.h"
+
+#include <ctime>
+
 #include "backends\imgui_impl_win32.h"
 #include "backends\imgui_impl_dx11.h"
 
-#include "AppFramework.h"
 #include "..\ZX-Convert\Resource.h"
 #include "Fonts\Fonts.h"
-
-namespace KeywordArg
-{
-	const std::wstring FULLSCREEN = TEXT("-fullscreen");
-}
 
 namespace
 {
 	enum class ECommandLine
 	{
 		Unknow,
+		Log,
 		Fullscreen,
 	};
 
-	std::map<std::wstring, ECommandLine> CommandLineArray = { {TEXT("-fullscreen"), ECommandLine::Fullscreen} };
+	std::map<std::wstring, ECommandLine> CommandLineArray =
+	{
+		{TEXT("-log"), ECommandLine::Log},
+		{TEXT("-fullscreen"), ECommandLine::Fullscreen}
+	};
+}
+
+namespace KeywordArg
+{
+	const std::wstring FULLSCREEN = TEXT("-fullscreen");
 }
 
 // Forward declare message handler from imgui_impl_win32.cpp
@@ -142,20 +150,18 @@ void FAppFramework::Release()
 
 void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 {
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::LogToFile();
-
-	LOG("Framework: Startup");
-
-	for(const  std::wstring& Arg : Args)
+	for (const std::wstring& Arg : Args)
 	{
 		const std::map< std::wstring, ECommandLine>::iterator& SearchIt = CommandLineArray.find(Arg);
 		const ECommandLine CommandLine = SearchIt != CommandLineArray.end() ? SearchIt->second : ECommandLine::Unknow;
+
 		switch (CommandLine)
 		{
 		case ECommandLine::Unknow:
+			break;
+
+		case ECommandLine::Log:
+			Flags.bLog = true;
 			break;
 
 		case ECommandLine::Fullscreen:
@@ -167,6 +173,34 @@ void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 			break;
 		}
 	}
+
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	if (Flags.bLog)
+	{
+		char Buffer[80];
+		std::time_t Time = std::time(nullptr);
+		std::tm* Now = std::localtime(&Time);
+
+		if (false)
+		{
+			strftime(Buffer, sizeof(Buffer), "%d.%m.%Y-%H.%M.%S", Now);
+			std::string File = Utils::Format("%s.log", Buffer);
+			ImGui::LogToFile(1, File.c_str());
+		}
+		else
+		{
+			ImGui::LogToFile();
+		}
+
+		strftime(Buffer, sizeof(Buffer), "Log file open, %Y/%m/%d %X", Now);
+		ImGui::LogText(IM_NEWLINE);
+		LOG(Buffer);
+	}
+
+	LOG("Framework: Startup");
 }
 
 void FAppFramework::Initialize()
@@ -329,10 +363,10 @@ bool FAppFramework::CreateDeviceD3D()
 	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 	UINT CreateDeviceFlags = 0;
-	CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+	//CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	D3D_FEATURE_LEVEL FeatureLevel;
-	const D3D_FEATURE_LEVEL FeatureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-	if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, CreateDeviceFlags, FeatureLevelArray, 2, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &FeatureLevel, &DeviceContext)))
+	const D3D_FEATURE_LEVEL FeatureLevelArray[3] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
+	if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, CreateDeviceFlags, FeatureLevelArray, 3, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &FeatureLevel, &DeviceContext)))
 	{
 		LOG_ERROR("Framework: Create device and swap chain ");
 		return false;

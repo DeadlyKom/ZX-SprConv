@@ -26,6 +26,8 @@ public:
 	virtual void Render();
 	virtual void SetRectWindow(uint16_t Width, uint16_t Height);
 
+	FFrameworkFlags& GetFlags() { return Flags; }
+
 	std::shared_ptr<SViewer> GetViewer() const { return Viewer; };
 	std::string LoadShaderResource(WORD ID);
 	std::vector<char> FromResource(WORD ID, std::wstring Folder = TEXT(""));
@@ -45,6 +47,8 @@ private:
 
 	bool StartupGUI();
 	void ShutdownGUI();
+
+	FFrameworkFlags Flags;
 
 	HINSTANCE hInstance;
 	ATOM AtomClass;

@@ -6,6 +6,8 @@
 
 namespace Utils
 {
+	FFrameworkFlags& GetFrameworkFlags();
+
 	ImFont* LoadFont(int32_t Size, int32_t Index = INDEX_NONE);
 	std::shared_ptr<FImage> LoadImage(std::string Filename);
 	std::shared_ptr<FImage> LoadImageFromResource(WORD ID, std::wstring Folder);

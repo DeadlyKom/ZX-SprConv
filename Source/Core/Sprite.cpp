@@ -60,9 +60,9 @@ namespace
 
 		ImGui::PushClipRect(p0, p1, true);
 
-		// callback for using our own image shader 
+		// callback for using our own image shader
 		Window->DrawList->AddCallback(DrawCallback, (void*)ImageEmpty.get());
-		Window->DrawList->AddImage(ImageEmpty->GetShaderResourceView(), p0, p0 + ImageEmpty->Size * Scale, ImVec2(0.0f, 0.0f), ImVec2(1.0, 1.0f), ImGui::GetColorU32(TintColor));
+		Window->DrawList->AddImage(ImageEmpty->GetShaderResourceView(), p0, p0 + ImageEmpty->Size * Scale, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImGui::GetColorU32(TintColor));
 
 		for (FSpriteLayer& Layer : Sprite->Layers)
 		{

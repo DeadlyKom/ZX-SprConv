@@ -33,6 +33,11 @@ inline bool operator!=(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x != r
 
 struct FImage;
 
+struct FFrameworkFlags
+{
+	bool bLog = false;
+};
+
 enum class EDialogMode;
 
 #include "..\ZX-Convert\Resource.h"
