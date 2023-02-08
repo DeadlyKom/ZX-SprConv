@@ -209,7 +209,7 @@ void SFileDialog::ReadDirectory(const std::string& Path)
 	Files.clear();
 	Folders.clear();
 
-	for (auto& EntryIt : std::filesystem::directory_iterator(Path))
+	for (auto& EntryIt : std::filesystem::directory_iterator(Path, std::filesystem::directory_options::skip_permission_denied))
 	{
 		if (EntryIt.is_directory())
 		{
