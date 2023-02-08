@@ -67,6 +67,11 @@ namespace
 
 		for (std::shared_ptr<FSpriteLayer>& Layer : Sprite->Layers)
 		{
+			if (!Layer->bVisible)
+			{
+				continue;
+			}
+
 			std::shared_ptr<FSpriteFrame> SpriteFrame = Layer->GetSpritesFrame(FrameNum);
 			if (!SpriteFrame)
 			{

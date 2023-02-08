@@ -2,6 +2,7 @@
 #include "Core\Sprite.h"
 #include "Core\Utils.h"
 #include "Core\Image.h"
+#include "Viewer\Windows\Property.h"
 
 namespace
 {
@@ -199,7 +200,7 @@ void SSequencer::RenderSequencer()
 		for (uint32_t RowIndex = 0; RowIndex < Sprite->Layers.size(); ++RowIndex)
 		{
 			ImGui::TableNextRow(ImGuiTableRowFlags_None, RowMinHeight);
-			DrawLayer(Sprite->Layers[RowIndex], RowIndex, Sprite->NumFrame);
+			DrawLayer(Sprite, Sprite->Layers[RowIndex], RowIndex, Sprite->NumFrame);
 		}
 
 		ImGui::PopStyleVar();
@@ -213,6 +214,7 @@ void SSequencer::RenderPopupBlockMenu()
 	{
 		if (ImGui::MenuItem("Properties..."))
 		{
+			PropertiesSpriteBlock();
 		}
 
 		ImGui::Separator();
@@ -228,7 +230,20 @@ void SSequencer::RenderPopupBlockMenu()
 
 void SSequencer::ClickedSpriteBlok(std::shared_ptr<FSpriteBlock> Block)
 {
+	if (CachedSelectedSprite.expired() || CachedSelectedSpriteBlock.expired())
+	{
+		return;
+	}
+	GetWindow<SProperty>(EWindowsType::Property)->SetProperty(EPropertyType::SpriteBlock, CachedSelectedSprite, CachedSelectedSpriteBlock);
+}
 
+void SSequencer::PropertiesSpriteBlock()
+{
+	if (CachedSelectedSprite.expired() || CachedSelectedSpriteBlock.expired())
+	{
+		return;
+	}
+	GetWindow<SProperty>(EWindowsType::Property)->SetProperty(EPropertyType::SpriteBlock, CachedSelectedSprite, CachedSelectedSpriteBlock);
 }
 
 void SSequencer::RemoveSpriteBlok()
@@ -298,7 +313,7 @@ bool SSequencer::DrawButton(const char* StringID, const FImage& Image, const ImV
 	return bPressed;
 }
 
-void SSequencer::DrawLayer(std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t NumLayer, uint32_t NumFrame)
+void SSequencer::DrawLayer(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t NumLayer, uint32_t NumFrame)
 {
 	if (!SpriteLayer)
 	{
@@ -323,10 +338,10 @@ void SSequencer::DrawLayer(std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t N
 
 	ImGui::TableSetColumnIndex(2);
 	ImGui::AlignTextToFramePadding();
-	DrawFrames(SpriteLayer, NumLayer, NumFrame);
+	DrawFrames(Sprite, SpriteLayer, NumLayer, NumFrame);
 }
 
-void SSequencer::DrawFrames(std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t NumLayer, uint32_t NumFrame)
+void SSequencer::DrawFrames(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t NumLayer, uint32_t NumFrame)
 {
 	if (!SpriteLayer)
 	{
@@ -351,10 +366,15 @@ void SSequencer::DrawFrames(std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t 
 				{
 					if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 					{
+						CachedSelectedSprite = Sprite;
+						CachedSelectedSpriteLeyer = SpriteLayer;
+						CachedSelectedSpriteBlock = Block;
+
 						ClickedSpriteBlok(Block);
 					}
 					else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
 					{
+						CachedSelectedSprite = Sprite;
 						CachedSelectedSpriteLeyer = SpriteLayer;
 						CachedSelectedSpriteBlock = Block;
 						ImGui::OpenPopup(PopupBlockMenuName);

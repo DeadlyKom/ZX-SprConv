@@ -551,7 +551,7 @@ bool SViewer::WindowCreateSpriteModal()
 		const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
-		ImGui::InputTextEx("Name ", NULL, CreateSpriteNameBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 20.0f, TextHeight), ImGuiInputTextFlags_None, &TextEditNumberCallback, (void*)this);
+		ImGui::InputTextEx("Name ", NULL, CreateSpriteNameBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 20.0f, TextHeight), ImGuiInputTextFlags_None);
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
 		ImGui::Text("Size :");
