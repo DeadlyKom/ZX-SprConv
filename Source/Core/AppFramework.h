@@ -19,7 +19,7 @@ public:
 	int32_t Launch(const std::vector<std::wstring>& Args, int32_t Width = -1, int32_t Height = -1);
 	void Release();
 
-	virtual void Startup(const  std::vector<std::wstring>& Args);
+	virtual bool Startup(const  std::vector<std::wstring>& Args);
 	virtual void Initialize();
 	virtual void Shutdown();
 	virtual void Tick(float DeltaTime);
@@ -45,6 +45,8 @@ private:
 	void CreateRenderTarget();
 	void CleanupRenderTarget();
 
+	bool InitField();
+	void SaveDefaultImGuiIni();
 	bool StartupGUI();
 	void ShutdownGUI();
 
@@ -77,4 +79,7 @@ private:
 	int32_t FontSize;
 
 	std::shared_ptr<SViewer> Viewer;
+
+	std::string IniFilePath;
+	std::string LogFilePath;
 };

@@ -87,8 +87,8 @@ void SProperty::RenderPropertySpriteBlock()
 	ImGui::Text("Offset :");
 	ImGui::Separator();
 
-	ImVec2 OffsetMin = Sprite->Size - Sprite->Pivot;
-	ImVec2 OffsetMax = Sprite->Pivot + SpriteBlock->ImageSprite->Size;
+	ImVec2 OffsetMin = Sprite->Pivot + SpriteBlock->ImageSprite->Size;
+	ImVec2 OffsetMax = Sprite->Size - Sprite->Pivot;
 
 	ImGui::SliderFloat("X ", &SpriteBlock->Offset.x, -OffsetMin.x + 1.0f, OffsetMax.x - 1.0f, "%.0f");
 	ImGui::SliderFloat("Y ", &SpriteBlock->Offset.y, -OffsetMin.y + 1.0f, OffsetMax.y - 1.0f, "%.0f");

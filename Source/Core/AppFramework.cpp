@@ -1,6 +1,7 @@
 #include "AppFramework.h"
 
 #include <ctime>
+#include <fstream>
 
 #include "backends\imgui_impl_win32.h"
 #include "backends\imgui_impl_dx11.h"
@@ -22,6 +23,15 @@ namespace
 		{TEXT("-log"), ECommandLine::Log},
 		{TEXT("-fullscreen"), ECommandLine::Fullscreen}
 	};
+}
+
+namespace Path
+{
+	const char* Log = "Saved/Logs";
+	const char* Config = "Saved/Config";
+
+	const char* LogFilename = "imgui_log.txt";
+	const char* IniFilename = "imgui.ini";
 }
 
 namespace KeywordArg
@@ -113,7 +123,11 @@ int32_t FAppFramework::Launch(const std::vector<std::wstring>& Args, int32_t Wid
 	WindowHeight = Height;
 
 	// startup
-	Startup(Args);
+	if (!Startup(Args))
+	{
+		Shutdown();
+		return 1;
+	}
 	Register();
 
 	if (!Create(WindowWidth, WindowHeight))
@@ -148,7 +162,7 @@ void FAppFramework::Release()
 	}
 }
 
-void FAppFramework::Startup(const std::vector<std::wstring>& Args)
+bool FAppFramework::Startup(const std::vector<std::wstring>& Args)
 {
 	for (const std::wstring& Arg : Args)
 	{
@@ -174,9 +188,15 @@ void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 		}
 	}
 
+	IniFilePath = Utils::Format("%s/%s", Path::Config, Path::IniFilename);
+	const bool bInitField = InitField();
+
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+
+	ImGuiIO& IO = ImGui::GetIO();
+	IO.IniFilename = IniFilePath.c_str();
 
 	if (Flags.bLog)
 	{
@@ -184,23 +204,31 @@ void FAppFramework::Startup(const std::vector<std::wstring>& Args)
 		std::time_t Time = std::time(nullptr);
 		std::tm* Now = std::localtime(&Time);
 
-		if (false)
+		if (true)
 		{
 			strftime(Buffer, sizeof(Buffer), "%d.%m.%Y-%H.%M.%S", Now);
-			std::string File = Utils::Format("%s.log", Buffer);
-			ImGui::LogToFile(1, File.c_str());
+			LogFilePath = Utils::Format("%s/%s.log", Path::Log, Buffer);
+			IO.LogFilename = LogFilePath.c_str();
 		}
 		else
-		{
-			ImGui::LogToFile();
+		{		
+			LogFilePath = Utils::Format("%s/%s.log", Path::Log, Path::LogFilename);
+			IO.LogFilename = LogFilePath.c_str();
 		}
-
+		ImGui::LogToFile();
 		strftime(Buffer, sizeof(Buffer), "Log file open, %Y/%m/%d %X", Now);
 		ImGui::LogText(IM_NEWLINE);
 		LOG(Buffer);
 	}
 
-	LOG("Framework: Startup");
+	if (!bInitField)
+	{
+		LOG("Framework: Startup fail");
+		return false;
+	}
+
+	LOG("Framework: Startup success");
+	return true;
 }
 
 void FAppFramework::Initialize()
@@ -227,7 +255,6 @@ void FAppFramework::Shutdown()
 
 	// internal
 	ShutdownGUI();
-	CleanupDeviceD3D();
 	DestroyWindow(hwndAppFramework);
 	Release();
 }
@@ -416,6 +443,233 @@ void FAppFramework::CleanupRenderTarget()
 	}
 }
 
+bool FAppFramework::InitField()
+{
+	if (!std::filesystem::exists(Path::Log))
+	{
+		if (!std::filesystem::create_directories(Path::Log))
+		{
+			return false;
+		}
+	}
+
+	if (!std::filesystem::exists(Path::Config))
+	{
+		if (!std::filesystem::create_directories(Path::Config))
+		{
+			return false;
+		}
+	}
+
+	if (!std::filesystem::exists(IniFilePath.c_str()))
+	{
+		SaveDefaultImGuiIni();
+	}
+
+	return true;
+}
+
+void FAppFramework::SaveDefaultImGuiIni()
+{
+	std::string DefaultFileContent = R"(
+[Window][Palette]
+Pos=0,634
+Size=192,80
+Collapsed=0
+DockId=0x0000000C,0
+
+[Window][DockSpaceViewport_11111111]
+Pos=0,19
+Size=1008,695
+Collapsed=0
+
+[Window][Debug##Default]
+ViewportPos=549,839
+ViewportId=0x9F5F46A1
+Size=602,386
+Collapsed=0
+
+[Window][Sprite Editor]
+Pos=260,20
+Size=318,286
+Collapsed=0
+DockId=0x00000009,0
+
+[Window][Image List]
+Pos=0,19
+Size=192,613
+Collapsed=0
+DockId=0x0000000B,0
+
+[Window][Select File]
+ViewportPos=611,294
+ViewportId=0x798C690B
+Size=850,420
+Collapsed=0
+
+[Window][Dear ImGui Metrics/Debugger]
+ViewportPos=2122,270
+ViewportId=0x8FC55800
+Size=978,596
+Collapsed=0
+
+[Window][Dear ImGui Debug Log]
+ViewportPos=2019,198
+ViewportId=0x8E350B18
+Size=1734,772
+Collapsed=0
+
+[Window][Dear ImGui Stack Tool]
+ViewportPos=55,58
+ViewportId=0x5B1A3814
+Size=601,498
+Collapsed=0
+
+[Window][Dear ImGui Style Editor]
+ViewportPos=106,235
+ViewportId=0x6D551092
+Size=413,942
+Collapsed=0
+
+[Window][About Dear ImGui]
+ViewportPos=672,145
+ViewportId=0x34B4C494
+Size=731,114
+Collapsed=0
+
+[Window][Same title as another window##1]
+ViewportPos=1349,228
+ViewportId=0x78C07CE7
+Size=560,528
+Collapsed=0
+
+[Window][Debug]
+Pos=1519,20
+Size=367,702
+Collapsed=0
+DockId=0x00000003,0
+
+[Window][Debug111]
+Size=76,1034
+Collapsed=0
+
+[Window][Build Sprite]
+Pos=580,20
+Size=311,338
+Collapsed=0
+DockId=0x00000004,0
+
+[Window][Set Sprite]
+Pos=580,341
+Size=311,160
+Collapsed=0
+DockId=0x00000010,0
+
+[Window][Sequencer]
+Pos=194,512
+Size=531,202
+Collapsed=0
+DockId=0x0000000A,0
+
+[Window][Tools]
+Pos=194,19
+Size=531,48
+Collapsed=0
+DockId=0x0000000D,0
+
+[Window][Quit]
+Pos=316,191
+Size=311,118
+Collapsed=0
+
+[Window][CreateSprite]
+Pos=348,109
+Size=248,282
+Collapsed=0
+
+[Window][Create Sprite]
+Pos=127,-53
+Size=248,393
+Collapsed=0
+
+[Window][Sprite Constructor]
+Pos=1452,75
+Size=341,942
+Collapsed=0
+DockId=0x00000011,0
+
+[Window][Property]
+Pos=727,372
+Size=281,342
+Collapsed=0
+DockId=0x00000012,0
+
+[Window][SpriteConstructor]
+Pos=727,19
+Size=281,351
+Collapsed=0
+DockId=0x00000011,0
+
+[Window][SpriteEditor]
+Pos=194,69
+Size=531,441
+Collapsed=0
+DockId=0x00000009,0
+
+[Window][Grid Settings]
+ViewportPos=1438,271
+ViewportId=0x0F8E5DF4
+Size=263,282
+Collapsed=0
+
+[Table][0x172A0CD1,4]
+RefScale=14
+Column 0  Width=32 Sort=0^
+Column 1  Width=50
+Column 2  Width=55
+Column 3  Weight=1.0000
+
+[Table][0xC12F73A2,3]
+RefScale=14
+Column 0  Width=32
+Column 1  Width=32
+Column 2  Width=236
+
+[Table][0x0EAA33F0,4]
+RefScale=13
+Column 0  Width=32
+Column 1  Width=32
+Column 2  Width=114
+Column 3  Width=32
+
+[Docking][Data]
+DockSpace           ID=0x8B93E3BD Window=0xA787BDB4 Pos=267,213 Size=1008,695 Split=X Selected=0xB3D8F9A0
+  DockNode          ID=0x00000001 Parent=0x8B93E3BD SizeRef=192,997 Split=Y Selected=0x41D61AAD
+    DockNode        ID=0x0000000B Parent=0x00000001 SizeRef=182,454 HiddenTabBar=1 Selected=0x41D61AAD
+    DockNode        ID=0x0000000C Parent=0x00000001 SizeRef=182,59 HiddenTabBar=1 Selected=0x7E84447F
+  DockNode          ID=0x00000002 Parent=0x8B93E3BD SizeRef=1726,997 Split=X Selected=0xB3D8F9A0
+    DockNode        ID=0x00000007 Parent=0x00000002 SizeRef=467,997 Split=Y Selected=0xB3D8F9A0
+      DockNode      ID=0x0000000D Parent=0x00000007 SizeRef=214,48 HiddenTabBar=1 Selected=0xD44407B5
+      DockNode      ID=0x0000000E Parent=0x00000007 SizeRef=214,432 Split=Y Selected=0xF3734F40
+        DockNode    ID=0x00000009 Parent=0x0000000E SizeRef=319,744 CentralNode=1 HiddenTabBar=1 Selected=0xF3734F40
+        DockNode    ID=0x0000000A Parent=0x0000000E SizeRef=319,202 HiddenTabBar=1 Selected=0x3E6B10D2
+    DockNode        ID=0x00000008 Parent=0x00000002 SizeRef=281,997 Split=Y Selected=0x508C396C
+      DockNode      ID=0x00000005 Parent=0x00000008 SizeRef=256,493 Split=Y Selected=0x508C396C
+        DockNode    ID=0x00000003 Parent=0x00000005 SizeRef=406,336 Selected=0x392A5ADD
+        DockNode    ID=0x00000004 Parent=0x00000005 SizeRef=406,364 Selected=0x508C396C
+      DockNode      ID=0x00000006 Parent=0x00000008 SizeRef=256,206 Split=Y Selected=0x03E5C57B
+        DockNode    ID=0x0000000F Parent=0x00000006 SizeRef=311,319 Split=Y Selected=0x39C75561
+          DockNode  ID=0x00000011 Parent=0x0000000F SizeRef=616,505 HiddenTabBar=1 Selected=0x39C75561
+          DockNode  ID=0x00000012 Parent=0x0000000F SizeRef=616,491 HiddenTabBar=1 Selected=0x1EA09189
+        DockNode    ID=0x00000010 Parent=0x00000006 SizeRef=311,160 Selected=0x03E5C57B
+)";
+
+	std::ofstream File;
+	File.open(IniFilePath.c_str(), std::ios_base::out);
+	File << DefaultFileContent;
+	File.close();
+}
+
 bool FAppFramework::StartupGUI()
 {
 	LOG("Framework: Startup ImGui");
@@ -462,9 +716,13 @@ bool FAppFramework::StartupGUI()
 
 void FAppFramework::ShutdownGUI()
 {
+	if (ImGui::GetCurrentContext() == nullptr && ImGui::GetIO().BackendRendererUserData != nullptr)
+	{
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+	}
+
 	ImGui::LogFinish();
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 }
 
