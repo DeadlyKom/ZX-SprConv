@@ -368,11 +368,20 @@ void SViewer::ShowMenuSprite()
 		{
 			ImGui::OpenPopup(CreateSpriteID);
 		}
-		if (ImGui::MenuItem("Properties...", "Ctrl+P")) {}
-		ImGui::Separator();
 
-		if (ImGui::MenuItem("Sprite Size...")) {}
-		ImGui::EndMenu();
+		std::shared_ptr<FSprite> CurrentSprite = GetSelectedSprite();
+		if (ImGui::MenuItem("Property", "Ctrl+P", nullptr, CurrentSprite != nullptr))
+		{
+			std::shared_ptr<SProperty> WindowProperty = std::dynamic_pointer_cast<SProperty>(GetWindow(EWindowsType::Property));
+			if (WindowProperty)
+			{
+				WindowProperty->SetProperty(EPropertyType::Sprite, CurrentSprite);
+			}
+		}
+		//ImGui::Separator();
+
+		//if (ImGui::MenuItem("Sprite Size...")) {}
+		//ImGui::EndMenu();
 	}
 }
 
@@ -561,12 +570,12 @@ bool SViewer::WindowCreateSpriteModal()
 		const float NormalSizeX = CreateSpritePivot.x / ImMax(CreateSpriteSize.x, 1.0f);
 		if(ImGui::InputTextEx("Width ", NULL, CreateSpriteWidthBuffer, IM_ARRAYSIZE(CreateSpriteWidthBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.x))
 		{
-			CreateSpritePivot.x = ImClamp((CreateSpriteSize.x * NormalSizeX - 1.0f), 0.0f, ImMax(CreateSpriteSize.x - 1.0f, 0.0f));
+			CreateSpritePivot.x = ImFloor(ImClamp((CreateSpriteSize.x * NormalSizeX - 1.0f), 0.0f, ImMax(CreateSpriteSize.x - 1.0f, 0.0f)));
 		}
 		const float NormalSizeY = CreateSpritePivot.y / ImMax(CreateSpriteSize.y, 1.0f);
 		if (ImGui::InputTextEx("Height ", NULL, CreateSpriteHeightBuffer, IM_ARRAYSIZE(CreateSpriteHeightBuffer), ImVec2(TextWidth * 10.0f, TextHeight), InputNumberTextFlags, &TextEditNumberCallback, (void*)&CreateSpriteSize.y))
 		{
-			CreateSpritePivot.y = ImClamp((CreateSpriteSize.y * NormalSizeX - 1.0f), 0.0f, ImMax(CreateSpriteSize.y - 1.0f, 0.0f));
+			CreateSpritePivot.y = ImFloor(ImClamp((CreateSpriteSize.y * NormalSizeY - 1.0f), 0.0f, ImMax(CreateSpriteSize.y - 1.0f, 0.0f)));
 		}
 
 		ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));

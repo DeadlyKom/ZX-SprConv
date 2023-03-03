@@ -1,7 +1,9 @@
 #include "Sequencer.h"
+
 #include "Core\Sprite.h"
 #include "Core\Utils.h"
 #include "Core\Image.h"
+
 #include "Viewer\Windows\Property.h"
 
 namespace

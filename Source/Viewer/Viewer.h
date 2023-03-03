@@ -36,6 +36,7 @@ struct FRecentFiles
 };
 
 class SImageList;
+class SProperty;
 class SSequencer;
 class SSpriteEditor;
 class SSpriteConstructor;
@@ -43,6 +44,7 @@ class SSpriteConstructor;
 class SViewer : public SWindow
 {
 	friend SImageList;
+	friend SProperty;
 	friend SSequencer;
 	friend SSpriteEditor;
 	friend SSpriteConstructor;

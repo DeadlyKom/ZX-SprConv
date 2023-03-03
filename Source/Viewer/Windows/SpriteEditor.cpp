@@ -449,6 +449,15 @@ void SSpriteEditor::RenderPopupMenu()
 	}
 }
 
+void SSpriteEditor::ResetMarquee()
+{
+	bPopupMenu = false;
+	bMarqueeActive = false;
+	bMarqueeVisible = false;
+	bMouseInsideMarquee = false;
+	MarqueeRect = ImRect(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
 void SSpriteEditor::RoundImagePosition()
 {
 	if (Image == nullptr)
@@ -712,6 +721,8 @@ void SSpriteEditor::OnSelectedFileImage(const std::filesystem::directory_entry& 
 		Image->Release();
 		Image = nullptr;
 	}
+
+	ResetMarquee();
 
 	ImageFilePath = FilePath;
 	Image = Utils::LoadImage(FilePath.path().string());

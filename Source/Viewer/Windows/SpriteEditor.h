@@ -23,6 +23,7 @@ private:
 	void RenderPopupMenu();
 
 	// internal
+	void ResetMarquee();
 	void RoundImagePosition();
 	void SetScale(float scaleY);
 	void SetScale(ImVec2 NewScale);

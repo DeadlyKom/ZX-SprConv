@@ -27,9 +27,15 @@ private:
 	void RenderPropertySpriteLayer();
 	void RenderPropertySpriteBlock();
 
+	void InitPropertySprite();
 	void InitPropertySpriteBlock();
 
 	EPropertyType VisiblePropertyType;
+
+	// sprite
+	char SpriteNameBuffer[BUFFER_SIZE_INPUT] = "";
+	char SpriteWidthBuffer[BUFFER_SIZE_INPUT] = "";
+	char SpriteHeightBuffer[BUFFER_SIZE_INPUT] = "";
 
 	// sprite block
 	char SpriteBlockNameBuffer[BUFFER_SIZE_INPUT] = "";
