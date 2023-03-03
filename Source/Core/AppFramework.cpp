@@ -395,7 +395,7 @@ bool FAppFramework::CreateDeviceD3D()
 	const D3D_FEATURE_LEVEL FeatureLevelArray[3] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
 	if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL, CreateDeviceFlags, FeatureLevelArray, 3, D3D11_SDK_VERSION, &sd, &SwapChain, &Device, &FeatureLevel, &DeviceContext)))
 	{
-		LOG_ERROR("Framework: Create device and swap chain ");
+		LOG_ERROR("Framework: Create device and swap chain");
 		return false;
 	}
 

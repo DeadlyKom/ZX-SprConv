@@ -221,9 +221,9 @@ void SViewer::OpenFile_Callback(std::filesystem::path FilePath)
 	{
 		// поиск одинаковых файлов
 		bool bPresent = false;
-		for (std::vector<std::filesystem::directory_entry>::iterator FileIt = Files.begin(); FileIt != Files.end(); ++FileIt)
+		for (const std::filesystem::directory_entry& FileIt : Files)
 		{
-			if (FileIt->path() == File.path())
+			if (FileIt.path() == File.path())
 			{
 				bPresent = true;
 				break;
@@ -242,7 +242,7 @@ void SViewer::OpenFile_Callback(std::filesystem::path FilePath)
 	}
 	else
 	{
-		LOG_ERROR("Can't open file :%s", File.path().string().c_str());
+		LOG_ERROR("Can't open file : %s", File.path().string().c_str());
 	}
 }
 

@@ -209,16 +209,30 @@ void SFileDialog::ReadDirectory(const std::string& Path)
 	Files.clear();
 	Folders.clear();
 
-	for (auto& EntryIt : std::filesystem::directory_iterator(Path, std::filesystem::directory_options::skip_permission_denied))
+	try
 	{
-		if (EntryIt.is_directory())
+		std::error_code ErrorCode;
+		for (std::filesystem::directory_entry FileIt : std::filesystem::directory_iterator(Path, std::filesystem::directory_options::skip_permission_denied, ErrorCode))
 		{
-			Folders.push_back(EntryIt);
-		}
-		else
-		{
-			Files.push_back(EntryIt);
-		}
+			if (ErrorCode)
+			{
+				LOG_ERROR("Can't open file : %s", FileIt.path().string().c_str());
+				continue;
+			}
+
+			if (FileIt.is_directory())
+			{
+				Folders.push_back(FileIt);
+			}
+			else
+			{
+				Files.push_back(FileIt);
+			}
+		}	
+	}
+	catch (const std::exception& Exception)
+	{
+		LOG_ERROR(Exception.what());
 	}
 
 	ApplyFilterTypes();

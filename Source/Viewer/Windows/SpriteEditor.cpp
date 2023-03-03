@@ -419,8 +419,7 @@ void SSpriteEditor::DrawMarquee(const ImRect& Window)
 	ImRect TmpMarqueeRect = MarqueeRect;
 
 	// clamp
-	const ImVec2 ImageSizeInv = ImVec2(1.0f, 1.0f) / Image->Size;
-	const ImVec2 Floor = ImFloor(UV.Min / ImageSizeInv);
+	const ImVec2 Floor = ImFloor(UV.Min * Image->Size);
 	TmpMarqueeRect.Min = (TmpMarqueeRect.Min - Floor) * Scale;
 	TmpMarqueeRect.Max = (TmpMarqueeRect.Max - Floor) * Scale;
 
@@ -430,9 +429,10 @@ void SSpriteEditor::DrawMarquee(const ImRect& Window)
 	const ImVec2 TopLeftSubTexel = ImagePosition * Scale * Image->Size - ViewSize * 0.5f;
 	const ImVec2 TopLeftPixel = ViewTopLeftPixel - (TopLeftSubTexel - ImFloor(TopLeftSubTexel / Scale) * Scale);
 
+	// ToDo разбить прямоугольник на 4 линии и клампить их
 	ImGui::GetWindowDrawList()->_FringeScale = 0.1f;
 	ImGui::GetWindowDrawList()->AddCallback(DrawCallback, Shader::LINE_ID);
-	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + TmpMarqueeRect.Min, TopLeftPixel + TmpMarqueeRect.Max, ImGui::GetColorU32(ImGuiCol_Button), 0, 0, 0.001f);
+	ImGui::GetWindowDrawList()->AddRect(TopLeftPixel + TmpMarqueeRect.Min, TopLeftPixel + TmpMarqueeRect.Max, ImGui::GetColorU32(ImGuiCol_Button), 0.0f, 0, 0.001f);
 }
 
 void SSpriteEditor::RenderPopupMenu()
