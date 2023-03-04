@@ -162,7 +162,7 @@ void SSpriteConstructor::RenderSpriteList()
 	const ImGuiStyle& Style = ImGui::GetStyle();
 	const float WindowVisible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 
-	std::vector<std::shared_ptr<FSprite>>& Sprites = GetParent()->GetSprites();
+	std::vector<std::shared_ptr<FSprite>> Sprites = GetParent()->GetSprites();
 	const uint32_t SpriteNum = uint32_t(Sprites.size());
 	for (uint32_t Index = 0; Index < SpriteNum; ++Index)
 	{

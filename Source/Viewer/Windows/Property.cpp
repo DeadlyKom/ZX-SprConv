@@ -78,6 +78,8 @@ void SProperty::RenderPropertySprite()
 	const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
 	std::shared_ptr<FSprite> Sprite = CachedSprite.lock();
 
+	ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.25f));
+	ImGui::Text("Sprite");
 	ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
 	ImGui::Separator();
 
@@ -126,6 +128,8 @@ void SProperty::RenderPropertySpriteBlock()
 	std::shared_ptr<FSprite> Sprite = CachedSprite.lock();
 	std::shared_ptr<FSpriteBlock> SpriteBlock = CachedSpriteBlock.lock();
 
+	ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.25f));
+	ImGui::Text("Sprite Block");
 	ImGui::Dummy(ImVec2(0.0f, TextHeight * 0.5f));
 	ImGui::Separator();
 

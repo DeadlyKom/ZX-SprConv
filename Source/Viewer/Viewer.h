@@ -98,7 +98,7 @@ private:
 
 	// create functions
 	bool AddSprite(std::shared_ptr<FSprite> NewSprite);
-	bool AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect);
+	void AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect);
 
 	// static functions
 	static int TextEditNumberCallback(ImGuiInputTextCallbackData* Data);

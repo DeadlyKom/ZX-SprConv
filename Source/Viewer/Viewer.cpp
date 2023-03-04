@@ -381,7 +381,7 @@ void SViewer::ShowMenuSprite()
 		//ImGui::Separator();
 
 		//if (ImGui::MenuItem("Sprite Size...")) {}
-		//ImGui::EndMenu();
+		ImGui::EndMenu();
 	}
 }
 
@@ -765,25 +765,25 @@ bool SViewer::AddSprite(std::shared_ptr<FSprite> NewSprite)
 	return true;
 }
 
-bool SViewer::AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect)
+void SViewer::AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect)
 {
 	AddFilePath(FilePath);
 
 	std::shared_ptr<FSprite> Sprite = GetSelectedSprite();
 	if (!Sprite)
 	{
-		return false;
+		return;
 	}
 
 	std::shared_ptr<FSpriteLayer> Layer = GetSelectedLayer(Sprite);
 	if (!Layer)
 	{
-		return false;
+		return;
 	}
 
 	std::shared_ptr<FSpriteBlock> NewSpriteBlock = std::make_shared<FSpriteBlock>();
 	NewSpriteBlock->Marquee = MarqueeRect;
 	NewSpriteBlock->Filename = FilePath.path().string();
 	NewSpriteBlock->Initialize();
-	return Layer->AddSpriteBlock(NewSpriteBlock, Sprite->SelectedFrame);
+	Layer->AddSpriteBlock(NewSpriteBlock);
 }

@@ -72,25 +72,26 @@ namespace
 				continue;
 			}
 
-			std::shared_ptr<FSpriteFrame> SpriteFrame = Layer->GetSpritesFrame(FrameNum);
+			const std::shared_ptr<FSpriteFrame>& SpriteFrame = Layer->GetSpritesFrame(FrameNum);
 			if (!SpriteFrame)
 			{
 				continue;
 			}
 
-			for (const std::weak_ptr<FSpriteBlock>& Block : SpriteFrame->Blocks)
+			for (uint32_t Index = 0; Index < SpriteFrame->bVisibleBlocks.size(); ++Index)
 			{
-				if (Block.expired() /*|| !Block.lock()->ImageSprite*/)
+				if (!!SpriteFrame->bVisibleBlocks[Index] == false)
 				{
 					continue;
 				}
 
-				const ImVec2 StartImage = p0 + Sprite->Pivot * Scale + Block.lock()->Offset * Scale;
-				const ImVec2 EndImage = StartImage + Block.lock()->ImageSprite->Size * Scale;
+				const std::shared_ptr<FSpriteBlock>& SpriteBlock = Layer->Blocks[Index];
+				const ImVec2 StartImage = p0 + Sprite->Pivot * Scale + SpriteBlock->Offset * Scale;
+				const ImVec2 EndImage = StartImage + SpriteBlock->ImageSprite->Size * Scale;
 
 				// callback for using our own image shader 
-				Window->DrawList->AddCallback(DrawCallback, (void*)Block.lock()->ImageSprite.get());
-				Window->DrawList->AddImage(Block.lock()->ImageSprite->GetShaderResourceView(), StartImage, EndImage, ImVec2(0.0f, 0.0f), ImVec2(1.0, 1.0f), ImGui::GetColorU32(TintColor));
+				Window->DrawList->AddCallback(DrawCallback, (void*)SpriteBlock->ImageSprite.get());
+				Window->DrawList->AddImage(SpriteBlock->ImageSprite->GetShaderResourceView(), StartImage, EndImage, ImVec2(0.0f, 0.0f), ImVec2(1.0, 1.0f), ImGui::GetColorU32(TintColor));
 			}
 		}
 		ImGui::PopClipRect();
@@ -105,6 +106,8 @@ namespace
 FSpriteBlock::FSpriteBlock()
 	: Offset(0.0f, 0.0f)
 	, Marquee(0.0f, 0.0f, 0.0f, 0.0f)
+	, bVisible(false)
+	, bLock(false)
 	, Filename("")
 	, ImageSprite(nullptr)
 {
@@ -145,7 +148,6 @@ void FSpriteBlock::Release()
 FSpriteLayer::FSpriteLayer()
 	: bVisible(false)
 	, bLock(false)
-	, bEmpty(true)
 	, Name("")
 {}
 
@@ -170,16 +172,55 @@ std::shared_ptr<FSpriteFrame> FSpriteLayer::AddFrame()
 	return Frames.back();
 }
 
-bool FSpriteLayer::AddSpriteBlock(std::shared_ptr<FSpriteBlock>& NewSpriteBlock, uint32_t FrameNum)
+void FSpriteLayer::AddSpriteBlock(std::shared_ptr<FSpriteBlock> NewSpriteBlock)
 {
-	if (!IsValidFrame(FrameNum))
+	Blocks.push_back(NewSpriteBlock);
+
+	for (std::shared_ptr<FSpriteFrame> Frame : Frames)
 	{
-		return false;
+		Frame->bVisibleBlocks.emplace_back(true);
+	}
+}
+
+void FSpriteLayer::RemoveSpriteBlock(std::shared_ptr<FSpriteBlock> RemoveSpriteBlock)
+{
+	size_t RemoveIndex = 0;
+
+	// remove sprite block
+	for (; RemoveIndex < Blocks.size(); ++RemoveIndex)
+	{
+		std::shared_ptr<FSpriteBlock>& Block = Blocks[RemoveIndex];
+		if (Block == RemoveSpriteBlock)
+		{
+			Block->Release();
+			Blocks.erase(Blocks.begin() + RemoveIndex);
+			break;
+		}
 	}
 
-	Frames[FrameNum]->Blocks.push_back(NewSpriteBlock);
-	Blocks.push_back(NewSpriteBlock);
-	return true;
+	if (RemoveIndex > Blocks.size())
+	{
+		LOG_ERROR("%s : error remove sprite block", __FUNCTION__);
+		return;
+	}
+
+	// remove sprite block in all frames
+	for (std::shared_ptr<FSpriteFrame> Frame : Frames)
+	{
+		Frame->bVisibleBlocks.erase(Frame->bVisibleBlocks.begin() + RemoveIndex);
+	}
+}
+
+void FSpriteLayer::SwapSpriteBlocks(uint32_t IndexA, uint32_t IndexB)
+{
+	// swap all frames
+	for (std::shared_ptr<FSpriteFrame>& Frame : Frames)
+	{
+		std::swap(Frame->bVisibleBlocks[IndexA], Frame->bVisibleBlocks[IndexB]);
+	}
+
+	// swap blocks
+	std::swap(Blocks[IndexA], Blocks[IndexB]);
 }
 
 FSprite::FSprite()

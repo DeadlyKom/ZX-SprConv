@@ -256,17 +256,7 @@ void SSequencer::RemoveSpriteBlok()
 	}
 
 	std::shared_ptr<FSpriteLayer> SelectedSpriteLeyer = CachedSelectedSpriteLeyer.lock();
-	for (size_t Index = 0; Index < SelectedSpriteLeyer->Blocks.size(); ++Index)
-	{
-		std::shared_ptr<FSpriteBlock> Block = SelectedSpriteLeyer->Blocks[Index];
-		if (Block == CachedSelectedSpriteBlock.lock())
-		{
-			Block->Release();
-			CachedSelectedSpriteBlock.reset();
-			SelectedSpriteLeyer->Blocks.erase(SelectedSpriteLeyer->Blocks.begin() + Index);
-			return;
-		}
-	}
+	SelectedSpriteLeyer->RemoveSpriteBlock(CachedSelectedSpriteBlock.lock());
 }
 
 bool SSequencer::DrawButton(const char* StringID, const FImage& Image, const ImVec4& BackgroundColor, const ImVec4& TintColor, const ImVec4& SelectedColor)
@@ -359,22 +349,36 @@ void SSequencer::DrawFrames(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSp
 		const bool bVisible = ImGui::TreeNodeEx(SpriteLayer->Name.c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
 		if (bVisible)
 		{
-			for (std::shared_ptr<FSpriteBlock> Block : SpriteLayer->Blocks)
+			const uint32_t BlocksNum = static_cast<uint32_t>(SpriteLayer->Blocks.size());
+			for (uint32_t Index = 0; Index < BlocksNum; ++Index)
 			{
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(2);
 
-				if (ImGui::TreeNodeEx(Block->Name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth))
+				std::shared_ptr<FSpriteBlock>& Block = SpriteLayer->Blocks[Index];
+				const std::string StringID = Utils::Format("%s##%i", Block->Name.c_str(), Index);
+				if (ImGui::TreeNodeEx(StringID.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth))
 				{
+					// start drag
 					if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 					{
-						CachedSelectedSprite = Sprite;
-						CachedSelectedSpriteLeyer = SpriteLayer;
-						CachedSelectedSpriteBlock = Block;
-
-						ClickedSpriteBlok(Block);
+						DragBlock = Block;
+						Start = Index;
 					}
-					else if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+					// dragging
+					else if (DragBlock && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
+					{
+						End = Index;
+					}
+					// end drag
+					else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+					{
+						DragBlock.reset();
+						Start = INDEX_NONE;
+						End = INDEX_NONE;
+					}
+					// pop up menu
+					else if(ImGui::IsItemClicked(ImGuiMouseButton_Right))
 					{
 						CachedSelectedSprite = Sprite;
 						CachedSelectedSpriteLeyer = SpriteLayer;
@@ -382,35 +386,37 @@ void SSequencer::DrawFrames(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSp
 						ImGui::OpenPopup(PopupBlockMenuName);
 					}
 
+					// draw frames
 					for (uint32_t FrameIndex = 0; FrameIndex < NumFrame; ++FrameIndex)
 					{
 						ImGui::TableNextColumn();
 
-						std::shared_ptr<FSpriteFrame> Frame = SpriteLayer->GetSpritesFrame(FrameIndex);
-						if (!Frame)
+						std::shared_ptr<FSpriteFrame> SpriteFrame = SpriteLayer->GetSpritesFrame(FrameIndex);
+						if (!SpriteFrame)
 						{
 							continue;
 						}
 
-						// поиск совпадения
-						bool bEmpty = true;
-						for (std::weak_ptr<FSpriteBlock>& FrameBlock : Frame->Blocks)
-						{
-							if (FrameBlock.expired() || FrameBlock.lock() != Block)
-							{
-								continue;
-							}
-
-							bEmpty = false;
-							break;
-						}
-
-						std::shared_ptr<FImage> ImageFrame = bEmpty ? ImageEmpty : ImageFill;
+						std::shared_ptr<FImage> ImageFrame = SpriteFrame->bVisibleBlocks[Index] ? ImageFill : ImageEmpty;
 						const std::string LayerFrameName = Utils::Format("Sequencer##Layer%iFrame%i", NumLayer, FrameIndex);
 						DrawButton(LayerFrameName.c_str(), *ImageFrame, BackgroundColor, TintColor, SelectedColor);
 					}
 				}
 			}
+
+			// drag and drop operation
+			const bool bDragging = ImGui::GetMouseDragDelta().y != 0.0f;
+			const bool bValidDragDelta = Start >= 0 && Start < BlocksNum && End >= 0 && End < BlocksNum && Start - End != 0;
+			if (bDragging && bValidDragDelta)
+			{
+				if (SpriteLayer->Blocks[End] != DragBlock)
+				{
+					// swap
+					SpriteLayer->SwapSpriteBlocks(Start, End);
+					Start = End;
+				}
+			}
+
 			RenderPopupBlockMenu();
 			ImGui::TreePop();
 		}

@@ -22,6 +22,9 @@ struct FSpriteBlock : std::enable_shared_from_this<FSpriteBlock>
 	ImVec2 Offset;
 	ImRect Marquee;
 
+	bool bVisible;
+	bool bLock;
+
 	std::string Name;
 	std::string Filename;
 	std::shared_ptr<FImage> ImageSprite;
@@ -29,7 +32,7 @@ struct FSpriteBlock : std::enable_shared_from_this<FSpriteBlock>
 
 struct FSpriteFrame : std::enable_shared_from_this<FSpriteFrame>
 {
-	std::vector<std::weak_ptr<FSpriteBlock>> Blocks;
+	std::vector<uint8_t> bVisibleBlocks;
 };
 
 struct FSpriteLayer : std::enable_shared_from_this<FSpriteLayer>
@@ -43,11 +46,13 @@ struct FSpriteLayer : std::enable_shared_from_this<FSpriteLayer>
 	std::shared_ptr<FSpriteFrame> AddFrame();
 
 	// block
-	bool AddSpriteBlock(std::shared_ptr<FSpriteBlock>& NewSpriteBlock, uint32_t FrameNum);
+	void AddSpriteBlock(std::shared_ptr<FSpriteBlock> NewSpriteBlock);
+	void RemoveSpriteBlock(std::shared_ptr<FSpriteBlock> RemoveSpriteBlock);
+	void SwapSpriteBlocks(uint32_t IndexA, uint32_t IndexB);
 
 	bool bVisible;
 	bool bLock;
-	bool bEmpty;
+
 	std::string Name;
 	std::vector<std::shared_ptr<FSpriteBlock>> Blocks;
 	std::vector<std::shared_ptr<FSpriteFrame>> Frames;

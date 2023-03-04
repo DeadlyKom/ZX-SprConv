@@ -26,6 +26,7 @@ inline bool operator!=(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x != r
 #include "imgui_internal.h"
 
 #include "Log.h"
+#include "Char.h"
 #include "Math_.h"
 #include "Window.h"
 #include "Delegates.h"

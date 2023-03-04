@@ -159,6 +159,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Source\Core\AppFramework.cpp" />
+    <ClCompile Include="..\Source\Core\Char.h" />
     <ClCompile Include="..\Source\Core\Delegate.cpp" />
     <ClCompile Include="..\Source\Core\Image.cpp" />
     <ClCompile Include="..\Source\Core\Sprite.cpp" />

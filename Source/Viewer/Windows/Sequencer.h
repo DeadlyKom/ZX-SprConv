@@ -37,6 +37,11 @@ private:
 	bool bLock = false;
 	ESequencerControl Selected = ESequencerControl::None;
 
+	// drag and drop
+	uint32_t Start = INDEX_NONE;
+	uint32_t End = INDEX_NONE;
+	std::shared_ptr<FSpriteBlock> DragBlock;
+
 	// popup menu
 	std::weak_ptr<FSprite> CachedSelectedSprite;
 	std::weak_ptr<FSpriteLayer> CachedSelectedSpriteLeyer;
