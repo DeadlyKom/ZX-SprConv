@@ -169,7 +169,14 @@ std::shared_ptr<FSpriteFrame> FSpriteLayer::GetSpritesFrame(uint32_t FrameNum)
 std::shared_ptr<FSpriteFrame> FSpriteLayer::AddFrame()
 {
 	Frames.push_back(std::make_shared<FSpriteFrame>());
-	return Frames.back();
+
+	std::shared_ptr<FSpriteFrame> Frame = Frames.back();
+	for (uint32_t Block = 0; Block < Blocks.size(); ++Block)
+	{
+		Frame->bVisibleBlocks.emplace_back(true);
+	}
+	
+	return Frame;
 }
 
 void FSpriteLayer::AddSpriteBlock(std::shared_ptr<FSpriteBlock> NewSpriteBlock)
@@ -269,6 +276,8 @@ void FSprite::AddFrame()
 	{
 		Layer->AddFrame();
 	}
+
+	NumFrame++;
 }
 
 std::shared_ptr<FSpriteFrame> FSprite::GetFrame(uint32_t LayerNum, uint32_t FrameNum)

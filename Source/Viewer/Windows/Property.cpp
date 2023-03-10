@@ -30,6 +30,7 @@ void SProperty::Render()
 	case EPropertyType::Sprite:			RenderPropertySprite();			break;
 	case EPropertyType::SpriteLayer:	RenderPropertySpriteLayer();	break;
 	case EPropertyType::SpriteBlock:	RenderPropertySpriteBlock();	break;
+	case EPropertyType::SpriteFrame:	RenderPropertySpriteFrame();	break;
 	default:															break;
 	}
 	ImGui::End();
@@ -60,6 +61,8 @@ void SProperty::SetProperty(EPropertyType PropertyType, ...)
 		CachedSprite = va_arg(Args, std::weak_ptr<FSprite>);
 		CachedSpriteBlock = va_arg(Args, std::weak_ptr<FSpriteBlock>);
 		InitPropertySpriteBlock();
+		break;
+	case EPropertyType::SpriteFrame:
 		break;
 	default:
 		break;
@@ -148,6 +151,10 @@ void SProperty::RenderPropertySpriteBlock()
 	ImGui::SliderFloat("X ", &SpriteBlock->Offset.x, -OffsetMin.x + 1.0f, OffsetMax.x - 1.0f, "%.0f");
 	ImGui::SliderFloat("Y ", &SpriteBlock->Offset.y, -OffsetMin.y + 1.0f, OffsetMax.y - 1.0f, "%.0f");
 	ImGui::Dummy(ImVec2(0.0f, TextHeight * 1.0f));
+}
+
+void SProperty::RenderPropertySpriteFrame()
+{
 }
 
 void SProperty::InitPropertySprite()

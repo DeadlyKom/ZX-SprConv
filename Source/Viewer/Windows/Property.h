@@ -9,6 +9,7 @@ enum class EPropertyType
 	Sprite,
 	SpriteLayer,
 	SpriteBlock,
+	SpriteFrame,
 };
 
 
@@ -26,6 +27,7 @@ private:
 	void RenderPropertySprite();
 	void RenderPropertySpriteLayer();
 	void RenderPropertySpriteBlock();
+	void RenderPropertySpriteFrame();
 
 	void InitPropertySprite();
 	void InitPropertySpriteBlock();

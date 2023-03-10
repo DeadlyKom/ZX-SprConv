@@ -98,6 +98,8 @@ private:
 
 	// create functions
 	bool AddSprite(std::shared_ptr<FSprite> NewSprite);
+	std::shared_ptr<FSpriteLayer> AddSpriteLayer(std::shared_ptr<FSprite> Sprite);
+	void AddSpriteFrame(std::shared_ptr<FSprite> Sprite);
 	void AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect);
 
 	// static functions
@@ -108,6 +110,12 @@ private:
 	T* WindowCast(EWindowsType Type)
 	{
 		return static_cast<T*>(Windows[Type].get());
+	}
+
+	template <typename T>
+	std::shared_ptr<T> WindowDynamicCast(EWindowsType Type)
+	{
+		return std::dynamic_pointer_cast<T>(Windows[Type]);
 	}
 
 	// internal
@@ -155,4 +163,8 @@ private:
 
 	// layer
 	int32_t LayersCounter;
+
+	// debug
+	bool bShowDebugLog;
+	bool bShowStackTool;
 };

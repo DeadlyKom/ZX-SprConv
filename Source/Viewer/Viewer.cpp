@@ -18,6 +18,8 @@ namespace
 	const char* MenuQuitName = "Quit";
 
 	const char* CreateSpriteName = "Create Sprite";
+	const char* CreateLayerName = "Create Layer";
+	const char* CreateFrameName = "Create Frame";
 	const char* GridSettingsName = "Grid Settings";
 }
 
@@ -29,6 +31,9 @@ SViewer::SViewer()
 	, CurrentSprite(-1)
 	, SpriteCounter(0)
 	, LayersCounter(0)
+	// debug
+	, bShowDebugLog(false)
+	, bShowStackTool(false)
 {}
 
 std::shared_ptr<SWindow> SViewer::GetWindow(EWindowsType Type)
@@ -58,26 +63,6 @@ void SViewer::NativeInitialize(FNativeDataInitialize Data)
 
 void SViewer::Initialize()
 {
-	//FSprite NewSprite;
-	//NewSprite.NumFrame = 1;
-	//NewSprite.Size = ImVec2(64.0f, 64.0f);
-	//NewSprite.Pivot = ImVec2(32.0f, 32.0f);
-	//NewSprite.Name = "Demo";
-
-	//FSpriteLayer NewLayer1;
-	//NewLayer1.bVisible = true;
-	//NewLayer1.bLock = false;
-	//NewLayer1.Name = "Layer 1";
-	//NewSprite.Layers.push_back(NewLayer1);
-
-	////FSpriteLayer NewLayer2;
-	////NewLayer2.bVisible = true;
-	////NewLayer2.bLock = false;
-	////NewLayer2.Name = "Layer 2";
-	////NewSprite.Layers.push_back(NewLayer2);
-	//
-	//Sprites.push_back(NewSprite);
-
 	ImageRGBA = Utils::LoadImageFromResource(IDB_COLOR_MODE_RGBA, TEXT("PNG"));
 	ImageIndexed = Utils::LoadImageFromResource(IDB_COLOR_MODE_INDEXED, TEXT("PNG"));
 	ImageZX = Utils::LoadImageFromResource(IDB_COLOR_MODE_ZX, TEXT("PNG"));
@@ -116,6 +101,16 @@ void SViewer::Render()
 
 		ImGui::EndMainMenuBar();
 	}
+
+	if (bShowDebugLog)
+	{
+		ImGui::ShowDebugLogWindow(&bShowDebugLog);
+	}
+	if (bShowStackTool)
+	{
+		ImGui::ShowStackToolWindow(&bShowStackTool);
+	}
+
 }
 
 void SViewer::Tick(float DeltaTime)
@@ -168,7 +163,12 @@ bool SViewer::TrySetTool(EToolType NewToolType)
 {
 	if (!bToolChangeLock)
 	{
-		LastSelectedTool = WindowCast<STools>(EWindowsType::Tools)->SetSelect(NewToolType);
+		STools* WindowTools = WindowCast<STools>(EWindowsType::Tools);
+		if (WindowTools != nullptr)
+		{
+			LastSelectedTool = WindowTools->SetSelect(NewToolType);
+		}
+
 		bToolChangeLock = true;
 		return true;
 	}
@@ -178,18 +178,33 @@ bool SViewer::TrySetTool(EToolType NewToolType)
 
 void SViewer::ResetTool()
 {
+	STools* WindowTools = WindowCast<STools>(EWindowsType::Tools);
+	if (WindowTools != nullptr)
+	{
+		WindowTools->SetSelect(LastSelectedTool);
+	}
+
 	bToolChangeLock = false;
-	WindowCast<STools>(EWindowsType::Tools)->SetSelect(LastSelectedTool);
 }
 
 bool SViewer::IsHandTool()
 {
-	return WindowCast<STools>(EWindowsType::Tools)->GetSelected() == EToolType::Hand;
+	STools* WindowTools = WindowCast<STools>(EWindowsType::Tools);
+	if (WindowTools != nullptr)
+	{
+
+	}
+	return WindowTools != nullptr ? WindowTools->GetSelected() == EToolType::Hand : false;
 }
 
 bool SViewer::IsMarqueeTool()
 {
-	return WindowCast<STools>(EWindowsType::Tools)->GetSelected() == EToolType::Marquee;
+	STools* WindowTools = WindowCast<STools>(EWindowsType::Tools);
+	if (WindowTools != nullptr)
+	{
+
+	}
+	return WindowTools != nullptr ? WindowTools->GetSelected() == EToolType::Marquee : false;
 }
 
 int SViewer::TextEditNumberCallback(ImGuiInputTextCallbackData* Data)
@@ -372,7 +387,7 @@ void SViewer::ShowMenuSprite()
 		std::shared_ptr<FSprite> CurrentSprite = GetSelectedSprite();
 		if (ImGui::MenuItem("Property", "Ctrl+P", nullptr, CurrentSprite != nullptr))
 		{
-			std::shared_ptr<SProperty> WindowProperty = std::dynamic_pointer_cast<SProperty>(GetWindow(EWindowsType::Property));
+			std::shared_ptr<SProperty> WindowProperty = WindowDynamicCast<SProperty>(EWindowsType::Property);
 			if (WindowProperty)
 			{
 				WindowProperty->SetProperty(EPropertyType::Sprite, CurrentSprite);
@@ -387,12 +402,50 @@ void SViewer::ShowMenuSprite()
 
 void SViewer::ShowMenuLayer()
 {
+	const ImGuiID CreateLayerID = ImGui::GetCurrentWindow()->GetID(CreateLayerName);
+	std::shared_ptr<FSprite> CurrentSprite = GetSelectedSprite();
+	if (ImGui::BeginMenu("Layer", CurrentSprite != nullptr))
+	{
+		if (ImGui::MenuItem("New", "Shift+N"))
+		{
+			//ImGui::OpenPopup(CreateLayerID);
+			AddSpriteLayer(CurrentSprite);
+		}
 
+		if (ImGui::MenuItem("Property", "Shift+P", nullptr, CurrentSprite != nullptr))
+		{
+			std::shared_ptr<SProperty> WindowProperty = WindowDynamicCast<SProperty>(EWindowsType::Property);
+			if (WindowProperty)
+			{
+				WindowProperty->SetProperty(EPropertyType::SpriteLayer, nullptr);
+			}
+		}
+		ImGui::EndMenu();
+	}
 }
 
 void SViewer::ShowMenuFrame()
 {
+	const ImGuiID CreateFrameID = ImGui::GetCurrentWindow()->GetID(CreateFrameName);
+	std::shared_ptr<FSprite> CurrentSprite = GetSelectedSprite();
+	if (ImGui::BeginMenu("Frame", CurrentSprite != nullptr))
+	{
+		if (ImGui::MenuItem("New", "N"))
+		{
+			//ImGui::OpenPopup(CreateFrameID);
+			AddSpriteFrame(CurrentSprite);
+		}
 
+		if (ImGui::MenuItem("Property", "P", nullptr, CurrentSprite != nullptr))
+		{
+			std::shared_ptr<SProperty> WindowProperty = WindowDynamicCast<SProperty>(EWindowsType::Property);
+			if (WindowProperty)
+			{
+				WindowProperty->SetProperty(EPropertyType::SpriteFrame, nullptr);
+			}
+		}
+		ImGui::EndMenu();
+	}
 }
 
 void SViewer::ShowMenuView()
@@ -637,7 +690,7 @@ bool SViewer::WindowCreateSpriteModal()
 		if (ImGui::ButtonEx("OK", ImVec2(TextWidth * 11.0f, TextHeight * 1.5f)))
 		{
 			std::shared_ptr<FSprite> NewSprite = std::make_shared<FSprite>();
-			NewSprite->NumFrame = 1;
+			NewSprite->NumFrame = 0;
 			NewSprite->Size = CreateSpriteSize;
 			NewSprite->Pivot = CreateSpritePivot;
 			NewSprite->ColorMode = CreateSpriteColorMode;
@@ -750,12 +803,9 @@ bool SViewer::AddSprite(std::shared_ptr<FSprite> NewSprite)
 		return false;
 	}
 
-	std::shared_ptr<FSpriteLayer> NewLayer = NewSprite->AddLayer();
-	NewLayer->bVisible = true;
-	NewLayer->bLock = false;
-	NewLayer->Name = Utils::Format("Layer %i", ++LayersCounter);
+	std::shared_ptr<FSpriteLayer> NewLayer = AddSpriteLayer(NewSprite);
+	AddSpriteFrame(NewSprite);
 
-	NewSprite->AddFrame();
 	Sprites.push_back(NewSprite);
 
 	if (CurrentSprite < 0)
@@ -763,6 +813,21 @@ bool SViewer::AddSprite(std::shared_ptr<FSprite> NewSprite)
 		CurrentSprite++;
 	}
 	return true;
+}
+
+std::shared_ptr<FSpriteLayer> SViewer::AddSpriteLayer(std::shared_ptr<FSprite> Sprite)
+{
+	std::shared_ptr<FSpriteLayer> NewLayer = Sprite->AddLayer();
+	NewLayer->bVisible = true;
+	NewLayer->bLock = false;
+	NewLayer->Name = Utils::Format("Layer %i", ++LayersCounter);
+
+	return NewLayer;
+}
+
+void SViewer::AddSpriteFrame(std::shared_ptr<FSprite> Sprite)
+{
+	Sprite->AddFrame();
 }
 
 void SViewer::AddSpriteBlock(const std::filesystem::directory_entry& FilePath, const ImRect& MarqueeRect)

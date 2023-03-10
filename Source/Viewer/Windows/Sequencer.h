@@ -16,6 +16,8 @@ enum class ESequencerControl
 class SSequencer : public SViewChild
 {
 public:
+	SSequencer();
+
 	virtual void Initialize() override;
 	virtual void Render() override;
 
@@ -33,13 +35,13 @@ private:
 	void DrawLayer(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t NumLayer, uint32_t NumFrame);
 	void DrawFrames(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSpriteLayer> SpriteLayer, uint32_t NumLayer, uint32_t NumFrame);
 
-	bool bVisible = true;
-	bool bLock = false;
-	ESequencerControl Selected = ESequencerControl::None;
+	bool bBaseVisible;
+	bool bBaseLock;
+	ESequencerControl Selected;
 
 	// drag and drop
-	uint32_t Start = INDEX_NONE;
-	uint32_t End = INDEX_NONE;
+	uint32_t DragStartIndex;
+	uint32_t DragEndIndex;
 	std::shared_ptr<FSpriteBlock> DragBlock;
 
 	// popup menu

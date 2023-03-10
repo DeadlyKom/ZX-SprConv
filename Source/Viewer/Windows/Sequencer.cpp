@@ -8,11 +8,12 @@
 
 namespace
 {
-	enum MyItemColumnID
+	enum ItemColumnID
 	{
 		ItemColumnID_Visible,
 		ItemColumnID_Lock,
 		ItemColumnID_LayerName,
+		ItemColumnID_Frame,
 	};
 
 	const ImVec4 BackgroundColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -21,6 +22,16 @@ namespace
 
 	const char* PopupBlockMenuName = "Popup Block Menu";
 }
+
+SSequencer::SSequencer()
+	: bBaseVisible(true)
+	, bBaseLock(false)
+	, Selected(ESequencerControl::None)
+
+	// drag and drop
+	, DragStartIndex(INDEX_NONE)
+	, DragEndIndex(INDEX_NONE)
+{}
 
 void SSequencer::Initialize()
 {
@@ -51,7 +62,7 @@ void SSequencer::Render()
 		return;
 	}
 
-	ImGui::Begin("Sequencer", &bOpen);
+	ImGui::Begin("Sequencer", &bOpen, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 	RenderControlButtons();
 	const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
@@ -127,24 +138,15 @@ void SSequencer::RenderSequencer()
 	}
 
 	const ImGuiTableFlags Flags =
-		ImGuiTableFlags_Resizable /*| ImGuiTableFlags_Reorderable *//*| ImGuiTableFlags_Hideable*/
-		//| ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_BordersInnerH
-		//| ImGuiTableFlags_Borders
+		ImGuiTableFlags_Resizable
+		| ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
 		| ImGuiTableFlags_RowBg
 		| ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersOuterH
-		/*| ImGuiTableFlags_SizingFixedFit*/;
+		;
 
 	const float TextHeight = ImGui::GetTextLineHeightWithSpacing();
-	const int FreezeColums = 3;
-	const int FreezeRows = 2;
-	const float InnerWidthWithScroll = 0.0f;
-	const bool OuterSizeEnabled = false;
-	const float RowMinHeight = 0.0f;
-
-	const ImVec2 OuterSizeValue = ImVec2(38.0f * (Sprite->NumFrame + 3) + 100.0f, TextHeight * (Sprite->Layers.size() + 1) * 1.7f);
-
-	const float inner_width_to_use = (Flags & ImGuiTableFlags_ScrollX) ? InnerWidthWithScroll : 0.0f;
-	if (ImGui::BeginTable("Sequencer", 3 + Sprite->NumFrame, Flags, OuterSizeEnabled ? OuterSizeValue : ImVec2(0, 0), inner_width_to_use))
+	const int32_t ColumCount = 3 + Sprite->NumFrame;
+	if (ImGui::BeginTable("Sequencer", ColumCount, Flags))
 	{
 		//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 2.0f));
@@ -157,51 +159,51 @@ void SSequencer::RenderSequencer()
 
 		for (uint32_t FrameIndex = 0; FrameIndex < Sprite->NumFrame; ++FrameIndex)
 		{
-			ImGui::TableSetupColumn("Frame##%i", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Visible);
+			const std::string NumFrameText = Utils::Format("Frame##%i", FrameIndex + 1);
+			ImGui::TableSetupColumn(NumFrameText.c_str(), ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoHide, 32.0f, ItemColumnID_Frame);
 		}
 
-		ImGui::TableSetupScrollFreeze(FreezeColums, FreezeRows);
-		//ImGui::TableHeadersRow();
-
-		ImGui::TableNextRow(ImGuiTableRowFlags_None, RowMinHeight);
+		ImGui::TableSetupScrollFreeze(ColumCount, 1);
+		ImGui::TableNextRow(ImGuiTableRowFlags_None, 0.0f);
 
 		{
 			ImGui::TableSetColumnIndex(0);
-			std::shared_ptr<FImage> ImageVisible = bVisible ? ImageVisibleEnable : ImageVisibleDisable;
+			std::shared_ptr<FImage> ImageVisible = bBaseVisible ? ImageVisibleEnable : ImageVisibleDisable;
 			if (DrawButton("Sequencer##BaseVisible", *ImageVisible, BackgroundColor, TintColor, SelectedColor))
 			{
-				bVisible = !bVisible;
+				bBaseVisible = !bBaseVisible;
 				for (uint32_t RowIndex = 0; RowIndex < Sprite->Layers.size(); ++RowIndex)
 				{
 					std::shared_ptr<FSpriteLayer>& SpriteLayer = Sprite->Layers[RowIndex];
-					SpriteLayer->bVisible = bVisible;
+					SpriteLayer->bVisible = bBaseVisible;
 				}
 			}
 
 			ImGui::TableSetColumnIndex(1);
-			std::shared_ptr<FImage> ImageLocking = bLock ? ImageLock : ImageUnlock;
+			std::shared_ptr<FImage> ImageLocking = bBaseLock ? ImageLock : ImageUnlock;
 			if (DrawButton("Sequencer##BaseLock", *ImageLocking, BackgroundColor, TintColor, SelectedColor))
 			{
-				bLock = !bLock;
+				bBaseLock = !bBaseLock;
 				for (uint32_t RowIndex = 0; RowIndex < Sprite->Layers.size(); ++RowIndex)
 				{
 					std::shared_ptr<FSpriteLayer>& SpriteLayer = Sprite->Layers[RowIndex];
-					SpriteLayer->bLock = bLock;
+					SpriteLayer->bLock = bBaseLock;
 				}
 			}
 
-			ImGui::TableNextColumn();
+			ImGui::TableSetColumnIndex(2);
 			for (uint32_t FrameIndex = 0; FrameIndex < Sprite->NumFrame; ++FrameIndex)
 			{
 				ImGui::TableNextColumn();
-				std::string NumFrameText = Utils::Format("%i", FrameIndex + 1);
+
+				const std::string NumFrameText = Utils::Format("%i", FrameIndex + 1);
 				ImGui::TextUnformatted(NumFrameText.c_str());
 			}
 		}
 
 		for (uint32_t RowIndex = 0; RowIndex < Sprite->Layers.size(); ++RowIndex)
 		{
-			ImGui::TableNextRow(ImGuiTableRowFlags_None, RowMinHeight);
+			ImGui::TableNextRow(ImGuiTableRowFlags_None, 0.0f);
 			DrawLayer(Sprite, Sprite->Layers[RowIndex], RowIndex, Sprite->NumFrame);
 		}
 
@@ -363,19 +365,19 @@ void SSequencer::DrawFrames(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSp
 					if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 					{
 						DragBlock = Block;
-						Start = Index;
+						DragStartIndex = Index;
 					}
 					// dragging
 					else if (DragBlock && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
 					{
-						End = Index;
+						DragEndIndex = Index;
 					}
 					// end drag
 					else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
 					{
 						DragBlock.reset();
-						Start = INDEX_NONE;
-						End = INDEX_NONE;
+						DragStartIndex = INDEX_NONE;
+						DragEndIndex = INDEX_NONE;
 					}
 					// pop up menu
 					else if(ImGui::IsItemClicked(ImGuiMouseButton_Right))
@@ -406,14 +408,14 @@ void SSequencer::DrawFrames(std::shared_ptr<FSprite> Sprite, std::shared_ptr<FSp
 
 			// drag and drop operation
 			const bool bDragging = ImGui::GetMouseDragDelta().y != 0.0f;
-			const bool bValidDragDelta = Start >= 0 && Start < BlocksNum && End >= 0 && End < BlocksNum && Start - End != 0;
+			const bool bValidDragDelta = DragStartIndex >= 0 && DragStartIndex < BlocksNum && DragEndIndex >= 0 && DragEndIndex < BlocksNum && DragStartIndex - DragEndIndex != 0;
 			if (bDragging && bValidDragDelta)
 			{
-				if (SpriteLayer->Blocks[End] != DragBlock)
+				if (SpriteLayer->Blocks[DragEndIndex] != DragBlock)
 				{
 					// swap
-					SpriteLayer->SwapSpriteBlocks(Start, End);
-					Start = End;
+					SpriteLayer->SwapSpriteBlocks(DragStartIndex, DragEndIndex);
+					DragStartIndex = DragEndIndex;
 				}
 			}
 
